@@ -1,0 +1,17 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "{BCC67D2B-43CE-12C9-08ED-5A99012B4753}",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "VFS",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"CoreUObject",
+				"Engine"
+			]
+		}
+	]
+}

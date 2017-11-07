@@ -1,0 +1,429 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "Core.h"
+#include "GameFramework/Actor.h"
+#include "Net/UnrealNetwork.h"
+#include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
+#include "Runtime/Engine/Classes/Particles/ParticleSystem.h"
+#include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
+#include "Runtime/Engine/Classes/Engine/EngineTypes.h"
+
+#include "CharacterBase.h"
+#include "AbilityProjectile.h"
+#include "AbilityBase.generated.h"
+
+UENUM(BlueprintType)
+enum EAbilityValidation
+{
+	ABV_Allowed UMETA(DisplayName = "Allowed"),
+	ABV_InvalidAbility UMETA(DisplayName = "InvalidAbility"),
+	ABV_NotReady UMETA(DisplayName = "NotReady"),
+	ABV_Health UMETA(DisplayName = "Health"),
+	ABV_Mana UMETA(DisplayName = "Mana"),
+	ABV_Energy UMETA(DisplayName = "Energy"),
+	ABV_MissTarget UMETA(DisplayName = "MissTarget"),
+	ABV_InvalidTarget UMETA(DisplayName = "InvalidTarget"),
+	ABV_TooFar UMETA(DisplayName = "TooFar"),
+	ABV_TooClose UMETA(DisplayName = "ToClose"),
+	ABV_Moving UMETA(DisplayName = "Moving"),
+	ABV_OutOfSight UMETA(DisplayName = "OutOfSight"),
+	ABV_Incapacitated UMETA(DisplayName = "Incapacitated"),
+	ABV_InProgress UMETA(DisplayName = "InProgress"),
+	ABV_Unknown UMETA(DisplayName = "Unknown"),
+};
+
+UENUM(BlueprintType)
+enum EAbilitySchool
+{
+	ABS_Physical UMETA(DisplayName = "Physical"),
+	ABS_Magic UMETA(DisplayName = "Magic"),
+};
+
+
+UENUM(BlueprintType)
+enum EAbilityStartType
+{
+	ABST_Instant UMETA(DisplayName = "Instant"),
+	ABST_Castable UMETA(DisplayName = "Castable"),
+	ABST_Channeling UMETA(DisplayName = "Channeling"),
+};
+
+UENUM(BlueprintType)
+enum EAbilityTargetType
+{
+	ABTT_Self UMETA(DisplayName = "Self"),
+	ABTT_Enemy UMETA(DisplayName = "Enemy"),
+	ABTT_Ally UMETA(DisplayName = "Ally"),
+};
+
+UENUM(BlueprintType)
+enum EAbilityArea
+{
+	ABA_Directional UMETA(DisplayName = "Directional"),
+	ABA_AreaOnEffect UMETA(DisplayName = "AreaOnEffect"),
+	ABA_Target UMETA(DisplayName = "Target"),
+};
+
+UENUM(BlueprintType)
+enum EAbilityCommit
+{
+	ABC_Instant UMETA(DisplayName = "Instant"),
+	ABC_Projectile UMETA(DisplayName = "Projectile"),
+};
+
+UENUM(BlueprintType)
+enum EAbilityProjectileType
+{
+	ABP_Chase UMETA(DisplayName = "Chase"),
+	ABP_Lauch UMETA(DisplayName = "Lauch"),
+};
+
+// ==================================================================================================================================================
+// MODIFIER
+// ==================================================================================================================================================
+
+UENUM(BlueprintType)
+enum EModifierStatusType
+{
+	MST_Absolute UMETA(DisplayName = "Absolute"),
+	MST_Percent UMETA(DisplayName = "Percent"),
+};
+
+UENUM(BlueprintType)
+enum EModifierSchool
+{
+	MS_Physical UMETA(DisplayName = "Physical"),
+	MS_Magic UMETA(DisplayName = "Magic"),
+	MS_Nature UMETA(DisplayName = "Nature"),
+};
+
+UENUM(BlueprintType)
+enum EModifierConstrain
+{
+	MDCT_None UMETA(DisplayName = "None"),
+	MDCT_Unique UMETA(DisplayName = "Unique"),
+	MDCT_UniqueByPlayer UMETA(DisplayName = "UniqueByPlayer"),
+};
+
+USTRUCT(BlueprintType)
+struct FModifierBase
+{
+	GENERATED_USTRUCT_BODY(BlueprintType)
+
+public:
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	AActor* AbilityOwner;
+
+	// Icon that will be shown.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	UTexture2D* Icon = NULL;
+
+	// Display Name.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	FName Name = "";
+
+	// Modifier Description.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	FText Description;
+
+	UParticleSystem* StartParticle = NULL;
+	UParticleSystem* DuringParticle = NULL;
+	UParticleSystem* EndParticle = NULL;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	bool bAllowSelf = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	bool bAllowTeam = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	bool bAllowEnemy = true;
+
+	// School modifier.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
+	TEnumAsByte<EModifierSchool> School = EModifierSchool::MS_Physical;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
+	TEnumAsByte<EModifierConstrain> Constrain = EModifierConstrain::MDCT_None;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	bool bIsPercent = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
+	bool bIsDispellable = true;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
+	bool bIsStackable = true;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
+	int32 MaxStacks = 2;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
+	int32 Stacks = 1;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float Health = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float Energy = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float Mana = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float Speed = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float Power = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float Defense = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float Critical = 0.0f;
+};
+
+USTRUCT(BlueprintType)
+struct FAuraModifier : public FModifierBase {
+	GENERATED_USTRUCT_BODY(BlueprintType)
+
+public:
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float MinDistance = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float MaxDistance = 0.0f;
+};
+
+USTRUCT(BlueprintType)
+struct FBuffModifier : public FModifierBase {
+	GENERATED_USTRUCT_BODY(BlueprintType)
+
+public:
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
+	int32 bUntilUse = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
+	float TimeRemaining = 60.0f;
+};
+
+USTRUCT(BlueprintType)
+struct FOvertimeModifier : public FModifierBase {
+	GENERATED_USTRUCT_BODY(BlueprintType)
+
+public:
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
+	float TimeRemaining = 10.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
+	float ElapsedTime = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
+	float TickTime = 2.0f;
+};
+
+USTRUCT(BlueprintType)
+struct FAbsorbingModifier : public FModifierBase {
+	GENERATED_USTRUCT_BODY(BlueprintType)
+
+};
+
+USTRUCT(BlueprintType)
+struct FHealModifier : public FModifierBase {
+	GENERATED_USTRUCT_BODY(BlueprintType)
+
+};
+
+USTRUCT(BlueprintType)
+struct FDamageModifier : public FModifierBase {
+	GENERATED_USTRUCT_BODY(BlueprintType)
+
+};
+
+// ==================================================================================================================================================
+// CLASS
+// ==================================================================================================================================================
+
+UCLASS(BlueprintType)
+class VFS_API AAbilityBase : public AActor
+{
+	GENERATED_BODY()
+
+public:	
+	// Sets default values for this actor's properties
+	AAbilityBase();
+
+protected:
+	float CountdownTimeRemaining;
+
+	float ChannelingTime;
+	float ChannelingTotalTime;
+
+	virtual void UpdateTimers(float DeltaTime);
+
+public:
+
+	// Ability Owner.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	ACharacterBase* CharacterOwner;
+
+	// Ability Slot.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	int32 Slot;
+
+	UParticleSystem* CastParticle;
+
+	// Ability Icon.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	UTexture2D* Icon;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	FName Name;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	FString Description;
+
+	// Countdown Time.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Countdown")
+	float CountdownTime;
+
+	// Cast Time.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float CastTime;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	bool bCastInMovement;
+
+	ACharacterBase* CastTarget;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cost")
+	float HealthCost;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cost")
+	float ManaCost;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cost")
+	float EnergyCost;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cost")
+	float bIsPercent;
+
+	// Min Distance to be started/commited.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Validation")
+	float MinDistance;
+
+	// Max distance to be started/commited.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Validation")
+	float MaxDistance;
+
+	// Max angle to be started/commited.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Validation")
+	float MaxAngle;
+
+	// Directional radius (if directional)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Validation")
+	float DirectionalRadius;
+
+	// Directional Range (if directional type)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Validation")
+	float DirectionalRange;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	bool bAllowSelf;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	bool bAllowTeam;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	bool bAllowEnemy;
+
+	// Ability School.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
+	TEnumAsByte<EAbilitySchool> SchoolType;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
+	TEnumAsByte<EAbilityStartType> AbilityType;
+
+	// Ability Area.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
+	TEnumAsByte<EAbilityArea> AreaType;
+
+	// Ability Commit Type.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
+	TEnumAsByte<EAbilityCommit> CommitType;
+
+	float ProjectileSpeed;
+
+	TSubclassOf<class AAbilityProjectile> Projectile;
+	UParticleSystem* ProjectileHitParticle;
+
+	// Aura Modifiers Array.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mofidiers")
+	TArray<FAuraModifier> AuraModifiers;
+
+	// Buff Modifiers Array.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifiers")
+	TArray<FBuffModifier> BuffModifiers;
+
+	// Absorbing Modifier Array.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifiers")
+	TArray<FAbsorbingModifier> AbsorbingModifiers;
+
+	// Overtime Modifiers Array.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifiers")
+	TArray<FOvertimeModifier> OvertimeModifiers;
+
+	// Damage Modifiers Array.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifiers")
+	TArray<FHealModifier> HealModifiers;
+
+	// Damage Modifiers Array.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifiers")
+	TArray<FDamageModifier> DamageModifiers;
+
+	virtual void BeginPlay() override;
+
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	virtual void SetupModifiers();
+
+	// Load icon.
+	void LoadIcon(const FString& Path);
+
+	// Check if Is in Countdown.
+	UFUNCTION(BlueprintCallable, Category = "Abilities")
+	bool IsCountdown();
+
+	void StartCountdown();
+
+	void StopCountdown();
+
+	// Get Countdown Time Remaining;
+	UFUNCTION(BlueprintCallable, Category = "Abilities")
+	float GetCountdownRemaining();
+
+	// Get Countdown Percent Progress
+	UFUNCTION(BlueprintCallable, Category = "Abilities")
+	float GetCountdownPercent();
+
+	void ClearChanneling();
+
+	bool UpdateChanneling(float DeltaTime);
+
+	virtual void OnStart(ACharacterBase* Target);
+	virtual void OnDamage(ACharacterBase* Target);
+	virtual void OnHeal(ACharacterBase* Target);
+	virtual void OnBreak(ACharacterBase* Target);
+	virtual void OnRenew(ACharacterBase* Targets);
+	virtual void OnExpire(ACharacterBase* Target);
+
+	// Network Replication Props (override).
+	void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
+};
