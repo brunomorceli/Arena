@@ -28,7 +28,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "GLobalLibrary")
 	static FORCEINLINE TSubclassOf<AAbilityBase> GetAbility(int32 Slot)
 	{
-		UGlobal* Global = UGlobalLibrary::GetGlobal();
+		UGlobal* Global = GetGlobal();
 		if (!Global) { return NULL; }
 		return Global->Abilities.Contains(Slot) ? Global->Abilities[Slot] : NULL;
 	}
@@ -36,7 +36,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "GLobalLibrary")
 	static FORCEINLINE UTexture2D* GetIcon(int32 Slot)
 	{
-		UGlobal* Global = UGlobalLibrary::GetGlobal();
+		UGlobal* Global = GetGlobal();
 		if (!Global) { return NULL; }
 		return Global->Icons.Contains(Slot) ? Global->Icons[Slot] : NULL;
 	}
@@ -44,7 +44,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "GLobalLibrary")
 	static FORCEINLINE UParticleSystem* GetParticle(int32 Slot)
 	{
-		UGlobal* Global = UGlobalLibrary::GetGlobal();
+		UGlobal* Global = GetGlobal();
 		if (!Global) { return NULL; }
 		return Global->Particles.Contains(Slot) ? Global->Particles[Slot] : NULL;
 	}
@@ -52,7 +52,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "GLobalLibrary")
 	static FORCEINLINE TSubclassOf<class AAbilityProjectile> GetProjectile(int32 Slot)
 	{
-		UGlobal* Global = UGlobalLibrary::GetGlobal();
+		UGlobal* Global = GetGlobal();
 		if (!Global) { return NULL; }
 		return Global->Projectiles.Contains(Slot) ? Global->Projectiles[Slot] : NULL;
 	}
@@ -60,7 +60,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "GLobalLibrary")
 	static FORCEINLINE FClassPreset GetClass(ECharacterClass CharacterClass)
 	{
-		UGlobal* Global = UGlobalLibrary::GetGlobal();
+		UGlobal* Global = GetGlobal();
 		if (!Global) { return FClassPreset(); }
 		return Global->Classes.Contains(CharacterClass) ? Global->Classes[CharacterClass] : FClassPreset();
 	}
@@ -68,8 +68,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "GLobalLibrary")
 	static FORCEINLINE USkeletalMesh* GetWeapon(int32 Slot)
 	{
-		UGlobal* Global = UGlobalLibrary::GetGlobal();
+		UGlobal* Global = GetGlobal();
 		if (!Global) { return NULL; }
 		return Global->Weapons.Contains(Slot) ? Global->Weapons[Slot] : NULL;
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "GLobalLibrary")
+	static FORCEINLINE FString GetServerAddress()
+	{
+		UGlobal* Global = GetGlobal();
+		if (!Global) { return ""; }
+
+		return Global->ServerAddress;
 	}
 };

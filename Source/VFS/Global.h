@@ -38,6 +38,9 @@ struct FClassPreset
 	FString Description = "";
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ClassPreset")
+	USkeletalMesh* CharacterMesh = NULL;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ClassPreset")
 	USkeletalMesh* LeftWeapon = NULL;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ClassPreset")
@@ -47,7 +50,7 @@ struct FClassPreset
 /**
  * 
  */
-UCLASS(Blueprintable, BlueprintType)
+UCLASS(Config=Game, Blueprintable, BlueprintType)
 class VFS_API UGlobal : public UObject
 {
 	GENERATED_BODY()
@@ -59,6 +62,9 @@ private:
 
 public:
 	UGlobal(const FObjectInitializer& ObjectInitializer);
+
+	UPROPERTY(Config)
+	FString ServerAddress;
 
 	// ==================================================================================
 	// ABILITIES

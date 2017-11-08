@@ -954,6 +954,11 @@ void AArenaCharacter::OnRep_PlayerClass()
 
 	FClassPreset ClassPreset = UGlobalLibrary::GetClass(PlayerClass);
 
+	if (ClassPreset.CharacterMesh)
+	{
+		GetMesh()->SetSkeletalMesh(ClassPreset.CharacterMesh, false);
+	}
+
 	LeftHandWeapon->SetSkeletalMesh(ClassPreset.LeftWeapon, false);
 	RightHandWeapon->SetSkeletalMesh(ClassPreset.RightWeapon, false);
 }

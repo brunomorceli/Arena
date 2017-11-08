@@ -232,13 +232,13 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
 	class UParticleSystemComponent* AuraParticle;
 
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Status")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	class USkeletalMeshComponent* LeftHandWeapon;
 
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Status")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	class USkeletalMeshComponent* RightHandWeapon;
 
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Status")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	class USkeletalMeshComponent* BackWeapon;
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "State")
@@ -471,6 +471,7 @@ public:
 	void MulticastFXNotification(int32 Slot);
 	void MulticastFXNotification_Implementation(int32 Slot);
 
+	void ChangePawn(TSubclassOf<ACharacterBase> Character);
 
 	void ChangeState(ECharacterState NewState);
 

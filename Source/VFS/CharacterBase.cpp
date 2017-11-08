@@ -643,6 +643,29 @@ void ACharacterBase::ChangeState(ECharacterState NewState)
 	State = NewState;
 }
 
+void ACharacterBase::ChangePawn(TSubclassOf<ACharacterBase> Character)
+{
+	if (!Character) { return; }
+
+	UWorld* World = GetWorld();
+	if (!World) { return; }
+
+	AController* PlayerController = World->GetFirstPlayerController();
+	if (!PlayerController) { return; }
+
+	APawn* CurrentPawn = PlayerController->GetPawn();
+	if (!CurrentPawn) { return; }
+
+	CurrentPawn->DetachFromControllerPendingDestroy();
+
+	PlayerController->UnPossess();
+
+	CurrentPawn->Destroy();
+
+	APawn* NewPawn = World->SpawnActor<APawn>(Character, GetActorLocation(), GetActorRotation());
+	PlayerController->Possess(NewPawn);
+}
+
 void ACharacterBase::ServerChangeTeam_Implementation(EPlayerTeam NewTeam)
 {
 	AArenaPlayerState* MyPlayerState = Cast<AArenaPlayerState>(PlayerState);
@@ -665,8 +688,4 @@ void ACharacterBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Ou
 	DOREPLIFETIME(ACharacterBase, Critical);
 	DOREPLIFETIME(ACharacterBase, Power);
 	DOREPLIFETIME(ACharacterBase, Defense);
-	DOREPLIFETIME(ACharacterBase, LeftHandWeapon);
-	DOREPLIFETIME(ACharacterBase, RightHandWeapon);
-	DOREPLIFETIME(ACharacterBase, BackWeapon);
-
 }
