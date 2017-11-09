@@ -18,10 +18,6 @@ AArenaGameMode::AArenaGameMode()
 	GameStateClass = AArenaGameState::StaticClass();
 }
 
-void AArenaGameMode::CreateDefaultAbilities(AArenaCharacter* Character)
-{
-}
-
 void AArenaGameMode::PostLogin(APlayerController * NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
@@ -29,33 +25,16 @@ void AArenaGameMode::PostLogin(APlayerController * NewPlayer)
 	UWorld* World = GetWorld();
 	if (!World) { return; }
 
+	ACharacterBase* CharacterBase = Cast<ACharacterBase>(NewPlayer->GetPawn());
+	if (!CharacterBase) { return; }
+
 	AArenaPlayerState* PlayerState = Cast<AArenaPlayerState>(NewPlayer->PlayerState);
 	if (!PlayerState) { return; }
 
-	PlayerState->ServerChangeTeam(bNextIsRed ? EPT_Red : EPT_Blue);
+	TEnumAsByte<EPlayerTeam> NewTeam = bNextIsRed ? EPT_Red : EPT_Blue;
+
+	PlayerState->ServerChangeTeam(NewTeam);
+	CharacterBase->Team = NewTeam;
 
 	bNextIsRed = !bNextIsRed;
-}
-
-void AArenaGameMode::StartAbility(AArenaCharacter* Character, int32 Slot)
-{
-
-}
-
-void AArenaGameMode::StopAbility(AArenaCharacter* Character, int32 Slot)
-{
-	/*AArenaCharacter* MyCharacter = Cast<AArenaCharacter>(Character);
-	if (!MyCharacter)
-	{
-		return;
-	}*/
-}
-
-void AArenaGameMode::CommitAbility(AArenaCharacter* Character, int32 Slot)
-{
-	/*AArenaCharacter* MyCharacter = Cast<AArenaCharacter>(Character);
-	if (!MyCharacter)
-	{
-		return;
-	}*/
 }

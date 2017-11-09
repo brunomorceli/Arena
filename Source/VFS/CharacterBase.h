@@ -250,6 +250,9 @@ public:
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerClass, VisibleAnywhere, BlueprintReadOnly, Category = "State")
 	TEnumAsByte<ECharacterClass> PlayerClass;
 
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = Camera)
+	TEnumAsByte<EPlayerTeam> Team;
+
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	float BaseTurnRate;
@@ -287,6 +290,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	ACharacterBase* Target;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
+	float TargetMaxDistance;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	float DeathDelay;
@@ -380,11 +386,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, Client, Reliable, Category = "Utils")
 	void ClientSetSelfTarget();
-	void ClientSetSelfTarget_Implementation() { ServerSetTarget(this); }
+	void ClientSetSelfTarget_Implementation() { Target = this; ServerSetTarget(this); }
 
 	UFUNCTION(BlueprintCallable, Client, Reliable, Category = "Utils")
 	void ClientClearTarget();
-	void ClientClearTarget_Implementation() { ServerSetTarget(NULL); }
+	void ClientClearTarget_Implementation() { Target = NULL; ServerSetTarget(NULL); }
 	
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = "Utils")
 	void ServerSetTarget(ACharacterBase* Character);

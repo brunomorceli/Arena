@@ -7,7 +7,7 @@
 AArenaPlayerState::AArenaPlayerState(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	CharacterClass = ECCL_None;
-	Team = EPT_Blue;
+	Team = EPT_Neutral;
 	Kills = 0;
 	Deaths = 0;
 	DamageDone = 0.0f;

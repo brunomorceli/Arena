@@ -78,11 +78,18 @@ ACharacterBase::ACharacterBase()
 
 	// network
 	bReplicates = true;
+	bAlwaysRelevant = true;
+	bNetUseOwnerRelevancy = true;
+	bNetLoadOnClient = true;
+	bReplicateMovement = true;
 
 	State = CS_Idle;
 
 	FString Name = "Unknown";
 	PlayerClass = ECCL_None;
+	Team = EPT_Neutral;
+
+	TargetMaxDistance = 3000.0f;
 
 	Health.Setup(2000.0f, 0.3f);
 	Mana.Setup(2000.0f, 0.3f);
@@ -130,13 +137,17 @@ void ACharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	UpdateState();
-
 	// clear the target
-	if ((Target && (Target->State == CS_Death) || State == CS_Death))
+	if (Target)
 	{
-		Target = NULL;
+		float TargetDist = FVector::Distance(Target->GetActorLocation(), GetActorLocation());
+		if (Target->State == CS_Death || State == CS_Death || TargetDist > TargetMaxDistance)
+		{
+			Target = NULL;
+		}
 	}
+
+	UpdateState();
 
 	UpdateAuraParticle();
 }
@@ -327,11 +338,14 @@ ACharacter* ACharacterBase::GetNearestCharacter()
 			continue;
 		}
 
-		float CurrActorDist = FVector2D::Distance(CurActorScreenLocation, ViewportCenter);
-		if (!FoundActors.IsValidIndex(NearestActorIndex) || CurrActorDist < NearestActorDist)
+		float ActorDistance = FVector::Distance(CurrActor->GetActorLocation(), GetActorLocation());
+		if (ActorDistance > TargetMaxDistance) { continue; }
+
+		float CurrScreenDist = FVector2D::Distance(CurActorScreenLocation, ViewportCenter);
+		if (!FoundActors.IsValidIndex(NearestActorIndex) || CurrScreenDist < NearestActorDist)
 		{
 			NearestActorIndex = ActorIndex;
-			NearestActorDist = CurrActorDist;
+			NearestActorDist = CurrScreenDist;
 		}
 	}
 
@@ -398,8 +412,8 @@ void ACharacterBase::ServerRespawn_Implementation()
 	UWorld* World = GetWorld();
 	if (!World) { return; }
 
-	AGameModeBase* GameMode = World->GetAuthGameMode();
-	if (!GameMode) { return; }
+	//AGameModeBase* GameMode = World->GetAuthGameMode();
+	//if (!GameMode) { return; }
 
 	Health.Reset();
 	Mana.Reset();
@@ -411,7 +425,7 @@ void ACharacterBase::ServerRespawn_Implementation()
 	Target = nullptr;
 	State = CS_Idle;
 
-	GameMode->RestartPlayer(Controller);
+	//GameMode->RestartPlayer(Controller);
 
 	// Teleport to a Random player start.
 	TArray<AActor*> FoundActors;
@@ -426,7 +440,6 @@ void ACharacterBase::ServerRespawn_Implementation()
 
 void ACharacterBase::ServerSetTarget_Implementation(ACharacterBase* Character)
 {
-	if (!HasAuthority()) { return; }
 	Target = Character;
 }
 
@@ -681,6 +694,7 @@ void ACharacterBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Ou
 	DOREPLIFETIME(ACharacterBase, State);
 	DOREPLIFETIME(ACharacterBase, Name);
 	DOREPLIFETIME(ACharacterBase, PlayerClass);
+	DOREPLIFETIME(ACharacterBase, Team);
 	DOREPLIFETIME(ACharacterBase, Health);
 	DOREPLIFETIME(ACharacterBase, Mana);
 	DOREPLIFETIME(ACharacterBase, Energy);
@@ -688,4 +702,5 @@ void ACharacterBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Ou
 	DOREPLIFETIME(ACharacterBase, Critical);
 	DOREPLIFETIME(ACharacterBase, Power);
 	DOREPLIFETIME(ACharacterBase, Defense);
+
 }

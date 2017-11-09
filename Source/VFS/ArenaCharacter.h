@@ -102,6 +102,7 @@ public:
 	EAbilityValidation ValidateCost(AAbilityBase* Ability);
 
 	EAbilityValidation ValidateTarget(AAbilityBase* Ability, ACharacterBase* First, ACharacterBase* Second);
+
 	bool IsEnemyCharacter(ACharacterBase* First, ACharacterBase* Second);
 
 	FString GetErrorString(EAbilityValidation Validation);
