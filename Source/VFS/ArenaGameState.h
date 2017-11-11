@@ -4,6 +4,8 @@
 
 #include "Core.h"
 #include "GameFramework/GameStateBase.h"
+
+#include "Enums.h"
 #include "ArenaGameState.generated.h"
 
 /**

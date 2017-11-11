@@ -6,12 +6,12 @@
 #include "Engine/GameInstance.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 
+#include "Enums.h"
 #include "ArenaSaveGame.h"
 
 #include "ArenaGameInstance.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FStartFindSessionDelegate);
-
 
 USTRUCT(BlueprintType)
 struct FPlayerProfile

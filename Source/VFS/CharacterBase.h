@@ -13,50 +13,12 @@
 #include "Runtime/Engine/Classes/Particles/ParticleSystem.h"
 #include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
 #include "Runtime/Engine/Classes/GameFramework/PlayerStart.h"
+#include "Runtime/Engine/Classes/Animation/AnimSequence.h"
 
+#include "Enums.h"
 #include "ArenaPlayerState.h"
 #include "ArenaSaveGame.h"
 #include "CharacterBase.generated.h"
-
-UENUM(BlueprintType)
-enum EHUDMessage
-{
-	Info UMETA(DisplayName = "Info"),
-	Success UMETA(DisplayName = "Success"),
-	Warning UMETA(DisplayName = "Warning"),
-	Danger UMETA(DisplayName = "Danger"),
-};
-
-UENUM(BlueprintType)
-enum ECharacterState
-{
-	CS_Idle UMETA(DisplayName = "Idle"),
-	CS_Move UMETA(DisplayName = "Move"),
-	CS_Jump UMETA(DisplayName = "Jump"),
-	CS_Stuck UMETA(DisplayName = "Stuck"),
-	CS_Cast UMETA(DisplayName = "Cast"),
-	CS_Channeling UMETA(DisplayName = "Channeling"),
-	CS_Stun UMETA(DisplayName = "Stun"),
-	CS_Invunerable UMETA(DisplayName = "Invunerable"),
-	CS_Death UMETA(DisplayName = "Death"),
-	CS_Spectate UMETA(DisplayName = "Spectate"),
-};
-
-UENUM(BlueprintType)
-enum ECharacterAnimationState
-{
-	CAS_Idle UMETA(DisplayName = "Idle"),
-	CAS_Damage UMETA(DisplayName = "Damage"),
-	CAS_Move UMETA(DisplayName = "Move"),
-	CAS_Cast UMETA(DisplayName = "Cast"),
-	CAS_Channeling UMETA(DisplayName = "Channeling"),
-	CAS_AttackRange UMETA(DisplayName = "AttackRange"),
-	CAS_AttackMelee UMETA(DisplayName = "AttackMelee"),
-	CAS_Stun UMETA(DisplayName = "Stun"),
-	CAS_Incapacitate UMETA(DisplayName = "Incapacidate"),
-	CAS_Death UMETA(DisplayName = "Death"),
-	CAS_Stop UMETA(DisplayName = "Stop"),
-};
 
 USTRUCT(BlueprintType)
 struct FStatus
@@ -187,12 +149,27 @@ struct FStatus
 	}
 };
 
+USTRUCT(BlueprintType)
+struct FAnimation
+{
+	GENERATED_USTRUCT_BODY(BlueprintType)
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
+	int32 bLoop = true;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
+	float Duration = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
+	UAnimSequence* AnimSequence = NULL;
+};
+
 // ============================================================================================================================
 // CLASS
 // ============================================================================================================================
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNotificationDelegate, FString, Message);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFXNotificationDelegate, int32, Slot);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FChangeAnimStateDelegate, ECharacterAnimationState, NewAnimState, FAnimation, Animation);
 
 UCLASS(config = Game)
 class ACharacterBase : public ACharacter
@@ -218,7 +195,7 @@ public:
 	FNotificationDelegate NotificationDelegate;
 
 	UPROPERTY(VisibleAnywhere, BlueprintAssignable, Category = "Notification")
-	FFXNotificationDelegate FXNotificationDelegate;
+	FChangeAnimStateDelegate ChangeAnimStateDelegate;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
 	class UParticleSystemComponent* ChestParticle;
@@ -244,6 +221,9 @@ public:
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "State")
 	TEnumAsByte<ECharacterState> State;
 
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	TEnumAsByte<ECharacterAnimationState> AnimationState;
+	
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "State")
 	FString Name;
 
@@ -473,9 +453,15 @@ public:
 	void ServerChangeTeam_Implementation(EPlayerTeam NewTeam);
 	bool ServerChangeTeam_Validate(EPlayerTeam NewTeam) { return true; }
 
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
+	void ServerChangeAnimState(ECharacterAnimationState NewAnimState, FAnimation Animation);
+	void ServerChangeAnimState_Implementation(ECharacterAnimationState NewAnimState, FAnimation Animation) { MulticastChangeAnimState(NewAnimState, Animation); }
+	bool ServerChangeAnimState_Validate(ECharacterAnimationState NewAnimState, FAnimation Animation) { return true; }
+
+
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastFXNotification(int32 Slot);
-	void MulticastFXNotification_Implementation(int32 Slot);
+	void MulticastChangeAnimState(ECharacterAnimationState NewAnimState, FAnimation Animation);
+	void MulticastChangeAnimState_Implementation(ECharacterAnimationState NewAnimState, FAnimation Animation);
 
 	void ChangePawn(TSubclassOf<ACharacterBase> Character);
 

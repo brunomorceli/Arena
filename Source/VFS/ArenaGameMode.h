@@ -5,6 +5,8 @@
 #include "Core.h"
 #include "GameFramework/GameModeBase.h"
 #include "GameFramework/Character.h"
+
+#include "Enums.h"
 #include "ArenaGameState.h"
 #include "ArenaPlayerState.h"
 #include "ArenaCharacter.h"

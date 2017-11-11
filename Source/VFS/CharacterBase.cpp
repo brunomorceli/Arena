@@ -84,12 +84,13 @@ ACharacterBase::ACharacterBase()
 	bReplicateMovement = true;
 
 	State = CS_Idle;
+	AnimationState = CAS_None;
 
 	FString Name = "Unknown";
 	PlayerClass = ECCL_None;
 	Team = EPT_Neutral;
 
-	TargetMaxDistance = 3000.0f;
+	TargetMaxDistance = 5000.0f;
 
 	Health.Setup(2000.0f, 0.3f);
 	Mana.Setup(2000.0f, 0.3f);
@@ -269,7 +270,8 @@ void ACharacterBase::MoveForward(float Value)
 {
 	if (Controller == NULL || State == CS_Stun || State == CS_Death) { return; }
 	
-	if (Value != 0.0f || State == CS_Cast || State == CS_Channeling)
+	//if (Value != 0.0f || bIsCasting)
+	if (Value != 0.0f)
 	{
 		SetActorRotToFollowCameraAngle();
 	}
@@ -645,9 +647,10 @@ void ACharacterBase::ServerJumpTo_Implementation()
 	if (Result) { LaunchCharacter(Velocity, true, true); }
 }
 
-void ACharacterBase::MulticastFXNotification_Implementation(int32 Slot)
-{
-	FXNotificationDelegate.Broadcast(Slot);
+void ACharacterBase::MulticastChangeAnimState_Implementation(ECharacterAnimationState NewAnimState, FAnimation Animation)
+{	
+	AnimationState = NewAnimState;
+	ChangeAnimStateDelegate.Broadcast(AnimationState, Animation);
 }
 
 void ACharacterBase::ChangeState(ECharacterState NewState)
@@ -692,6 +695,7 @@ void ACharacterBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Ou
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ACharacterBase, State);
+	DOREPLIFETIME(ACharacterBase, AnimationState);
 	DOREPLIFETIME(ACharacterBase, Name);
 	DOREPLIFETIME(ACharacterBase, PlayerClass);
 	DOREPLIFETIME(ACharacterBase, Team);
@@ -702,5 +706,4 @@ void ACharacterBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Ou
 	DOREPLIFETIME(ACharacterBase, Critical);
 	DOREPLIFETIME(ACharacterBase, Power);
 	DOREPLIFETIME(ACharacterBase, Defense);
-
 }

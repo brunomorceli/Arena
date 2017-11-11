@@ -33,6 +33,8 @@ void AArenaCharacter::Tick(float DeltaTime)
 
 	ValidateCast();
 	UpdateTimers(DeltaTime);
+
+	if (CastTimeRemaining == 0.0f && AnimationState == CAS_Cast) { StopCast(); }
 }
 
 void AArenaCharacter::UpdateState()
@@ -53,7 +55,11 @@ void AArenaCharacter::UpdateState()
 		return;
 	}
 
-	if (IsCasting()) { State = CS_Cast; }
+	TEnumAsByte<ECharacterState> NextState = State;
+	for (auto Modifier : BuffModifiers)
+	{
+		if (Modifier.State > State) { State = Modifier.State; }
+	}
 }
 
 void AArenaCharacter::ValidateCast()
@@ -290,15 +296,16 @@ void AArenaCharacter::StartCast(int32 Slot)
 
 	CastAbility = Abilities[Slot];
 	CastTimeRemaining = CastAbility->CastTime;
-	State = CS_Cast;
 	MulticastSetHandsParticles(CastAbility->CastParticle, CastAbility->CastParticle);
+	ServerChangeAnimState(CAS_Cast, CastAbility->CastAnimation);
 }
 
 void AArenaCharacter::StopCast()
 {
-	CastAbility = NULL;
 	CastTimeRemaining = 0.0f;
+	CastAbility = NULL;
 	MulticastSetHandsParticles(NULL, NULL);
+	ServerChangeAnimState(CAS_None, FAnimation());
 }
 
 void AArenaCharacter::CommitAbility(int32 Slot)
@@ -315,6 +322,7 @@ void AArenaCharacter::CommitAbility(int32 Slot)
 	if (!HasAuthority()) { return; }
 
 	CommitAbilityModifiers(Ability);
+	ServerChangeAnimState(CAS_Commit, Ability->CommitAnimation);
 }
 
 void AArenaCharacter::CommitAbilityModifiers(AAbilityBase* Ability)
@@ -530,7 +538,6 @@ bool AArenaCharacter::IsEnemyCharacter(ACharacterBase* First, ACharacterBase* Se
 
 	return FirstPlayerState->Team != SecondPlayerState->Team;
 }
-
 
 bool AArenaCharacter::IsCasting()
 {

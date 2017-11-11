@@ -4,6 +4,8 @@
 
 #include "Core.h"
 #include "UObject/NoExportTypes.h"
+
+#include "Enums.h"
 #include "Global.h"
 #include "GlobalLibrary.generated.h"
 
@@ -81,4 +83,13 @@ public:
 
 		return Global->ServerAddress;
 	}
+
+	UFUNCTION(BlueprintCallable, Category = "GLobalLibrary")
+	static FORCEINLINE UAnimSequence* GetAnimSequence(int32 Slot)
+	{
+		UGlobal* Global = GetGlobal();
+		if (!Global) { return NULL; }
+		return Global->AnimSequences.Contains(Slot) ? Global->AnimSequences[Slot] : NULL;
+	}
+
 };

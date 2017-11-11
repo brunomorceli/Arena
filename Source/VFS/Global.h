@@ -6,14 +6,15 @@
 #include "UObject/NoExportTypes.h"
 #include "Runtime/Engine/Classes/Particles/ParticleSystem.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
+#include "Runtime/Engine/Classes/Animation/AnimSequence.h"
 
+#include "Enums.h"
 #include "AbilityBase.h"
 #include "Ability1.h"
 #include "Ability2.h"
 #include "Ability3.h"
 #include "Ability4.h"
 #include "Ability5.h"
-
 #include "AbilityProjectile.h"
 #include "Global.generated.h"
 
@@ -114,5 +115,11 @@ public:
 	// ==================================================================================
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Global")
 	TMap<int32, USkeletalMesh*> Weapons;
+
+	// ==================================================================================
+	// ANIMATION SEQUENCES
+	// ==================================================================================
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Global")
+	TMap<int32, UAnimSequence*> AnimSequences;
 
 };

@@ -30,6 +30,9 @@ AAbility5::AAbility5()
 void AAbility5::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	CastAnimation.AnimSequence = UGlobalLibrary::GetAnimSequence(3);
+	CastAnimation.bLoop = true;
 }
 
 void AAbility5::SetupModifiers()

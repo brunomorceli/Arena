@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Core.h"
+
 #include "AbilityBase.h"
 #include "Ability5.generated.h"
 

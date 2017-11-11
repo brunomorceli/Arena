@@ -5,17 +5,8 @@
 #include "Core.h"
 #include "GameFramework/SaveGame.h"
 
+#include "Enums.h"
 #include "ArenaSaveGame.generated.h"
-
-UENUM(BlueprintType)
-enum ECharacterClass
-{
-	ECCL_None UMETA(DisplayName = "None"),
-	ECCL_Assassin UMETA(DisplayName = "Assassin"),
-	ECCL_Wizard UMETA(DisplayName = "Wizard"),
-	ECCL_Cleric UMETA(DisplayName = "Cleric"),
-	ECCL_Warrior UMETA(DisplayName = "Warrior"),
-};
 
 /**
  * 

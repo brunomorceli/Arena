@@ -10,102 +10,14 @@
 #include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
 
+#include "Enums.h"
 #include "CharacterBase.h"
 #include "AbilityProjectile.h"
 #include "AbilityBase.generated.h"
 
-UENUM(BlueprintType)
-enum EAbilityValidation
-{
-	ABV_Allowed UMETA(DisplayName = "Allowed"),
-	ABV_InvalidAbility UMETA(DisplayName = "InvalidAbility"),
-	ABV_NotReady UMETA(DisplayName = "NotReady"),
-	ABV_Health UMETA(DisplayName = "Health"),
-	ABV_Mana UMETA(DisplayName = "Mana"),
-	ABV_Energy UMETA(DisplayName = "Energy"),
-	ABV_MissTarget UMETA(DisplayName = "MissTarget"),
-	ABV_InvalidTarget UMETA(DisplayName = "InvalidTarget"),
-	ABV_TooFar UMETA(DisplayName = "TooFar"),
-	ABV_TooClose UMETA(DisplayName = "ToClose"),
-	ABV_Moving UMETA(DisplayName = "Moving"),
-	ABV_OutOfSight UMETA(DisplayName = "OutOfSight"),
-	ABV_Incapacitated UMETA(DisplayName = "Incapacitated"),
-	ABV_InProgress UMETA(DisplayName = "InProgress"),
-	ABV_Unknown UMETA(DisplayName = "Unknown"),
-};
-
-UENUM(BlueprintType)
-enum EAbilitySchool
-{
-	ABS_Physical UMETA(DisplayName = "Physical"),
-	ABS_Magic UMETA(DisplayName = "Magic"),
-};
-
-
-UENUM(BlueprintType)
-enum EAbilityStartType
-{
-	ABST_Instant UMETA(DisplayName = "Instant"),
-	ABST_Castable UMETA(DisplayName = "Castable"),
-	ABST_Channeling UMETA(DisplayName = "Channeling"),
-};
-
-UENUM(BlueprintType)
-enum EAbilityTargetType
-{
-	ABTT_Self UMETA(DisplayName = "Self"),
-	ABTT_Enemy UMETA(DisplayName = "Enemy"),
-	ABTT_Ally UMETA(DisplayName = "Ally"),
-};
-
-UENUM(BlueprintType)
-enum EAbilityArea
-{
-	ABA_Directional UMETA(DisplayName = "Directional"),
-	ABA_AreaOnEffect UMETA(DisplayName = "AreaOnEffect"),
-	ABA_Target UMETA(DisplayName = "Target"),
-};
-
-UENUM(BlueprintType)
-enum EAbilityCommit
-{
-	ABC_Instant UMETA(DisplayName = "Instant"),
-	ABC_Projectile UMETA(DisplayName = "Projectile"),
-};
-
-UENUM(BlueprintType)
-enum EAbilityProjectileType
-{
-	ABP_Chase UMETA(DisplayName = "Chase"),
-	ABP_Lauch UMETA(DisplayName = "Lauch"),
-};
-
 // ==================================================================================================================================================
 // MODIFIER
 // ==================================================================================================================================================
-
-UENUM(BlueprintType)
-enum EModifierStatusType
-{
-	MST_Absolute UMETA(DisplayName = "Absolute"),
-	MST_Percent UMETA(DisplayName = "Percent"),
-};
-
-UENUM(BlueprintType)
-enum EModifierSchool
-{
-	MS_Physical UMETA(DisplayName = "Physical"),
-	MS_Magic UMETA(DisplayName = "Magic"),
-	MS_Nature UMETA(DisplayName = "Nature"),
-};
-
-UENUM(BlueprintType)
-enum EModifierConstrain
-{
-	MDCT_None UMETA(DisplayName = "None"),
-	MDCT_Unique UMETA(DisplayName = "Unique"),
-	MDCT_UniqueByPlayer UMETA(DisplayName = "UniqueByPlayer"),
-};
 
 USTRUCT(BlueprintType)
 struct FModifierBase
@@ -134,13 +46,13 @@ public:
 	UParticleSystem* EndParticle = NULL;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	bool bAllowSelf = false;
+	int32 bAllowSelf = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	bool bAllowTeam = false;
+	int32 bAllowTeam = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	bool bAllowEnemy = true;
+	int32 bAllowEnemy = true;
 
 	// School modifier.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
@@ -150,13 +62,13 @@ public:
 	TEnumAsByte<EModifierConstrain> Constrain = EModifierConstrain::MDCT_None;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	bool bIsPercent = false;
+	int32 bIsPercent = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
-	bool bIsDispellable = true;
+	int32 bIsDispellable = true;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
-	bool bIsStackable = true;
+	int32 bIsStackable = true;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
 	int32 MaxStacks = 2;
@@ -210,6 +122,8 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
 	float TimeRemaining = 60.0f;
+
+	ECharacterState State = CS_Idle;
 };
 
 USTRUCT(BlueprintType)
@@ -386,6 +300,12 @@ public:
 	// Damage Modifiers Array.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifiers")
 	TArray<FDamageModifier> DamageModifiers;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
+	FAnimation CastAnimation;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
+	FAnimation CommitAnimation;
 
 	virtual void BeginPlay() override;
 

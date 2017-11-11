@@ -11,18 +11,9 @@
 #include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
 #include "Runtime/Engine/Classes/Components/SphereComponent.h"
 
+#include "Enums.h"
 #include "CharacterBase.h"
 #include "AbilityProjectile.generated.h"
-
-UENUM(BlueprintType)
-enum EProjectileType
-{
-	PTP_Frost UMETA(DisplayName = "Frost"),
-	PTP_Fire UMETA(DisplayName = "Fire"),
-	PTP_Water UMETA(DisplayName = "Water"),
-	PTP_Shadow UMETA(DisplayName = "Shadow"),
-	PTP_Earth UMETA(DisplayName = "Earth"),
-};
 
 UCLASS()
 class VFS_API AAbilityProjectile : public AActor
@@ -65,7 +56,4 @@ public:
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Particle")
-	TEnumAsByte<EProjectileType> Type;
 };

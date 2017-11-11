@@ -41,6 +41,26 @@ void AAbility1::SetupModifiers()
 	Damage.Health = 500.0f;
 	DamageModifiers.Add(Damage);
 
+	/*FBuffModifier Stun;
+	Stun.AbilityOwner = this;
+	Stun.TimeRemaining = 6.0f;
+	Stun.State = CS_Stun;
+	Stun.bAllowEnemy = true;
+	Stun.bAllowSelf = false;
+	Stun.bAllowTeam = false;
+	BuffModifiers.Add(Stun);*/
+
+	FBuffModifier Root;
+	Root.AbilityOwner = this;
+	Root.TimeRemaining = 7.0f;
+	Root.State = CS_Stuck;
+	Root.bAllowEnemy = true;
+	Root.bAllowSelf = false;
+	Root.bAllowTeam = false;
+	BuffModifiers.Add(Root);
+
+	CommitAnimation.AnimSequence = UGlobalLibrary::GetAnimSequence(1);
+
 	Projectile = UGlobalLibrary::GetProjectile(1);
 	ProjectileHitParticle = UGlobalLibrary::GetParticle(6);
 }

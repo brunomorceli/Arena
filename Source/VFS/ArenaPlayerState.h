@@ -5,16 +5,11 @@
 #include "Core.h"
 #include "GameFramework/PlayerState.h"
 #include "Net/UnrealNetwork.h"
+
+#include "Enums.h"
 #include "ArenaGameInstance.h"
 #include "ArenaPlayerState.generated.h"
 
-UENUM(BlueprintType)
-enum EPlayerTeam
-{
-	EPT_Red UMETA(DisplayName = "Red"),
-	EPT_Blue UMETA(DisplayName = "Blue"),
-	EPT_Neutral UMETA(DisplayName = "Neutral"),
-};
 
 /**
  * 
