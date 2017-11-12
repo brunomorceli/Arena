@@ -285,7 +285,7 @@ void  AArenaCharacter::StopAbility(int32 Slot)
 {
 	if (!Abilities.Contains(Slot)) { return; }
 	StopCast();
-	ChangeState(CS_Idle);
+	State = CS_Idle;
 }
 
 void AArenaCharacter::StartCast(int32 Slot)
@@ -297,7 +297,7 @@ void AArenaCharacter::StartCast(int32 Slot)
 	CastAbility = Abilities[Slot];
 	CastTimeRemaining = CastAbility->CastTime;
 	MulticastSetHandsParticles(CastAbility->CastParticle, CastAbility->CastParticle);
-	ServerChangeAnimState(CAS_Cast, CastAbility->CastAnimation);
+	ServerSetAnimState(CAS_Cast, CastAbility->CastAnimation);
 }
 
 void AArenaCharacter::StopCast()
@@ -305,7 +305,7 @@ void AArenaCharacter::StopCast()
 	CastTimeRemaining = 0.0f;
 	CastAbility = NULL;
 	MulticastSetHandsParticles(NULL, NULL);
-	ServerChangeAnimState(CAS_None, FAnimation());
+	ServerSetAnimState(CAS_None, FAnimation());
 }
 
 void AArenaCharacter::CommitAbility(int32 Slot)
@@ -322,7 +322,7 @@ void AArenaCharacter::CommitAbility(int32 Slot)
 	if (!HasAuthority()) { return; }
 
 	CommitAbilityModifiers(Ability);
-	ServerChangeAnimState(CAS_Commit, Ability->CommitAnimation);
+	ServerSetAnimState(CAS_Commit, Ability->CommitAnimation);
 }
 
 void AArenaCharacter::CommitAbilityModifiers(AAbilityBase* Ability)
@@ -438,7 +438,7 @@ EAbilityValidation AArenaCharacter::ValidateStartAbility(int32 Slot)
 		EAbilityValidation Validation = ValidateTarget(Ability, this, Target);
 		if (Validation != ABV_Allowed) {
 			if (!Ability->bAllowSelf) { return Validation; }
-			Target = this;
+			ServerSetTarget(this);
 		}
 	}
 

@@ -35,5 +35,5 @@ void AAbility3::SetupModifiers()
 void AAbility3::OnStart(ACharacterBase* Target)
 {
 	Super::OnStart(Target);
-	CharacterOwner->ServerJumpTo();
+	CharacterOwner->ServerJumpTo(Target->GetActorLocation());
 }

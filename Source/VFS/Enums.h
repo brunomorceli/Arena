@@ -5,15 +5,6 @@
 #include "CoreMinimal.h"
 
 UENUM(BlueprintType)
-enum EHUDMessage
-{
-	Info UMETA(DisplayName = "Info"),
-	Success UMETA(DisplayName = "Success"),
-	Warning UMETA(DisplayName = "Warning"),
-	Danger UMETA(DisplayName = "Danger"),
-};
-
-UENUM(BlueprintType)
 enum ECharacterState
 {
 	CS_Idle UMETA(DisplayName = "Idle"),

@@ -293,7 +293,7 @@ public:
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	FStatus PhyicalAbsorbing;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	ACharacterBase* Target;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
@@ -365,9 +365,6 @@ public:
 	ACharacter* GetNearestCharacter();
 
 	UFUNCTION(BlueprintCallable, Category = "Utils")
-	void GetTarget();
-
-	UFUNCTION(BlueprintCallable, Category = "Utils")
 	FText GetStatusText(FStatus Status) { return Status.GetStatusText(); }
 
 	UFUNCTION(BlueprintCallable, Category = "Utils")
@@ -379,118 +376,117 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Utils")
 	FText GetPercentText(FStatus Status) { return Status.GetPercentText(); }
 
-	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = "Utils")
-	void ServerGetTarget();
-	void ServerGetTarget_Implementation() { ClientGetTarget(); }
-	bool ServerGetTarget_Validate() { return true; }
-
-	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = "Utils")
-	void ServerSetSelfTarget();
-	void ServerSetSelfTarget_Implementation() { ClientSetSelfTarget(); }
-	bool ServerSetSelfTarget_Validate() { return true; }
-
-	UFUNCTION(BlueprintCallable, Client, Reliable, Category = "Utils")
-	void ClientSetSelfTarget();
-	void ClientSetSelfTarget_Implementation() { Target = this; ServerSetTarget(this); }
-
-	UFUNCTION(BlueprintCallable, Client, Reliable, Category = "Utils")
-	void ClientClearTarget();
-	void ClientClearTarget_Implementation() { Target = NULL; ServerSetTarget(NULL); }
+	// ===================================================================================================================
+	// UTILITY METHODS
+	// ===================================================================================================================
 	
-	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = "Utils")
-	void ServerSetTarget(ACharacterBase* Character);
-	void ServerSetTarget_Implementation(ACharacterBase* Character);
-	bool ServerSetTarget_Validate(ACharacterBase* Character) { return true; }
+	UFUNCTION(BlueprintCallable, Category = "Utils")
+	float GetUMGTargetScale();
 
-	UFUNCTION(BlueprintCallable, Client, Reliable, Category = "Utils")
-	void ClientGetTarget();
-	void ClientGetTarget_Implementation();
-
-	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = "Utils")
-	void ServerEscape();
-	void ServerEscape_Implementation() { ClientClearTarget(); }
-	bool ServerEscape_Validate() { return true; }
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerRespawn();
-	void ServerRespawn_Implementation();
-	bool ServerRespawn_Validate() { return true; }
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerAddScore();
-	void ServerAddScore_Implementation();
-	bool ServerAddScore_Validate() { return true; }
-
-	void ShowMessage(const FString &Notification, EHUDMessage MessageType);
-
-	UFUNCTION(BlueprintCallable, Client, Reliable, Category = "Notification")
-	void ClientNotification(const FString& Notification);
-	void ClientNotification_Implementation(const FString& Notification);
-
-	UFUNCTION(BlueprintCallable, Category = "Camera")
+	UFUNCTION(BlueprintCallable, Category = "Utils")
 	void SetActorRotToFollowCameraAngle();
 
+	UFUNCTION(BlueprintCallable, Category = "Utils")
 	bool ConicalHitTest(TArray<ACharacterBase*> &Characters, float Radius, float Range);
 
+	UFUNCTION(BlueprintCallable, Category = "Utils")
 	bool AreaHitTest(TArray<ACharacterBase*> &Characters, float Radius);
 
+	UFUNCTION(BlueprintCallable, Category = "Utils")
 	bool DirectionalHitTest(TArray<ACharacterBase*> &Characters, float Radius, float Range);
 
-	float GetAngle(ACharacterBase* Observer, ACharacterBase* Target);
+	UFUNCTION(BlueprintCallable, Category = "Utils")
+	float GetAngle(ACharacterBase* CharacterObserver, ACharacterBase* CharacterTarget);
 
 	UFUNCTION(BlueprintCallable, Category = "Utils")
 	bool FindFloor(FVector& Result, float Depth);
 
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastSetChestParticle(UParticleSystem* Particlebool, bool Clear);
-	void MulticastSetChestParticle_Implementation(UParticleSystem* Particle, bool Clear);
+	// ===================================================================================================================
+	// NETWORK METHODS
+	// ===================================================================================================================
 
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastSetHandsParticles(UParticleSystem* LeftHand, UParticleSystem* RightHand);
-	void MulticastSetHandsParticles_Implementation(UParticleSystem* LeftHand, UParticleSystem* RightHand);
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = "Network")
+	void ServerSearchTarget();
+	void ServerSearchTarget_Implementation() { ClientSearchTarget(); }
+	bool ServerSearchTarget_Validate() { return true; }
 
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastSetAuraParticle(UParticleSystem* Particle);
-	void MulticastSetAuraParticle_Implementation(UParticleSystem* Particle);
+	UFUNCTION(BlueprintCallable, Client, Reliable, Category = "Network")
+	void ClientSearchTarget();
+	void ClientSearchTarget_Implementation();
 
-	UFUNCTION(Server, Reliable, WithValidation)
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = "Network")
+	void ServerSetTarget(ACharacterBase* Character);
+	void ServerSetTarget_Implementation(ACharacterBase* Character);
+	bool ServerSetTarget_Validate(ACharacterBase* Character) { return true; }
+
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = "Network")
+	void MulticastSetTarget(ACharacterBase* Character);
+	void MulticastSetTarget_Implementation(ACharacterBase* Character);
+	bool MulticastSetTarget_Validate(ACharacterBase* Character) { return true; }
+
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = "Network")
+	void ServerSetSelfTarget();
+	void ServerSetSelfTarget_Implementation() { ServerSetTarget(this); }
+	bool ServerSetSelfTarget_Validate() { return true; }
+
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = "Network")
+	void ServerEscape();
+	void ServerEscape_Implementation() { ServerSetTarget(NULL); }
+	bool ServerEscape_Validate() { return true; }
+
+	UFUNCTION(Server, Reliable, WithValidation, Category = "Network")
+	void ServerRespawn();
+	void ServerRespawn_Implementation();
+	bool ServerRespawn_Validate() { return true; }
+
+	UFUNCTION(BlueprintCallable, Client, Reliable, Category = "Network")
+	void ClientNotification(const FString& Notification);
+	void ClientNotification_Implementation(const FString& Notification) { NotificationDelegate.Broadcast(Notification); }
+
+	UFUNCTION(Server, Reliable, WithValidation, Category = "Network")
 	void ServerSetRotation(FRotator Rotation);
 	void ServerSetRotation_Implementation(FRotator Rotation) { SetActorRotation(Rotation); }
 	bool ServerSetRotation_Validate(FRotator Rotation) { return true; }
 
-	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
-	void ServerSetAsSpectator(bool NewState);
-	void ServerSetAsSpectator_Implementation(bool NewState);
-	bool ServerSetAsSpectator_Validate(bool NewState) { return true; }
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = "Network")
+	void ServerTeleportTo(FVector Location, FRotator Rotator);
+	void ServerTeleportTo_Implementation(FVector Location, FRotator Rotator);
+	bool ServerTeleportTo_Validate(FVector Location, FRotator Rotator) { return true; }
 
-	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
-	void ServerTeleportToTarget();
-	void ServerTeleportToTarget_Implementation();
-	bool ServerTeleportToTarget_Validate() { return true; }
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = "Network")
+	void ServerJumpTo(FVector Location);
+	void ServerJumpTo_Implementation(FVector Location);
+	bool ServerJumpTo_Validate(FVector Location) { return true; }
 
-	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
-	void ServerJumpTo();
-	void ServerJumpTo_Implementation();
-	bool ServerJumpTo_Validate() { return true; }
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = "Network")
+	void ServerSetTeam(EPlayerTeam NewTeam);
+	void ServerSetTeam_Implementation(EPlayerTeam NewTeam);
+	bool ServerSetTeam_Validate(EPlayerTeam NewTeam) { return true; }
 
-	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
-	void ServerChangeTeam(EPlayerTeam NewTeam);
-	void ServerChangeTeam_Implementation(EPlayerTeam NewTeam);
-	bool ServerChangeTeam_Validate(EPlayerTeam NewTeam) { return true; }
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = "Network")
+	void ServerSetAnimState(ECharacterAnimationState NewAnimState, FAnimation Animation);
+	void ServerSetAnimState_Implementation(ECharacterAnimationState NewAnimState, FAnimation Animation) { MulticastSetAnimState(NewAnimState, Animation); }
+	bool ServerSetAnimState_Validate(ECharacterAnimationState NewAnimState, FAnimation Animation) { return true; }
 
-	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
-	void ServerChangeAnimState(ECharacterAnimationState NewAnimState, FAnimation Animation);
-	void ServerChangeAnimState_Implementation(ECharacterAnimationState NewAnimState, FAnimation Animation) { MulticastChangeAnimState(NewAnimState, Animation); }
-	bool ServerChangeAnimState_Validate(ECharacterAnimationState NewAnimState, FAnimation Animation) { return true; }
+	UFUNCTION(NetMulticast, Reliable, Category = "Network")
+	void MulticastSetAnimState(ECharacterAnimationState NewAnimState, FAnimation Animation);
+	void MulticastSetAnimState_Implementation(ECharacterAnimationState NewAnimState, FAnimation Animation);
 
+	UFUNCTION(NetMulticast, Reliable, Category = "Network")
+	void MulticastSetPawn(TSubclassOf<ACharacterBase> Character);
+	void MulticastSetPawn_Implementation(TSubclassOf<ACharacterBase> Character);
 
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastChangeAnimState(ECharacterAnimationState NewAnimState, FAnimation Animation);
-	void MulticastChangeAnimState_Implementation(ECharacterAnimationState NewAnimState, FAnimation Animation);
+	UFUNCTION(NetMulticast, Reliable, Category = "Network")
+	void MulticastSetChestParticle(UParticleSystem* Particlebool, bool Clear);
+	void MulticastSetChestParticle_Implementation(UParticleSystem* Particle, bool Clear);
 
-	void ChangePawn(TSubclassOf<ACharacterBase> Character);
+	UFUNCTION(NetMulticast, Reliable, Category = "Network")
+	void MulticastSetHandsParticles(UParticleSystem* LeftHand, UParticleSystem* RightHand);
+	void MulticastSetHandsParticles_Implementation(UParticleSystem* LeftHand, UParticleSystem* RightHand);
 
-	void ChangeState(ECharacterState NewState);
+	UFUNCTION(NetMulticast, Reliable, Category = "Network")
+	void MulticastSetAuraParticle(UParticleSystem* Particle);
+	void MulticastSetAuraParticle_Implementation(UParticleSystem* Particle);
 
 	void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
 };

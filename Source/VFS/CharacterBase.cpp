@@ -156,7 +156,7 @@ void ACharacterBase::Tick(float DeltaTime)
 		float TargetDist = FVector::Distance(Target->GetActorLocation(), GetActorLocation());
 		if (Target->State == CS_Death || State == CS_Death || TargetDist > TargetMaxDistance)
 		{
-			Target = NULL;
+			ServerSetTarget(NULL);
 		}
 	}
 
@@ -224,7 +224,7 @@ void ACharacterBase::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 	// VR headset functionality
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &ACharacterBase::OnResetVR);
 
-	PlayerInputComponent->BindAction("GetTarget", IE_Pressed, this, &ACharacterBase::ServerGetTarget);
+	PlayerInputComponent->BindAction("GetTarget", IE_Pressed, this, &ACharacterBase::ServerSearchTarget);
 
 	PlayerInputComponent->BindAction("SelfTarget", IE_Pressed, this, &ACharacterBase::ServerSetSelfTarget);
 
@@ -371,92 +371,6 @@ ACharacter* ACharacterBase::GetNearestCharacter()
 	return NULL;
 }
 
-void ACharacterBase::GetTarget()
-{
-	ACharacter* Character = GetNearestCharacter();
-	if (!Character) { return; }
-
-	ACharacterBase* CharacterBase = Cast<ACharacterBase>(Character);
-	if (!CharacterBase) { return; }
-
-	Target = CharacterBase;
-}
-
-void ACharacterBase::ShowMessage(const FString &Notification, EHUDMessage MessageType)
-{
-	FColor Color;
-
-	switch (MessageType)
-	{
-	case Info:
-		Color = FColor::Blue;
-		break;
-	case Success:
-		Color = FColor::Green;
-		break;
-	case Warning:
-		Color = FColor::Orange;
-		break;
-	case Danger:
-		Color = FColor::Red;
-		break;
-	default:
-		break;
-	}
-
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, Color, Notification);
-}
-
-void ACharacterBase::ClientNotification_Implementation(const FString& Notification)
-{
-	NotificationDelegate.Broadcast(Notification);
-}
-
-void ACharacterBase::ClientGetTarget_Implementation()
-{
-	GetTarget();
-	if (Target)
-	{
-		ServerSetTarget(Target);
-	}
-}
-
-void ACharacterBase::ServerRespawn_Implementation()
-{
-	UWorld* World = GetWorld();
-	if (!World) { return; }
-
-	//AGameModeBase* GameMode = World->GetAuthGameMode();
-	//if (!GameMode) { return; }
-
-	Health.Reset();
-	Mana.Reset();
-	Energy.Reset();
-	Speed.Reset();
-	Critical = 5.0f;
-	Power.Reset();
-	Defense.Reset();
-	Target = nullptr;
-	State = CS_Idle;
-
-	//GameMode->RestartPlayer(Controller);
-
-	// Teleport to a Random player start.
-	TArray<AActor*> FoundActors;
-	UGameplayStatics::GetAllActorsOfClass(World, APlayerStart::StaticClass(), FoundActors);
-	int32 Index = FMath::RandRange(0, FoundActors.Num() - 1);
-
-	APlayerStart* PlayerStart = Cast<APlayerStart>(FoundActors[Index]);
-	if (!PlayerStart) { return; }
-
-	TeleportTo(PlayerStart->GetActorLocation(), PlayerStart->GetActorRotation());
-}
-
-void ACharacterBase::ServerSetTarget_Implementation(ACharacterBase* Character)
-{
-	Target = Character;
-}
-
 void ACharacterBase::SetDeadState()
 {
 	UWorld* World = GetWorld();
@@ -469,6 +383,28 @@ void ACharacterBase::SetDeadState()
 
 	FTimerHandle TimerHandler;
 	World->GetTimerManager().SetTimer(TimerHandler, this, &ACharacterBase::ServerRespawn, DeathDelay, false);
+}
+
+// =====================================================================================================================================
+// UTILITY METHODS
+// =====================================================================================================================================
+
+float ACharacterBase::GetUMGTargetScale()
+{
+	if (!Target) { return 1.0f; }
+
+	float Distance = FVector::Distance(GetActorLocation(), Target->GetActorLocation());
+	
+	return (TargetMaxDistance - Distance) / TargetMaxDistance;
+}
+
+void ACharacterBase::SetActorRotToFollowCameraAngle()
+{
+	FRotator rot = FollowCamera->GetComponentRotation();
+	FRotator NewRot(0.f, rot.Yaw, 0.f);
+
+	SetActorRotation(NewRot);
+	ServerSetRotation(NewRot);
 }
 
 bool ACharacterBase::ConicalHitTest(TArray<ACharacterBase*> &Characters, float Radius, float Range)
@@ -534,14 +470,14 @@ bool ACharacterBase::DirectionalHitTest(TArray<ACharacterBase*> &Characters, flo
 	return Characters.Num() > 0;
 }
 
-float ACharacterBase::GetAngle(ACharacterBase* Observer, ACharacterBase* Target)
+float ACharacterBase::GetAngle(ACharacterBase* CharacterObserver, ACharacterBase* CharacterTarget)
 {
-	if (!Target) { return 0.0f; }
+	if (!CharacterTarget) { return 0.0f; }
 
-	FVector CurrentLocation = Target->GetActorLocation() - Observer->GetActorLocation();
+	FVector CurrentLocation = CharacterTarget->GetActorLocation() - CharacterObserver->GetActorLocation();
 	CurrentLocation.Normalize();
 
-	float Product = FVector::DotProduct(CurrentLocation, Observer->GetActorForwardVector());
+	float Product = FVector::DotProduct(CurrentLocation, CharacterObserver->GetActorForwardVector());
 
 	return FMath::Acos(Product) * 100;
 }
@@ -568,84 +504,87 @@ bool ACharacterBase::FindFloor(FVector& Result, float Depth = 5000.0f)
 	return true;
 }
 
-void ACharacterBase::MulticastSetChestParticle_Implementation(UParticleSystem* Particle, bool Clear)
+// =====================================================================================================================================
+// NETWORK METHODS
+// =====================================================================================================================================
+
+void ACharacterBase::ClientSearchTarget_Implementation()
 {
-	if (Clear) { ChestParticle->SetTemplate(NULL); }
-	if (Particle) { ChestParticle->SetTemplate(Particle); }
+	ACharacter* Character = GetNearestCharacter();
+	if (!Character) { return; }
+
+	ACharacterBase* CharacterBase = Cast<ACharacterBase>(Character);
+	if (!CharacterBase) { return; }
+
+	ServerSetTarget(CharacterBase);
 }
 
-void ACharacterBase::MulticastSetHandsParticles_Implementation(UParticleSystem* LeftHand, UParticleSystem* RightHand)
+void ACharacterBase::ServerSetTarget_Implementation(ACharacterBase* Character)
 {
-	LeftHandParticle->SetTemplate(NULL);
-	RightHandParticle->SetTemplate(NULL);
-
-	if (LeftHand) { LeftHandParticle->SetTemplate(LeftHand); }
-	if (RightHand) { RightHandParticle->SetTemplate(RightHand); }
+	Target = Character;
+	MulticastSetTarget(Character);
 }
 
-void ACharacterBase::MulticastSetAuraParticle_Implementation(UParticleSystem* Particle)
+void ACharacterBase::MulticastSetTarget_Implementation(ACharacterBase* Character)
 {
-	AuraParticle->SetTemplate(NULL);
-	if (Particle) { AuraParticle->SetTemplate(Particle); }
+	Target = Character;
 }
 
-void ACharacterBase::ServerAddScore_Implementation()
+void ACharacterBase::ServerRespawn_Implementation()
 {
-	if (!PlayerState) { return; }
-	PlayerState->Score++;
+	UWorld* World = GetWorld();
+	if (!World) { return; }
+
+	//AGameModeBase* GameMode = World->GetAuthGameMode();
+	//if (!GameMode) { return; }
+
+	Health.Reset();
+	Mana.Reset();
+	Energy.Reset();
+	Speed.Reset();
+	Critical = 5.0f;
+	Power.Reset();
+	Defense.Reset();
+	Target = nullptr;
+	State = CS_Idle;
+
+	//GameMode->RestartPlayer(Controller);
+
+	// Teleport to a Random player start.
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsOfClass(World, APlayerStart::StaticClass(), FoundActors);
+	int32 Index = FMath::RandRange(0, FoundActors.Num() - 1);
+
+	APlayerStart* PlayerStart = Cast<APlayerStart>(FoundActors[Index]);
+	if (!PlayerStart) { return; }
+
+	TeleportTo(PlayerStart->GetActorLocation(), PlayerStart->GetActorRotation());
 }
 
-void ACharacterBase::SetActorRotToFollowCameraAngle()
+void ACharacterBase::ServerTeleportTo_Implementation(FVector Location, FRotator Rotator = FRotator::ZeroRotator)
 {
-	/*FVector ForwardVector = FollowCamera->GetForwardVector();
-	FRotator ForwardRotation = ForwardVector.Rotation();
-	ForwardRotation.Pitch = 0.0f;*/
-
-	FRotator rot = FollowCamera->GetComponentRotation();
-	FRotator NewRot(0.f, rot.Yaw, 0.f);
-
-	SetActorRotation(NewRot);
-	ServerSetRotation(NewRot);
-}
-
-void ACharacterBase::ServerSetAsSpectator_Implementation(bool NewState)
-{
-	//if (!HasAuthority()) { return; }
-
-	PlayerState->bIsSpectator = NewState;
-}
-
-void ACharacterBase::ServerTeleportToTarget_Implementation()
-{
-	if (!Target) { return; }
-
-	FVector Location = Target->GetActorLocation();
-	FRotator Rotator = Target->GetActorRotation();
-
 	GetCharacterMovement()->Velocity = FVector::ZeroVector;
 	TeleportTo(Location, Rotator);
 }
 
-
-void ACharacterBase::ServerJumpTo_Implementation()
+void ACharacterBase::ServerJumpTo_Implementation(FVector Location)
 {
 	UWorld* World = GetWorld();
-	if (!World || !Target) { return; }
+	if (!World) { return; }
 
 	FVector Velocity;
 	float LauchSpeed = 1500.0f;
 	TArray<AActor*> ActorsToIgnore;
 
 	ActorsToIgnore.Add(this);
-	ActorsToIgnore.Add(Target);
 
-	FVector Start = GetActorLocation();
-	FVector End = Target->GetActorLocation();
+	if (Target) { ActorsToIgnore.Add(Target); }
+
 	bool Result = UGameplayStatics::SuggestProjectileVelocity(
 		this,
 		Velocity,
-		Start,
-		End,
+		GetActorLocation(),
+		Location,
 		LauchSpeed,
 		false, //bHighArc
 		0.0f, // radius
@@ -659,8 +598,16 @@ void ACharacterBase::ServerJumpTo_Implementation()
 	if (Result) { LaunchCharacter(Velocity, true, true); }
 }
 
-void ACharacterBase::MulticastChangeAnimState_Implementation(ECharacterAnimationState NewAnimState, FAnimation Animation)
-{	
+void ACharacterBase::ServerSetTeam_Implementation(EPlayerTeam NewTeam)
+{
+	AArenaPlayerState* MyPlayerState = Cast<AArenaPlayerState>(PlayerState);
+	if (!MyPlayerState) { return; }
+
+	MyPlayerState->ServerChangeTeam(NewTeam);
+}
+
+void ACharacterBase::MulticastSetAnimState_Implementation(ECharacterAnimationState NewAnimState, FAnimation Animation)
+{
 	AnimationState = NewAnimState;
 	ChangeAnimStateDelegate.Broadcast(AnimationState, Animation);
 
@@ -676,10 +623,10 @@ void ACharacterBase::MulticastChangeAnimState_Implementation(ECharacterAnimation
 
 		FTimerHandle LeftTimer;
 		GetWorldTimerManager().SetTimer(
-			LeftTimer, 
-			this->LeftHandWeaponTrail, 
-			&UParticleSystemComponent::EndTrails, 
-			Animation.TrailDuration, 
+			LeftTimer,
+			this->LeftHandWeaponTrail,
+			&UParticleSystemComponent::EndTrails,
+			Animation.TrailDuration,
 			false
 		);
 	}
@@ -705,13 +652,7 @@ void ACharacterBase::MulticastChangeAnimState_Implementation(ECharacterAnimation
 	}
 }
 
-void ACharacterBase::ChangeState(ECharacterState NewState)
-{
-	if (!HasAuthority()) { return; }
-	State = NewState;
-}
-
-void ACharacterBase::ChangePawn(TSubclassOf<ACharacterBase> Character)
+void ACharacterBase::MulticastSetPawn_Implementation(TSubclassOf<ACharacterBase> Character)
 {
 	if (!Character) { return; }
 
@@ -734,18 +675,31 @@ void ACharacterBase::ChangePawn(TSubclassOf<ACharacterBase> Character)
 	PlayerController->Possess(NewPawn);
 }
 
-void ACharacterBase::ServerChangeTeam_Implementation(EPlayerTeam NewTeam)
+void ACharacterBase::MulticastSetChestParticle_Implementation(UParticleSystem* Particle, bool Clear)
 {
-	AArenaPlayerState* MyPlayerState = Cast<AArenaPlayerState>(PlayerState);
-	if (!MyPlayerState) { return; }
+	if (Clear) { ChestParticle->SetTemplate(NULL); }
+	if (Particle) { ChestParticle->SetTemplate(Particle); }
+}
 
-	MyPlayerState->ServerChangeTeam(NewTeam);
+void ACharacterBase::MulticastSetHandsParticles_Implementation(UParticleSystem* LeftHand, UParticleSystem* RightHand)
+{
+	LeftHandParticle->SetTemplate(NULL);
+	RightHandParticle->SetTemplate(NULL);
+
+	if (LeftHand) { LeftHandParticle->SetTemplate(LeftHand); }
+	if (RightHand) { RightHandParticle->SetTemplate(RightHand); }
+}
+
+void ACharacterBase::MulticastSetAuraParticle_Implementation(UParticleSystem* Particle)
+{
+	AuraParticle->SetTemplate(NULL);
+	if (Particle) { AuraParticle->SetTemplate(Particle); }
 }
 
 void ACharacterBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
+	DOREPLIFETIME(ACharacterBase, Target);
 	DOREPLIFETIME(ACharacterBase, State);
 	DOREPLIFETIME(ACharacterBase, AnimationState);
 	DOREPLIFETIME(ACharacterBase, Name);
@@ -758,4 +712,5 @@ void ACharacterBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Ou
 	DOREPLIFETIME(ACharacterBase, Critical);
 	DOREPLIFETIME(ACharacterBase, Power);
 	DOREPLIFETIME(ACharacterBase, Defense);
+
 }
