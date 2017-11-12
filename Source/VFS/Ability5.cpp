@@ -33,6 +33,10 @@ void AAbility5::BeginPlay()
 	
 	CastAnimation.AnimSequence = UGlobalLibrary::GetAnimSequence(3);
 	CastAnimation.bLoop = true;
+
+	CastAnimation.RightHandTrail = UGlobalLibrary::GetTrail(1);
+	CastAnimation.TrailDelay = 0.3f;
+	CastAnimation.TrailDuration = 1.0f;
 }
 
 void AAbility5::SetupModifiers()

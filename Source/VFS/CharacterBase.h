@@ -14,6 +14,7 @@
 #include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
 #include "Runtime/Engine/Classes/GameFramework/PlayerStart.h"
 #include "Runtime/Engine/Classes/Animation/AnimSequence.h"
+#include "Runtime/Engine/Public/TimerManager.h"
 
 #include "Enums.h"
 #include "ArenaPlayerState.h"
@@ -162,6 +163,21 @@ struct FAnimation
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	UAnimSequence* AnimSequence = NULL;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
+	UParticleSystem* LeftHandTrail = NULL;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
+	UParticleSystem* RightHandTrail = NULL;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
+	float TrailWidth = 1.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
+	float TrailDuration = 0.5f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
+	float TrailDelay = 0.0f;
 };
 
 // ============================================================================================================================
@@ -210,10 +226,19 @@ public:
 	class UParticleSystemComponent* AuraParticle;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
+	class UParticleSystemComponent* CharacterTrail;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	class USkeletalMeshComponent* LeftHandWeapon;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	class UParticleSystemComponent* LeftHandWeaponTrail;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	class USkeletalMeshComponent* RightHandWeapon;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	class UParticleSystemComponent* RightHandWeaponTrail;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	class USkeletalMeshComponent* BackWeapon;

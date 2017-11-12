@@ -52,6 +52,14 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "GLobalLibrary")
+	static FORCEINLINE UParticleSystem* GetTrail(int32 Slot)
+	{
+		UGlobal* Global = GetGlobal();
+		if (!Global) { return NULL; }
+		return Global->Trails.Contains(Slot) ? Global->Trails[Slot] : NULL;
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "GLobalLibrary")
 	static FORCEINLINE TSubclassOf<class AAbilityProjectile> GetProjectile(int32 Slot)
 	{
 		UGlobal* Global = GetGlobal();

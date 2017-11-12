@@ -59,15 +59,27 @@ ACharacterBase::ACharacterBase()
 	AuraParticle = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("AuraParticle"));
 	AuraParticle->SetupAttachment(RootComponent);
 	
+	// Create Character Trail.
+	CharacterTrail = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("CharacterTrail"));
+	CharacterTrail->SetupAttachment(GetMesh(), FName("root"));
+
 	// Create Left Hand Weapon.
 	LeftHandWeapon = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("LeftHandWeapon"));
 	LeftHandWeapon->SetIsReplicated(true);
 	LeftHandWeapon->SetupAttachment(GetMesh(), FName("hand_l_socket"));
+	
+	// Create Left Hand Weapon Trail.
+	LeftHandWeaponTrail = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("LeftHandWeaponTrail"));
+	LeftHandWeaponTrail->SetupAttachment(LeftHandWeapon);
 
 	// Create Right Hand Weapon.
 	RightHandWeapon = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RightHandWeapon"));
 	RightHandWeapon->SetIsReplicated(true);
 	RightHandWeapon->SetupAttachment(GetMesh(), FName("hand_r_socket"));
+
+	// Create Right Hand Weapon Trail.
+	RightHandWeaponTrail = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("RightHandWeaponTrail"));
+	RightHandWeaponTrail->SetupAttachment(RightHandWeapon);
 
 	// Create Back Weapon.
 	BackWeapon = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BackWeapon"));
@@ -651,6 +663,46 @@ void ACharacterBase::MulticastChangeAnimState_Implementation(ECharacterAnimation
 {	
 	AnimationState = NewAnimState;
 	ChangeAnimStateDelegate.Broadcast(AnimationState, Animation);
+
+	if (Animation.LeftHandTrail)
+	{
+		LeftHandWeaponTrail->SetTemplate(Animation.LeftHandTrail);
+		LeftHandWeaponTrail->BeginTrails(
+			"trail_start",
+			"trail_end",
+			ETrailWidthMode_FromCentre,
+			Animation.TrailWidth
+		);
+
+		FTimerHandle LeftTimer;
+		GetWorldTimerManager().SetTimer(
+			LeftTimer, 
+			this->LeftHandWeaponTrail, 
+			&UParticleSystemComponent::EndTrails, 
+			Animation.TrailDuration, 
+			false
+		);
+	}
+
+	if (Animation.RightHandTrail)
+	{
+		RightHandWeaponTrail->SetTemplate(Animation.RightHandTrail);
+		RightHandWeaponTrail->BeginTrails(
+			"trail_start",
+			"trail_end",
+			ETrailWidthMode_FromCentre,
+			Animation.TrailWidth
+		);
+
+		FTimerHandle RightTimer;
+		GetWorldTimerManager().SetTimer(
+			RightTimer,
+			this->RightHandWeaponTrail,
+			&UParticleSystemComponent::EndTrails,
+			Animation.TrailDuration,
+			false
+		);
+	}
 }
 
 void ACharacterBase::ChangeState(ECharacterState NewState)
