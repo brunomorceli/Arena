@@ -20,10 +20,17 @@ enum ECharacterState
 UENUM(BlueprintType)
 enum ECharacterAnimationState
 {
-	CAS_TakeDamage UMETA(DisplayName = "TakeDamage"),
-	CAS_Action UMETA(DisplayName = "Action"),
-	CAS_Commit UMETA(DisplayName = "Commit"),
+	CAS_Damage UMETA(DisplayName = "Damage"),
+	CAS_Ability1 UMETA(DisplayName = "Ability1"),
+	CAS_Ability2 UMETA(DisplayName = "Ability2"),
+	CAS_Ability3 UMETA(DisplayName = "Ability3"),
+	CAS_Ability4 UMETA(DisplayName = "Ability4"),
+	CAS_Ability5 UMETA(DisplayName = "Ability5"),
+	CAS_Ability6 UMETA(DisplayName = "Ability6"),
+	CAS_Ability7 UMETA(DisplayName = "Ability7"),
+	CAS_Ability8 UMETA(DisplayName = "Ability8"),
 	CAS_Cast UMETA(DisplayName = "Cast"),
+	CAS_Channel UMETA(DisplayName = "Channel"),
 	CAS_None UMETA(DisplayName = "None"),
 };
 

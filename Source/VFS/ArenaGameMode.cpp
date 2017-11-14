@@ -8,7 +8,7 @@ AArenaGameMode::AArenaGameMode()
 	bNextIsRed = false;
 
 	// set default pawn class to our Blueprinted character
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Blueprints/ArenaCharacterBP.ArenaCharacterBP_C"));
+	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Blueprints/DefaultCharacterBP.DefaultCharacterBP_C"));
 	if (PlayerPawnBPClass.Class != NULL)
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;

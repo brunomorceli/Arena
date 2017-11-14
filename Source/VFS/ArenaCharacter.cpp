@@ -34,7 +34,10 @@ void AArenaCharacter::Tick(float DeltaTime)
 	ValidateCast();
 	UpdateTimers(DeltaTime);
 
-	if (CastTimeRemaining == 0.0f && AnimationState == CAS_Cast) { StopCast(); }
+	if (CastTimeRemaining == 0.0f && (AnimationState == CAS_Cast || AnimationState == CAS_Channel))
+	{
+		StopCast();
+	}
 }
 
 void AArenaCharacter::UpdateState()
@@ -297,7 +300,11 @@ void AArenaCharacter::StartCast(int32 Slot)
 	CastAbility = Abilities[Slot];
 	CastTimeRemaining = CastAbility->CastTime;
 	MulticastSetHandsParticles(CastAbility->CastParticle, CastAbility->CastParticle);
-	ServerSetAnimState(CAS_Cast, CastAbility->CastAnimation);
+
+	ServerSetAnimState(
+		CastAbility->AbilityType == ABST_Castable ? CAS_Cast : CAS_Channel, 
+		CastAbility->CastAnimation
+	);
 }
 
 void AArenaCharacter::StopCast()
@@ -322,7 +329,40 @@ void AArenaCharacter::CommitAbility(int32 Slot)
 	if (!HasAuthority()) { return; }
 
 	CommitAbilityModifiers(Ability);
-	ServerSetAnimState(CAS_Commit, Ability->CommitAnimation);
+
+	TEnumAsByte<ECharacterAnimationState> AnimationState;
+	switch (Ability->Slot)
+	{
+		case 1:
+			AnimationState = CAS_Ability1;
+			break;
+		case 2:
+			AnimationState = CAS_Ability2;
+			break;
+		case 3:
+			AnimationState = CAS_Ability3;
+			break;
+		case 4:
+			AnimationState = CAS_Ability4;
+			break;
+		case 5:
+			AnimationState = CAS_Ability5;
+			break;
+		case 6:
+			AnimationState = CAS_Ability6;
+			break;
+		case 7:
+			AnimationState = CAS_Ability7;
+			break;
+		case 8:
+			AnimationState = CAS_Ability8;
+			break;
+		default:
+			AnimationState = CAS_None;
+			break;
+	}
+
+	ServerSetAnimState(AnimationState, Ability->CommitAnimation);
 }
 
 void AArenaCharacter::CommitAbilityModifiers(AAbilityBase* Ability)
@@ -438,6 +478,7 @@ EAbilityValidation AArenaCharacter::ValidateStartAbility(int32 Slot)
 		EAbilityValidation Validation = ValidateTarget(Ability, this, Target);
 		if (Validation != ABV_Allowed) {
 			if (!Ability->bAllowSelf) { return Validation; }
+			Target = this;
 			ServerSetTarget(this);
 		}
 	}
