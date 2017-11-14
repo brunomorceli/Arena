@@ -10,7 +10,7 @@ AArenaCharacter::AArenaCharacter()
 
 	CastTimeRemaining = 0;
 
-	GlobalCountdownTime = 0.7f;
+	GlobalCountdownTime = 1.5f;
 	GlobalCountdownTimeRemaining = 0.0f;
 
 	AuraModifiers = TArray<FAuraModifier>();
@@ -72,9 +72,7 @@ void AArenaCharacter::ValidateCast()
 
 void AArenaCharacter::UpdateTimers(float DeltaTime)
 {
-	if (IsGlobalCountdown()) {
-		GlobalCountdownTimeRemaining =  FMath::Clamp(GlobalCountdownTimeRemaining - DeltaTime, 0.0f, GlobalCountdownTime);
-	}
+	GlobalCountdownTimeRemaining =  FMath::Clamp(GlobalCountdownTimeRemaining - DeltaTime, 0.0f, GlobalCountdownTime);
 
 	UpdateBuffModifiers(DeltaTime);
 
@@ -107,6 +105,12 @@ void AArenaCharacter::UpdateBuffModifiers(float DeltaTime)
 			if (Ability)
 			{
 				Health.RemoveMaxMultiplier(Ability->GetUniqueID());
+				Mana.RemoveMaxMultiplier(Ability->GetUniqueID());
+				Energy.RemoveMaxMultiplier(Ability->GetUniqueID());
+
+				// [temporary]
+				MulticastSetMaxWalkSpeed(600.0f);
+
 				Ability->OnExpire(this);
 
 				BuffModifiers.RemoveAt(i);
@@ -529,6 +533,8 @@ EAbilityValidation AArenaCharacter::ValidateStartChanneling(AAbilityBase* Abilit
 
 EAbilityValidation AArenaCharacter::ValidateStartInstant(AAbilityBase* Ability)
 {
+	if (IsGlobalCountdown()) { return ABV_NotReady; }
+
 	// Directional or Area on Effect Validation.
 	if (Ability->AreaType == ABA_Directional || Ability->AreaType == ABA_AreaOnEffect) { return ABV_Allowed; }
 
@@ -813,20 +819,22 @@ void AArenaCharacter::ApplyBuffModifier(FBuffModifier Modifier)
 	}
 
 	// add multiplyers
-	if (Health.Value != 0.0f)
+	if (Modifier.Health != 0.0f)
 	{
 		Health.AddMaxMultiplier(Ability->GetUniqueID(), Modifier.Health, Modifier.bIsPercent);
 	}
 
-	if (Mana.Value != 0.0f)
+	if (Modifier.Mana != 0.0f)
 	{
 		Mana.AddMaxMultiplier(Ability->GetUniqueID(), Modifier.Mana, Modifier.bIsPercent);
 	}
 
-	if (Energy.Value != 0.0f)
+	if (Modifier.Energy != 0.0f)
 	{
 		Energy.AddMaxMultiplier(Ability->GetUniqueID(), Modifier.Energy, Modifier.bIsPercent);
 	}
+
+	if (Modifier.Speed != 0.0f) { MulticastSetMaxWalkSpeed(Modifier.Speed); }
 
 	// notify all sources
 	if (Modifier.bIsStackable) { Ability->OnRenew(this); }
@@ -919,8 +927,6 @@ template<int32 Slot> void AArenaCharacter::InputStartAbility()
 
 void AArenaCharacter::ServerStartAbility_Implementation(int32 Slot)
 {
-	if (!HasAuthority()) { return; }
-
 	EAbilityValidation Validation = StartAbility(Slot);
 
 	if (Validation != EAbilityValidation::ABV_Allowed) {

@@ -161,7 +161,6 @@ void ACharacterBase::Tick(float DeltaTime)
 	}
 
 	UpdateState();
-
 	UpdateAuraParticle();
 }
 
@@ -548,6 +547,8 @@ void ACharacterBase::ServerRespawn_Implementation()
 	Target = nullptr;
 	State = CS_Idle;
 
+	MulticastSetMaxWalkSpeed(Speed.Value);
+
 	//GameMode->RestartPlayer(Controller);
 
 	// Teleport to a Random player start.
@@ -694,6 +695,12 @@ void ACharacterBase::MulticastSetAuraParticle_Implementation(UParticleSystem* Pa
 {
 	AuraParticle->SetTemplate(NULL);
 	if (Particle) { AuraParticle->SetTemplate(Particle); }
+}
+
+void ACharacterBase::MulticastSetMaxWalkSpeed_Implementation(float Amount)
+{
+	float Result = FMath::Clamp(Amount, 0.0f, 1200.0f);
+	GetCharacterMovement()->MaxWalkSpeed = Result;
 }
 
 void ACharacterBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const

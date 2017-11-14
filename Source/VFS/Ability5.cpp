@@ -13,12 +13,12 @@ AAbility5::AAbility5()
 	MaxDistance = 300.0f;
 
 	AbilityType = ABST_Instant;
-	CastTime = 1.0f;
 
-	DirectionalRadius = 50.0f;
-	DirectionalRange = 180.0f;
+	AreaType = ABA_Target;
 
-	AreaType = ABA_Directional;
+	bAllowEnemy = true;
+	bAllowSelf = false;
+	bAllowTeam = false;
 
 	LoadIcon("/Game/Sprites/Icons/168.168");
 }
@@ -45,7 +45,21 @@ void AAbility5::SetupModifiers()
 	FDamageModifier Damage;
 	Damage.AbilityOwner = this;
 	Damage.Icon = Icon;
-	Damage.Health = 100.0f;
-	Damage.StartParticle = UGlobalLibrary::GetParticle(5);
+	Damage.Health = 350.0f;
+	Damage.StartParticle = UGlobalLibrary::GetParticle(4);
 	DamageModifiers.Add(Damage);
+
+
+	FBuffModifier Slow;
+	Slow.AbilityOwner = this;
+	Slow.Icon = Icon;
+	Slow.Speed = 300.0f;
+	Slow.bIsPercent = false;
+	Slow.bIsStackable = false;
+	Slow.TimeRemaining = 6.0f;
+	Slow.bAllowEnemy = true;
+	Slow.bAllowSelf = false;
+	Slow.bAllowTeam = false;
+
+	BuffModifiers.Add(Slow);
 }

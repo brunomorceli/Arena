@@ -11,7 +11,7 @@ AAbility4::AAbility4()
 	Name = "First Blood";
 	Description = "Nothing yet.";
 
-	ManaCost = 200.0f;
+	ManaCost = 100.0f;
 	MaxDistance = 1200.0f;
 
 	bAllowSelf = true;
@@ -42,7 +42,7 @@ void AAbility4::SetupModifiers()
 	Buff.bAllowSelf = true;
 	Buff.Health = 20.0f;
 	Buff.bIsPercent = true;
-	Buff.TimeRemaining = 5.0f;
+	Buff.TimeRemaining = 300.0f;
 
 	Buff.bIsDispellable = true;
 	Buff.bIsStackable = true;

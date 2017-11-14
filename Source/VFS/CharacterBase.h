@@ -488,5 +488,10 @@ public:
 	void MulticastSetAuraParticle(UParticleSystem* Particle);
 	void MulticastSetAuraParticle_Implementation(UParticleSystem* Particle);
 
+
+	UFUNCTION(NetMulticast, Reliable, Category = "Network")
+	void MulticastSetMaxWalkSpeed(float Amount);
+	void MulticastSetMaxWalkSpeed_Implementation(float Amount);
+
 	void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
 };
