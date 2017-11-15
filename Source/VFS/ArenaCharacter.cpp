@@ -10,7 +10,7 @@ AArenaCharacter::AArenaCharacter()
 
 	CastTimeRemaining = 0;
 
-	GlobalCountdownTime = 1.5f;
+	GlobalCountdownTime = 1.0f;
 	GlobalCountdownTimeRemaining = 0.0f;
 
 	AuraModifiers = TArray<FAuraModifier>();
