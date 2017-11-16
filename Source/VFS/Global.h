@@ -10,11 +10,6 @@
 
 #include "Enums.h"
 #include "AbilityBase.h"
-#include "Ability1.h"
-#include "Ability2.h"
-#include "Ability3.h"
-#include "Ability4.h"
-#include "Ability5.h"
 #include "AbilityProjectile.h"
 #include "Global.generated.h"
 
@@ -59,7 +54,6 @@ class VFS_API UGlobal : public UObject
 private:
 	void LoadSprites(FString& BasePath);
 	void LoadIcons(FString& BasePath);
-	void LoadAbilities();
 
 public:
 	UGlobal(const FObjectInitializer& ObjectInitializer);

@@ -9,8 +9,6 @@ UGlobal::UGlobal(const FObjectInitializer& ObjectInitializer) : Super(ObjectInit
 	TotalIcons = 488;
 	TotalBadges = 39;
 	LoadSprites(SpritePath);
-
-	LoadAbilities();
 }
 
 void UGlobal::LoadSprites(FString& BasePath)
@@ -36,11 +34,3 @@ void UGlobal::LoadIcons(FString& BasePath)
 	}
 }
 
-void UGlobal::LoadAbilities()
-{
-	Abilities.Add(1, AAbility1::StaticClass());
-	Abilities.Add(2, AAbility2::StaticClass());
-	Abilities.Add(3, AAbility3::StaticClass());
-	Abilities.Add(4, AAbility4::StaticClass());
-	Abilities.Add(5, AAbility5::StaticClass());
-}

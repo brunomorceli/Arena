@@ -1,13 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Ability5.h"
+#include "AbilityCleric7.h"
 #include "GlobalLibrary.h"
 
-AAbility5::AAbility5()
+AAbilityCleric7::AAbilityCleric7()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	Name = "Channeling Attack";
+	Name = "Sword Strike";
 	Description = "Nothing yet.";
 
 	MaxDistance = 300.0f;
@@ -20,13 +20,13 @@ AAbility5::AAbility5()
 	bAllowSelf = false;
 	bAllowTeam = false;
 
-	LoadIcon("/Game/Sprites/Icons/168.168");
+	LoadIcon("/Game/Sprites/Icons/475.475");
 }
 
-void AAbility5::BeginPlay()
+void AAbilityCleric7::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	CommitAnimation.AnimSequence = UGlobalLibrary::GetAnimSequence(3);
 	CommitAnimation.bLoop = true;
 
@@ -35,7 +35,7 @@ void AAbility5::BeginPlay()
 	CommitAnimation.TrailDuration = 1.0f;
 }
 
-void AAbility5::SetupModifiers()
+void AAbilityCleric7::SetupModifiers()
 {
 	Super::SetupModifiers();
 
@@ -48,18 +48,4 @@ void AAbility5::SetupModifiers()
 	Damage.Health = 350.0f;
 	Damage.StartParticle = UGlobalLibrary::GetParticle(4);
 	DamageModifiers.Add(Damage);
-
-
-	FBuffModifier Slow;
-	Slow.AbilityOwner = this;
-	Slow.Icon = Icon;
-	Slow.Speed = 300.0f;
-	Slow.bIsPercent = false;
-	Slow.bIsStackable = false;
-	Slow.TimeRemaining = 6.0f;
-	Slow.bAllowEnemy = true;
-	Slow.bAllowSelf = false;
-	Slow.bAllowTeam = false;
-
-	BuffModifiers.Add(Slow);
 }

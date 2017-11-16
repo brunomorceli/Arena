@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Ability2.h"
+#include "AbilityCleric1.h"
 #include "GlobalLibrary.h"
 
-AAbility2::AAbility2()
+AAbilityCleric1::AAbilityCleric1()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -26,7 +26,19 @@ AAbility2::AAbility2()
 	LoadIcon("/Game/Sprites/Icons/285.285");
 }
 
-void AAbility2::SetupModifiers()
+void AAbilityCleric1::BeginPlay()
+{
+	Super::BeginPlay();
+
+	CommitAnimation.AnimSequence = UGlobalLibrary::GetAnimSequence(3);
+	CommitAnimation.bLoop = true;
+
+	CommitAnimation.RightHandTrail = UGlobalLibrary::GetTrail(1);
+	CommitAnimation.TrailDelay = 0.3f;
+	CommitAnimation.TrailDuration = 1.0f;
+}
+
+void AAbilityCleric1::SetupModifiers()
 {
 	Super::SetupModifiers();
 

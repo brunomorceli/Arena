@@ -2,23 +2,20 @@
 
 #pragma once
 
-#include "Core.h"
-
+#include "CoreMinimal.h"
 #include "AbilityBase.h"
-#include "Ability4.generated.h"
+#include "AbilityWizard2.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class VFS_API AAbility4 : public AAbilityBase
+class VFS_API AAbilityWizard2 : public AAbilityBase
 {
 	GENERATED_BODY()
-	
-public:
 
-	AAbility4();
-	
+	AAbilityWizard2();
+
 	virtual void BeginPlay() override;
 
 	virtual void SetupModifiers() override;

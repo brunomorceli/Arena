@@ -2,21 +2,19 @@
 
 #pragma once
 
-#include "Core.h"
-
+#include "CoreMinimal.h"
 #include "AbilityBase.h"
-#include "Ability1.generated.h"
+#include "AbilityAssassin2.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class VFS_API AAbility1 : public AAbilityBase
+class VFS_API AAbilityAssassin2 : public AAbilityBase
 {
 	GENERATED_BODY()
 
-public:
-	AAbility1();
+	AAbilityAssassin2();
 
 	virtual void BeginPlay() override;
 
