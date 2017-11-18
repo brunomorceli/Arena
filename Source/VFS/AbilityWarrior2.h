@@ -19,4 +19,6 @@ class VFS_API AAbilityWarrior2 : public AAbilityBase
 	virtual void BeginPlay() override;
 
 	virtual void SetupModifiers() override;
+
+	virtual void OnStart(ACharacterBase* Target) override;
 };

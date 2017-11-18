@@ -459,6 +459,11 @@ public:
 	bool ServerJumpTo_Validate(FVector Location) { return true; }
 
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = "Network")
+	void ServerKnockBack(FVector CenterLocation, float Distance);
+	void ServerKnockBack_Implementation(FVector CenterLocation, float Distance);
+	bool ServerKnockBack_Validate(FVector CenterLocation, float Distance) { return true; }
+
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = "Network")
 	void ServerSetTeam(EPlayerTeam NewTeam);
 	void ServerSetTeam_Implementation(EPlayerTeam NewTeam);
 	bool ServerSetTeam_Validate(EPlayerTeam NewTeam) { return true; }

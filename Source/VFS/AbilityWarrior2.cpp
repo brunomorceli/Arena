@@ -48,3 +48,9 @@ void AAbilityWarrior2::SetupModifiers()
 	Damage.StartParticle = UGlobalLibrary::GetParticle(4);
 	DamageModifiers.Add(Damage);
 }
+
+void AAbilityWarrior2::OnStart(ACharacterBase* Target)
+{
+	Super::OnStart(Target);
+	Target->ServerKnockBack(CharacterOwner->GetActorLocation(), 1200.0f);
+}

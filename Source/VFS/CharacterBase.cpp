@@ -599,6 +599,18 @@ void ACharacterBase::ServerJumpTo_Implementation(FVector Location)
 	if (Result) { LaunchCharacter(Velocity, true, true); }
 }
 
+void ACharacterBase::ServerKnockBack_Implementation(FVector CenterLocation, float Distance)
+{
+	FVector Forward = GetActorLocation() - CenterLocation;
+	Forward.Normalize();
+
+	Forward = Forward * Distance;
+	Forward.Z = 0.0f;
+	Forward += GetActorLocation();
+
+	ServerJumpTo(Forward);
+}
+
 void ACharacterBase::ServerSetTeam_Implementation(EPlayerTeam NewTeam)
 {
 	AArenaPlayerState* MyPlayerState = Cast<AArenaPlayerState>(PlayerState);
