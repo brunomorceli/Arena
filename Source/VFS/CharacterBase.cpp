@@ -43,6 +43,14 @@ ACharacterBase::ACharacterBase()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+	// Create a Head Particle
+	HeadParticle = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("HeadParticle"));
+	HeadParticle->SetupAttachment(GetMesh(), FName("head_socket"));
+
+	// Create a Root Particle
+	RootParticle = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("RootParticle"));
+	RootParticle->SetupAttachment(GetMesh(), FName("root_socket"));
+
 	// Create a Left Hand Particle
 	ChestParticle = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ChestParticle"));
 	ChestParticle->SetupAttachment(GetMesh(), FName("chest_socket"));
@@ -104,16 +112,16 @@ ACharacterBase::ACharacterBase()
 
 	TargetMaxDistance = 5000.0f;
 
-	Health.Setup(2000.0f, 0.3f);
-	Mana.Setup(2000.0f, 0.3f);
-	Energy.Setup(150.0f, 3.0f);
+	Health.Setup(0.0f, 2000.0f, 2000.0f, 0.3f);
+	Mana.Setup(0.0f, 2000.0f, 2000.0f, 0.3f);
+	Energy.Setup(0.0f, 150.0f, 150.0f, 3.0f);
+	Speed.Setup(0.0f, 600.0f, 600.0f);
+	Critical.Setup(0.0f, 100.0f, 5.0f);
 
-	Speed.Setup(600.0f);
-
-	Critical = 5.0f;
-
-	Power.Setup(10.0f);
-	Defense.Setup(100.0f);
+	PhysicalPower.Setup(-100.0f, 100.0f, 0.0f);
+	MagicPower.Setup(-100.0f, 100.0f, 0.0f);
+	PhysicalDefense.Setup(-100.0f, 100.0f, 0.0f);
+	MagicDefense.Setup(-100.0f, 100.0f, 0.0f);
 
 	RegenerationInterval = 0.333f;
 
@@ -132,13 +140,13 @@ void ACharacterBase::RegenerateStatus()
 	float DeltaTime = RegenerationInterval;
 
 	float HealthRegen = Health.Regeneration * DeltaTime;
-	Health.Value = FMath::Min(Health.Value + HealthRegen, Health.Max);
+	Health.Heal(HealthRegen);
 
 	float ManaRegen = Mana.Regeneration * DeltaTime;
-	Mana.Value = FMath::Min(Mana.Value + ManaRegen, Mana.Max);
+	Mana.Heal(ManaRegen);
 
 	float EnergyRegen = Energy.Regeneration * DeltaTime;
-	Energy.Value = FMath::Min(Energy.Value + EnergyRegen, Energy.Max);
+	Energy.Heal(EnergyRegen);
 }
 
 void ACharacterBase::BeginPlay()
@@ -503,6 +511,89 @@ bool ACharacterBase::FindFloor(FVector& Result, float Depth = 5000.0f)
 	return true;
 }
 
+void ACharacterBase::PlaySound(USoundBase* Sound, float Delay = 0.0f)
+{
+	UWorld* World = GetWorld();
+	if (!World) { return; }
+
+	// Add Delay
+	if (Delay > 0.0f)
+	{
+		FTimerHandle TimerHandle;
+		FTimerDelegate TimerDel;
+
+		TimerDel.BindUFunction(this, FName("PlaySound"), Sound, 0.0f);
+		World->GetTimerManager().SetTimer(TimerHandle, TimerDel, Delay, false);
+		return;
+	}
+
+	UGameplayStatics::PlaySoundAtLocation(World, Sound, GetActorLocation());
+}
+
+void ACharacterBase::AddWeaponTrail(
+	UParticleSystemComponent* HandParticle,
+	UParticleSystem* Particle,
+	float Duration,
+	float Delay,
+	float TrailWidth
+)
+{
+	UWorld* World = GetWorld();
+	if (!World) { return; }
+
+	// Add Delay
+	if (Delay > 0.0f)
+	{
+		FTimerHandle TimerHandle;
+		FTimerDelegate TimerDel;
+
+		TimerDel.BindUFunction(this, FName("AddWeaponTrail"), HandParticle, Particle, Duration, 0.0f, TrailWidth);
+		World->GetTimerManager().SetTimer(TimerHandle, TimerDel, Delay, false);
+		return;
+	}
+
+	// Start Trail
+	HandParticle->SetTemplate(Particle);
+	HandParticle->BeginTrails(
+		"horizontal_trail_start",
+		"horizontal_trail_end",
+		ETrailWidthMode_FromCentre,
+		TrailWidth
+	);
+
+	HandParticle->BeginTrails(
+		"vertical_trail_start",
+		"vertical_trail_end",
+		ETrailWidthMode_FromCentre,
+		TrailWidth
+	);
+
+	// Add Delay to end particle
+	FTimerHandle TimerHandler;
+	World->GetTimerManager().SetTimer(
+		TimerHandler,
+		HandParticle,
+		&UParticleSystemComponent::EndTrails,
+		Duration,
+		false
+	);
+}
+
+void ACharacterBase::PlayFX(TSubclassOf<AAbilityFXBase> Effect)
+{
+	UWorld* World = GetWorld();
+	if (!World || !Effect) { return; }
+
+	FActorSpawnParameters Params;
+	Params.Owner = this;
+	Params.Instigator = this;
+
+	AAbilityFXBase* NewFX = World->SpawnActor<AAbilityFXBase>(Effect, GetActorLocation(), GetActorRotation(), Params);
+	if (!NewFX) { return; }
+
+	NewFX->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
+}
+
 // =====================================================================================================================================
 // NETWORK METHODS
 // =====================================================================================================================================
@@ -541,9 +632,10 @@ void ACharacterBase::ServerRespawn_Implementation()
 	Mana.Reset();
 	Energy.Reset();
 	Speed.Reset();
-	Critical = 5.0f;
-	Power.Reset();
-	Defense.Reset();
+	Critical.Value = 5.0f;
+	MagicPower.Reset();
+	MagicDefense.Reset();
+	PhysicalDefense.Reset();
 	Target = nullptr;
 	State = CS_Idle;
 
@@ -619,50 +711,11 @@ void ACharacterBase::ServerSetTeam_Implementation(EPlayerTeam NewTeam)
 	MyPlayerState->ServerChangeTeam(NewTeam);
 }
 
-void ACharacterBase::MulticastSetAnimState_Implementation(ECharacterAnimationState NewAnimState, FAnimation Animation)
+void ACharacterBase::MulticastSetAnimState_Implementation(ECharacterAnimationState NewAnimState, TSubclassOf<AAbilityFXBase> Effect)
 {
 	AnimationState = NewAnimState;
-	ChangeAnimStateDelegate.Broadcast(AnimationState, Animation);
-
-	if (Animation.LeftHandTrail)
-	{
-		LeftHandWeaponTrail->SetTemplate(Animation.LeftHandTrail);
-		LeftHandWeaponTrail->BeginTrails(
-			"trail_start",
-			"trail_end",
-			ETrailWidthMode_FromCentre,
-			Animation.TrailWidth
-		);
-
-		FTimerHandle LeftTimer;
-		GetWorldTimerManager().SetTimer(
-			LeftTimer,
-			this->LeftHandWeaponTrail,
-			&UParticleSystemComponent::EndTrails,
-			Animation.TrailDuration,
-			false
-		);
-	}
-
-	if (Animation.RightHandTrail)
-	{
-		RightHandWeaponTrail->SetTemplate(Animation.RightHandTrail);
-		RightHandWeaponTrail->BeginTrails(
-			"trail_start",
-			"trail_end",
-			ETrailWidthMode_FromCentre,
-			Animation.TrailWidth
-		);
-
-		FTimerHandle RightTimer;
-		GetWorldTimerManager().SetTimer(
-			RightTimer,
-			this->RightHandWeaponTrail,
-			&UParticleSystemComponent::EndTrails,
-			Animation.TrailDuration,
-			false
-		);
-	}
+	ChangeAnimStateDelegate.Broadcast(AnimationState);
+	PlayFX(Effect);
 }
 
 void ACharacterBase::MulticastSetPawn_Implementation(TSubclassOf<ACharacterBase> Character)
@@ -688,31 +741,45 @@ void ACharacterBase::MulticastSetPawn_Implementation(TSubclassOf<ACharacterBase>
 	PlayerController->Possess(NewPawn);
 }
 
-void ACharacterBase::MulticastSetChestParticle_Implementation(UParticleSystem* Particle, bool Clear)
-{
-	if (Clear) { ChestParticle->SetTemplate(NULL); }
-	if (Particle) { ChestParticle->SetTemplate(Particle); }
-}
-
-void ACharacterBase::MulticastSetHandsParticles_Implementation(UParticleSystem* LeftHand, UParticleSystem* RightHand)
-{
-	LeftHandParticle->SetTemplate(NULL);
-	RightHandParticle->SetTemplate(NULL);
-
-	if (LeftHand) { LeftHandParticle->SetTemplate(LeftHand); }
-	if (RightHand) { RightHandParticle->SetTemplate(RightHand); }
-}
-
 void ACharacterBase::MulticastSetAuraParticle_Implementation(UParticleSystem* Particle)
 {
 	AuraParticle->SetTemplate(NULL);
 	if (Particle) { AuraParticle->SetTemplate(Particle); }
 }
 
+void ACharacterBase::MulticastSetParticle_Implementation(UParticleSystem* Particle, ECharacterSocket Socket)
+{
+	switch (Socket)
+	{
+	case CSO_Head:
+		HeadParticle->SetTemplate(Particle);
+		break;
+	case CSO_Root:
+		RootParticle->SetTemplate(Particle);
+		break;
+	case CSO_Chest:
+		ChestParticle->SetTemplate(Particle);
+		break;
+	case CSO_LeftHand:
+		LeftHandParticle->SetTemplate(Particle);
+		break;
+	case CSO_RightHand:
+		RightHandParticle->SetTemplate(Particle);
+		break;
+	default:
+		break;
+	}
+}
+
 void ACharacterBase::MulticastSetMaxWalkSpeed_Implementation(float Amount)
 {
 	float Result = FMath::Clamp(Amount, 0.0f, 1200.0f);
 	GetCharacterMovement()->MaxWalkSpeed = Result;
+}
+
+void ACharacterBase::MulticastPlayFX_Implementation(TSubclassOf<AAbilityFXBase> Effect)
+{
+	PlayFX(Effect);
 }
 
 void ACharacterBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
@@ -729,7 +796,8 @@ void ACharacterBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & Ou
 	DOREPLIFETIME(ACharacterBase, Energy);
 	DOREPLIFETIME(ACharacterBase, Speed);
 	DOREPLIFETIME(ACharacterBase, Critical);
-	DOREPLIFETIME(ACharacterBase, Power);
-	DOREPLIFETIME(ACharacterBase, Defense);
-
+	DOREPLIFETIME(ACharacterBase, PhysicalPower);
+	DOREPLIFETIME(ACharacterBase, MagicPower);
+	DOREPLIFETIME(ACharacterBase, PhysicalDefense);
+	DOREPLIFETIME(ACharacterBase, MagicDefense);
 }

@@ -26,13 +26,6 @@ AAbilityWizard1::AAbilityWizard1()
 void AAbilityWizard1::BeginPlay()
 {
 	Super::BeginPlay();
-
-	CommitAnimation.AnimSequence = UGlobalLibrary::GetAnimSequence(3);
-	CommitAnimation.bLoop = true;
-
-	CommitAnimation.RightHandTrail = UGlobalLibrary::GetTrail(1);
-	CommitAnimation.TrailDelay = 0.3f;
-	CommitAnimation.TrailDuration = 1.0f;
 }
 
 void AAbilityWizard1::SetupModifiers()
@@ -46,6 +39,5 @@ void AAbilityWizard1::SetupModifiers()
 	Damage.AbilityOwner = this;
 	Damage.Icon = Icon;
 	Damage.Health = 350.0f;
-	Damage.StartParticle = UGlobalLibrary::GetParticle(4);
 	DamageModifiers.Add(Damage);
 }

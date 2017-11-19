@@ -29,13 +29,6 @@ AAbilityCleric1::AAbilityCleric1()
 void AAbilityCleric1::BeginPlay()
 {
 	Super::BeginPlay();
-
-	CommitAnimation.AnimSequence = UGlobalLibrary::GetAnimSequence(3);
-	CommitAnimation.bLoop = true;
-
-	CommitAnimation.RightHandTrail = UGlobalLibrary::GetTrail(1);
-	CommitAnimation.TrailDelay = 0.3f;
-	CommitAnimation.TrailDuration = 1.0f;
 }
 
 void AAbilityCleric1::SetupModifiers()
@@ -49,7 +42,6 @@ void AAbilityCleric1::SetupModifiers()
 	Damage.AbilityOwner = this;
 	Damage.Icon = Icon;
 	Damage.Health = 150.0f;
-	Damage.StartParticle = UGlobalLibrary::GetParticle(5);
 	Damage.bAllowEnemy = true;
 	Damage.bAllowTeam = false;
 	Damage.bAllowSelf = false;
@@ -60,7 +52,6 @@ void AAbilityCleric1::SetupModifiers()
 	Heal.AbilityOwner = this;
 	Heal.Icon = Icon;
 	Heal.Health = 150.0f;
-	Heal.StartParticle = UGlobalLibrary::GetParticle(7);
 	Heal.bAllowEnemy = false;
 	Heal.bAllowTeam = true;
 	Heal.bAllowSelf = true;

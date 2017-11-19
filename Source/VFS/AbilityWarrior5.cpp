@@ -26,13 +26,7 @@ AAbilityWarrior5::AAbilityWarrior5()
 void AAbilityWarrior5::BeginPlay()
 {
 	Super::BeginPlay();
-
-	CommitAnimation.AnimSequence = UGlobalLibrary::GetAnimSequence(3);
-	CommitAnimation.bLoop = true;
-
-	CommitAnimation.RightHandTrail = UGlobalLibrary::GetTrail(1);
-	CommitAnimation.TrailDelay = 0.3f;
-	CommitAnimation.TrailDuration = 1.0f;
+	CommitFX = UGlobalLibrary::GetAbilityUseFX(5);
 }
 
 void AAbilityWarrior5::SetupModifiers()
@@ -45,7 +39,19 @@ void AAbilityWarrior5::SetupModifiers()
 	FDamageModifier Damage;
 	Damage.AbilityOwner = this;
 	Damage.Icon = Icon;
-	Damage.Health = 350.0f;
-	Damage.StartParticle = UGlobalLibrary::GetParticle(4);
+	Damage.Health = 100.0f;
+	Damage.bIsHarmful = true;
 	DamageModifiers.Add(Damage);
+
+	FBuffModifier PhysicalDebuff;
+	PhysicalDebuff.AbilityOwner = this;
+	PhysicalDebuff.PhysicalDefense = -15.0f;
+	PhysicalDebuff.School = MS_Physical;
+	PhysicalDebuff.bAllowSelf = false;
+	PhysicalDebuff.bAllowTeam = false;
+	PhysicalDebuff.bAllowEnemy = true;
+	PhysicalDebuff.bIsHarmful = true;
+	PhysicalDebuff.TimeRemaining = 10.0f;
+
+	BuffModifiers.Add(PhysicalDebuff);
 }

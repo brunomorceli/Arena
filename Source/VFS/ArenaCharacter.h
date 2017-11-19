@@ -139,6 +139,12 @@ public:
 
 	void TickOvertimeModifier(FOvertimeModifier Modifier);
 
+	float CalculateDamageByBuffModifiers(float Amount, EModifierSchool School);
+	
+	float CalculateDamageByAbsorbingModifiers(float Amount, EModifierSchool School);
+
+	void UpdateOnTakeDamage(FDamageModifier Modifier, float Amount);
+
 	// ==========================================================================================
 	// NETWORK
 	// ==========================================================================================

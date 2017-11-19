@@ -35,6 +35,16 @@ enum ECharacterAnimationState
 };
 
 UENUM(BlueprintType)
+enum ECharacterSocket
+{
+	CSO_Root UMETA(DisplayName = "Root"),
+	CSO_Head UMETA(DisplayName = "Head"),
+	CSO_Chest UMETA(DisplayName = "Chest"),
+	CSO_LeftHand UMETA(DisplayName = "LeftHand"),
+	CSO_RightHand UMETA(DisplayName = "RightHand"),
+};
+
+UENUM(BlueprintType)
 enum EAbilityValidation
 {
 	ABV_Allowed UMETA(DisplayName = "Allowed"),
@@ -100,7 +110,6 @@ enum EAbilityProjectileType
 	ABP_Lauch UMETA(DisplayName = "Lauch"),
 };
 
-
 UENUM(BlueprintType)
 enum EModifierStatusType
 {
@@ -113,7 +122,6 @@ enum EModifierSchool
 {
 	MS_Physical UMETA(DisplayName = "Physical"),
 	MS_Magic UMETA(DisplayName = "Magic"),
-	MS_Nature UMETA(DisplayName = "Nature"),
 };
 
 UENUM(BlueprintType)
@@ -142,12 +150,6 @@ enum ECharacterClass
 	ECCL_Cleric UMETA(DisplayName = "Cleric"),
 	ECCL_Warrior UMETA(DisplayName = "Warrior"),
 };
-
-
-
-
-
-
 
 class VFS_API Enums
 {

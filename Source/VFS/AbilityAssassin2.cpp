@@ -26,13 +26,6 @@ AAbilityAssassin2::AAbilityAssassin2()
 void AAbilityAssassin2::BeginPlay()
 {
 	Super::BeginPlay();
-
-	CommitAnimation.AnimSequence = UGlobalLibrary::GetAnimSequence(3);
-	CommitAnimation.bLoop = true;
-
-	CommitAnimation.RightHandTrail = UGlobalLibrary::GetTrail(1);
-	CommitAnimation.TrailDelay = 0.3f;
-	CommitAnimation.TrailDuration = 1.0f;
 }
 
 void AAbilityAssassin2::SetupModifiers()
@@ -46,6 +39,5 @@ void AAbilityAssassin2::SetupModifiers()
 	Damage.AbilityOwner = this;
 	Damage.Icon = Icon;
 	Damage.Health = 250.0f;
-	Damage.StartParticle = UGlobalLibrary::GetParticle(4);
 	DamageModifiers.Add(Damage);
 }

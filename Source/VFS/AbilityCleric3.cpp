@@ -26,13 +26,6 @@ AAbilityCleric3::AAbilityCleric3()
 void AAbilityCleric3::BeginPlay()
 {
 	Super::BeginPlay();
-
-	CommitAnimation.AnimSequence = UGlobalLibrary::GetAnimSequence(3);
-	CommitAnimation.bLoop = true;
-
-	CommitAnimation.RightHandTrail = UGlobalLibrary::GetTrail(1);
-	CommitAnimation.TrailDelay = 0.3f;
-	CommitAnimation.TrailDuration = 1.0f;
 }
 
 void AAbilityCleric3::SetupModifiers()
@@ -46,7 +39,6 @@ void AAbilityCleric3::SetupModifiers()
 	Damage.AbilityOwner = this;
 	Damage.Icon = Icon;
 	Damage.Health = 100.0f;
-	Damage.StartParticle = UGlobalLibrary::GetParticle(4);
 	DamageModifiers.Add(Damage);
 
 	FBuffModifier Stun;
@@ -54,7 +46,6 @@ void AAbilityCleric3::SetupModifiers()
 	Stun.Icon = Icon;
 	Stun.State = CS_Stun;
 	Stun.TimeRemaining = 2.0f;
-	Stun.StartParticle = UGlobalLibrary::GetParticle(5);
 
 	BuffModifiers.Add(Stun);
 }

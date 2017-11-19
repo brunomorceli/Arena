@@ -26,13 +26,6 @@ AAbilityWarrior6::AAbilityWarrior6()
 void AAbilityWarrior6::BeginPlay()
 {
 	Super::BeginPlay();
-
-	CommitAnimation.AnimSequence = UGlobalLibrary::GetAnimSequence(3);
-	CommitAnimation.bLoop = true;
-
-	CommitAnimation.RightHandTrail = UGlobalLibrary::GetTrail(1);
-	CommitAnimation.TrailDelay = 0.3f;
-	CommitAnimation.TrailDuration = 1.0f;
 }
 
 void AAbilityWarrior6::SetupModifiers()
@@ -45,7 +38,6 @@ void AAbilityWarrior6::SetupModifiers()
 	FDamageModifier Damage;
 	Damage.AbilityOwner = this;
 	Damage.Icon = Icon;
-	Damage.Health = 350.0f;
-	Damage.StartParticle = UGlobalLibrary::GetParticle(4);
+	Damage.Health = 100.0f;
 	DamageModifiers.Add(Damage);
 }

@@ -26,13 +26,7 @@ AAbilityWarrior1::AAbilityWarrior1()
 void AAbilityWarrior1::BeginPlay()
 {
 	Super::BeginPlay();
-
-	CommitAnimation.AnimSequence = UGlobalLibrary::GetAnimSequence(3);
-	CommitAnimation.bLoop = true;
-
-	CommitAnimation.RightHandTrail = UGlobalLibrary::GetTrail(1);
-	CommitAnimation.TrailDelay = 0.3f;
-	CommitAnimation.TrailDuration = 1.0f;
+	CommitFX = UGlobalLibrary::GetAbilityUseFX(1);
 }
 
 void AAbilityWarrior1::SetupModifiers()
@@ -45,7 +39,11 @@ void AAbilityWarrior1::SetupModifiers()
 	FDamageModifier Damage;
 	Damage.AbilityOwner = this;
 	Damage.Icon = Icon;
-	Damage.Health = 350.0f;
-	Damage.StartParticle = UGlobalLibrary::GetParticle(4);
+	Damage.Health = 100.0f;
+
+	Damage.OnApplyHandler = [](AAbilityBase* Ability, ACharacterBase* Target) {
+		Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(1));
+	};
+
 	DamageModifiers.Add(Damage);
 }

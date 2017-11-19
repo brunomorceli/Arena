@@ -38,7 +38,6 @@ void AAbilityWarrior4::SetupModifiers()
 	FDamageModifier Damage;
 	Damage.AbilityOwner = this;
 	Damage.Icon = Icon;
-	Damage.Health = 120.0f;
-	Damage.StartParticle = UGlobalLibrary::GetParticle(4);
+	Damage.Health = 100.0f;
 	DamageModifiers.Add(Damage);
 }

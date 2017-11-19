@@ -100,4 +100,19 @@ public:
 		return Global->AnimSequences.Contains(Slot) ? Global->AnimSequences[Slot] : NULL;
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "GLobalLibrary")
+	static FORCEINLINE TSubclassOf<class AAbilityFXBase> GetAbilityUseFX(int32 Slot)
+	{
+		UGlobal* Global = GetGlobal();
+		if (!Global) { return NULL; }
+		return Global->AbilityUseFXs.Contains(Slot) ? Global->AbilityUseFXs[Slot] : NULL;
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "GLobalLibrary")
+	static FORCEINLINE TSubclassOf<class AAbilityFXBase> GetAbilityHitFX(int32 Slot)
+	{
+		UGlobal* Global = GetGlobal();
+		if (!Global) { return NULL; }
+		return Global->AbilityHitFXs.Contains(Slot) ? Global->AbilityHitFXs[Slot] : NULL;
+	}
 };

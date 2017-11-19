@@ -101,17 +101,26 @@ void AArenaCharacter::UpdateBuffModifiers(float DeltaTime)
 		BuffModifiers[i].TimeRemaining -= DeltaTime;
 		if (BuffModifiers[i].TimeRemaining <= 0.0f)
 		{
-			AAbilityBase* Ability = Cast<AAbilityBase>(BuffModifiers[i].AbilityOwner);
-			if (Ability)
+			if (BuffModifiers[i].AbilityOwner)
 			{
-				Health.RemoveMaxMultiplier(Ability->GetUniqueID());
-				Mana.RemoveMaxMultiplier(Ability->GetUniqueID());
-				Energy.RemoveMaxMultiplier(Ability->GetUniqueID());
+				Health.RemoveMaxMultiplier(BuffModifiers[i].AbilityOwner->GetUniqueID());
+				Mana.RemoveMaxMultiplier(BuffModifiers[i].AbilityOwner->GetUniqueID());
+				Energy.RemoveMaxMultiplier(BuffModifiers[i].AbilityOwner->GetUniqueID());
+
+				PhysicalDefense.Value -= BuffModifiers[i].PhysicalDefense;
+				MagicDefense.Value -= BuffModifiers[i].MagicDefense;
 
 				// [temporary]
 				MulticastSetMaxWalkSpeed(600.0f);
 
-				Ability->OnExpire(this);
+				if (BuffModifiers[i].OnExpireHandler)
+				{
+					BuffModifiers[i].OnExpireHandler(BuffModifiers[i].AbilityOwner, this);
+				}
+				if (BuffModifiers[i].OnRemoveHandler)
+				{
+					BuffModifiers[i].OnRenewHandler(BuffModifiers[i].AbilityOwner, this);
+				}
 
 				BuffModifiers.RemoveAt(i);
 				continue;
@@ -137,8 +146,14 @@ void AArenaCharacter::UpdateOvertimeModifiers(float DeltaTime)
 
 		if (OvertimeModifiers[i].TimeRemaining <= 0.0f)
 		{
-			AAbilityBase* Ability = Cast<AAbilityBase>(OvertimeModifiers[i].AbilityOwner);
-			if (Ability) { Ability->OnExpire(this); }
+			if (OvertimeModifiers[i].AbilityOwner && OvertimeModifiers[i].OnExpireHandler)
+			{
+				OvertimeModifiers[i].OnExpireHandler(OvertimeModifiers[i].AbilityOwner, this);
+			}
+			if (OvertimeModifiers[i].AbilityOwner && OvertimeModifiers[i].OnRemoveHandler)
+			{
+				OvertimeModifiers[i].OnRemoveHandler(OvertimeModifiers[i].AbilityOwner, this);
+			}
 
 			OvertimeModifiers.RemoveAt(i);
 			continue;
@@ -303,20 +318,14 @@ void AArenaCharacter::StartCast(int32 Slot)
 
 	CastAbility = Abilities[Slot];
 	CastTimeRemaining = CastAbility->CastTime;
-	MulticastSetHandsParticles(CastAbility->CastParticle, CastAbility->CastParticle);
-
-	ServerSetAnimState(
-		CastAbility->AbilityType == ABST_Castable ? CAS_Cast : CAS_Channel, 
-		CastAbility->CastAnimation
-	);
+	ServerSetAnimState(CastAbility->AbilityType == ABST_Castable ? CAS_Cast : CAS_Channel, CastAbility->CastFX);
 }
 
 void AArenaCharacter::StopCast()
 {
 	CastTimeRemaining = 0.0f;
 	CastAbility = NULL;
-	MulticastSetHandsParticles(NULL, NULL);
-	ServerSetAnimState(CAS_None, FAnimation());
+	ServerSetAnimState(CAS_None, NULL);
 }
 
 void AArenaCharacter::CommitAbility(int32 Slot)
@@ -366,7 +375,7 @@ void AArenaCharacter::CommitAbility(int32 Slot)
 			break;
 	}
 
-	ServerSetAnimState(AnimationState, Ability->CommitAnimation);
+	ServerSetAnimState(AnimationState, Ability->CommitFX);
 }
 
 void AArenaCharacter::CommitAbilityModifiers(AAbilityBase* Ability)
@@ -755,8 +764,6 @@ void AArenaCharacter::ApplyModifiers(AAbilityBase* Ability)
 
 		if (Modifier.bAllowSelf) { Causer->ApplyDamageModifier(Modifier); }
 	}
-
-	Ability->OnStart(this);
 }
 
 void AArenaCharacter::ApplyDelayedModifiers(AAbilityBase* Ability)
@@ -779,20 +786,19 @@ void AArenaCharacter::ApplyDelayedModifiers(AAbilityBase* Ability)
 
 void AArenaCharacter::ApplyAuraModifier(FAuraModifier Modifier)
 {
-	MulticastSetChestParticle(Modifier.StartParticle, false);
+	if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(Modifier.AbilityOwner, this); }
 }
 
 void AArenaCharacter::ApplyBuffModifier(FBuffModifier Modifier)
 {
-	AAbilityBase* Ability = Cast<AAbilityBase>(Modifier.AbilityOwner);
-	if (!Ability) { return; }
+	if (!Modifier.AbilityOwner) { return; }
 
 	// check if the buff already exists.
 	int32 index = -1;
 	for (int32 i = 0; i < BuffModifiers.Num(); i++)
 	{
 		FBuffModifier ExistingModifier = BuffModifiers[i];
-		if (ExistingModifier.AbilityOwner->GetUniqueID() == Ability->GetUniqueID())
+		if (ExistingModifier.AbilityOwner->GetUniqueID() == Modifier.AbilityOwner->GetUniqueID())
 		{
 			index = i;
 			break;
@@ -806,8 +812,7 @@ void AArenaCharacter::ApplyBuffModifier(FBuffModifier Modifier)
 
 		if (!Modifier.bIsStackable || BuffModifiers[index].Stacks >= Modifier.MaxStacks)
 		{
-			Ability->OnRenew(this);
-			return MulticastSetChestParticle(Modifier.StartParticle, false);
+			if (Modifier.OnRenewHandler) { Modifier.OnRenewHandler(Modifier.AbilityOwner, this); }
 		}
 
 		BuffModifiers[index].Stacks = FMath::Clamp(BuffModifiers[index].Stacks + 1, 1, BuffModifiers[index].MaxStacks);
@@ -816,50 +821,71 @@ void AArenaCharacter::ApplyBuffModifier(FBuffModifier Modifier)
 	else
 	{
 		BuffModifiers.Push(Modifier);
+		if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(Modifier.AbilityOwner, this); }
 	}
 
 	// add multiplyers
 	if (Modifier.Health != 0.0f)
 	{
-		Health.AddMaxMultiplier(Ability->GetUniqueID(), Modifier.Health, Modifier.bIsPercent);
+		Health.AddMaxMultiplier(Modifier.AbilityOwner->GetUniqueID(), Modifier.Health, Modifier.bIsPercent);
 	}
 
 	if (Modifier.Mana != 0.0f)
 	{
-		Mana.AddMaxMultiplier(Ability->GetUniqueID(), Modifier.Mana, Modifier.bIsPercent);
+		Mana.AddMaxMultiplier(Modifier.AbilityOwner->GetUniqueID(), Modifier.Mana, Modifier.bIsPercent);
 	}
 
 	if (Modifier.Energy != 0.0f)
 	{
-		Energy.AddMaxMultiplier(Ability->GetUniqueID(), Modifier.Energy, Modifier.bIsPercent);
+		Energy.AddMaxMultiplier(Modifier.AbilityOwner->GetUniqueID(), Modifier.Energy, Modifier.bIsPercent);
 	}
 
 	if (Modifier.Speed != 0.0f) { MulticastSetMaxWalkSpeed(Modifier.Speed); }
 
+	if (Modifier.MagicDefense != 0.0f)
+	{
+		MagicDefense.Value += Modifier.MagicDefense;
+	}
+
+	PhysicalDefense.Value += Modifier.PhysicalDefense;
+	MagicDefense.Value += Modifier.MagicDefense;
+
 	// notify all sources
-	if (Modifier.bIsStackable) { Ability->OnRenew(this); }
-	MulticastSetChestParticle(Modifier.StartParticle, false);
+	if (Modifier.bIsStackable && Modifier.OnRenewHandler)
+	{
+		Modifier.OnRenewHandler(Modifier.AbilityOwner, this);
+	}
 }
 
 void AArenaCharacter::ApplyAbsorbingModifier(FAbsorbingModifier Modifier)
 {
-	MulticastSetChestParticle(Modifier.StartParticle, false);
+	AbsorbingModifiers.Add(Modifier);
+	if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(Modifier.AbilityOwner, this); }
 }
 
 void AArenaCharacter::ApplyDamageModifier(FDamageModifier Modifier)
 {
-	AAbilityBase* Ability = Cast<AAbilityBase>(Modifier.AbilityOwner);
-	if (!Ability) { return; }
+	if (!Modifier.AbilityOwner) { return; }
 
-	Health.Damage(Modifier.Health, Modifier.bIsPercent);
+	if (Modifier.Health != 0.0f)
+	{
+		float Amount = Modifier.bIsPercent ? Health.GetPercentAmount(Modifier.Health) : Modifier.Health;
+		Amount = CalculateDamageByBuffModifiers(Amount, Modifier.School);
+		Amount = CalculateDamageByAbsorbingModifiers(Amount, Modifier.School);
+
+		if (Amount >= 0.0f)
+		Health.Damage(Amount);
+	}
+
 	Mana.Damage(Modifier.Mana, Modifier.bIsPercent);
 	Energy.Damage(Modifier.Energy, Modifier.bIsPercent);
 
-	MulticastSetChestParticle(Modifier.StartParticle, false);
+	if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(Modifier.AbilityOwner, this); }
+	if (Modifier.OnDoDamageHandler) { Modifier.OnDoDamageHandler(Modifier.AbilityOwner, this); }
 
 	if (Health.Value > 0.0f) { return; }
 
-	ACharacterBase* Causer = Cast<ACharacterBase>(Ability->CharacterOwner);
+	ACharacterBase* Causer = Cast<ACharacterBase>(Modifier.AbilityOwner->CharacterOwner);
 	if (!Causer) { return; }
 
 	AArenaPlayerState* CauserPlayerState = Cast<AArenaPlayerState>(Causer->PlayerState);
@@ -874,7 +900,6 @@ void AArenaCharacter::ApplyDamageModifier(FDamageModifier Modifier)
 void AArenaCharacter::ApplyOvertimeModifier(FOvertimeModifier Modifier)
 {
 	OvertimeModifiers.Push(FOvertimeModifier(Modifier));
-	MulticastSetChestParticle(Modifier.StartParticle, false);
 }
 
 void AArenaCharacter::ApplyHealModifier(FHealModifier Modifier)
@@ -883,7 +908,7 @@ void AArenaCharacter::ApplyHealModifier(FHealModifier Modifier)
 	Mana.Heal(Modifier.Mana, Modifier.bIsPercent);
 	Energy.Heal(Modifier.Energy, Modifier.bIsPercent);
 
-	MulticastSetChestParticle(Modifier.StartParticle, false);
+	if (Modifier.OnDoHealHandler) { Modifier.OnDoHealHandler(Modifier.AbilityOwner, this); }
 }
 
 void AArenaCharacter::ApplyCosts(AAbilityBase* Ability)
@@ -906,14 +931,94 @@ void AArenaCharacter::ApplyCosts(AAbilityBase* Ability)
 
 void AArenaCharacter::TickOvertimeModifier(FOvertimeModifier Modifier)
 {
-	AAbilityBase* Ability = Cast<AAbilityBase>(Modifier.AbilityOwner);
-	if (!Ability) { return; }
+	if (!Modifier.AbilityOwner) { return; }
 
-	Health.Damage(Modifier.Health, Modifier.bIsPercent);
-	Mana.Damage(Modifier.Mana, Modifier.bIsPercent);
-	Energy.Damage(Modifier.Energy, Modifier.bIsPercent);
+	if (Modifier.bIsHarmful)
+	{
+		Health.Damage(Modifier.Health, Modifier.bIsPercent);
+		Mana.Damage(Modifier.Mana, Modifier.bIsPercent);
+		Energy.Damage(Modifier.Energy, Modifier.bIsPercent);
 
-	MulticastSetChestParticle(Modifier.StartParticle, false);
+		if (Modifier.OnDoDamageHandler) { Modifier.OnDoDamageHandler(Modifier.AbilityOwner, this); }
+	}
+	else
+	{
+		Health.Heal(Modifier.Health, Modifier.bIsPercent);
+		Mana.Heal(Modifier.Mana, Modifier.bIsPercent);
+		Energy.Heal(Modifier.Energy, Modifier.bIsPercent);
+
+		if (Modifier.OnDoHealHandler) { Modifier.OnDoHealHandler(Modifier.AbilityOwner, this); }
+	}
+
+	if (Modifier.OnTickHandler) { Modifier.OnTickHandler(Modifier.AbilityOwner, this); }
+}
+
+float AArenaCharacter::CalculateDamageByBuffModifiers(float Amount, EModifierSchool School)
+{
+	if (State == CS_Invunerable || Amount <= 0.0f) { return 0.0f; }
+
+
+	if (School == MS_Magic)
+	{
+		Amount -= Amount * (MagicDefense.Value / 100.0f);
+	}
+
+	Amount -= Amount * (PhysicalDefense.Value / 100.0f);
+
+	return FMath::Max(Amount, 0.0f);
+}
+
+float AArenaCharacter::CalculateDamageByAbsorbingModifiers(float Amount, EModifierSchool School)
+{
+	if (State == CS_Invunerable || Amount <= 0.0f) { return 0.0f; }
+
+	for (int32 Index = 0; Index < AbsorbingModifiers.Num();)
+	{
+		if (AbsorbingModifiers[Index].School != School)
+		{
+			Index++;
+			continue;
+		}
+
+		if (AbsorbingModifiers[Index].Health > Amount)
+		{
+			AbsorbingModifiers[Index].Health -= Amount;
+			return 0.0f;
+		}
+
+		Amount -= AbsorbingModifiers[Index].Health;
+		
+		if (AbsorbingModifiers[Index].OnRemoveHandler)
+		{
+			AbsorbingModifiers[Index].OnRemoveHandler(AbsorbingModifiers[Index].AbilityOwner, this);
+		}
+
+		AbsorbingModifiers.RemoveAt(Index);
+		
+		if (Amount <= 0) { return 0.0f; }
+
+		Index++;
+	}
+
+	return Amount;
+}
+
+void AArenaCharacter::UpdateOnTakeDamage(FDamageModifier Modifier, float Amount)
+{
+	for (auto Aura : AuraModifiers)
+	{
+		if (Aura.OnTakeDamageHandler) { Aura.OnTakeDamageHandler(Aura.AbilityOwner, this); }
+	}
+
+	for (auto Buff : BuffModifiers)
+	{
+		if (Buff.OnTakeDamageHandler) { Buff.OnTakeDamageHandler(Buff.AbilityOwner, this); }
+	}
+
+	for (auto OverTime : OvertimeModifiers)
+	{
+		if (OverTime.OnTakeDamageHandler) { OverTime.OnTakeDamageHandler(OverTime.AbilityOwner, this); }
+	}
 }
 
 // ==========================================================================================

@@ -15,6 +15,8 @@
 #include "AbilityProjectile.h"
 #include "AbilityBase.generated.h"
 
+class AAbilityBase;
+
 // ==================================================================================================================================================
 // MODIFIER
 // ==================================================================================================================================================
@@ -26,8 +28,10 @@ struct FModifierBase
 
 public:
 
+	typedef void(*HandlerPtr)(AAbilityBase*, ACharacterBase*);
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	AActor* AbilityOwner;
+	AAbilityBase* AbilityOwner;
 
 	// Icon that will be shown.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
@@ -41,10 +45,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
 	FText Description;
 
-	UParticleSystem* StartParticle = NULL;
-	UParticleSystem* DuringParticle = NULL;
-	UParticleSystem* EndParticle = NULL;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
 	int32 bAllowSelf = false;
 
@@ -53,6 +53,8 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
 	int32 bAllowEnemy = true;
+
+	int32 bIsHarmful = true;
 
 	// School modifier.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
@@ -89,13 +91,32 @@ public:
 	float Speed = 0.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float Power = 0.0f;
+	float PhysicalPower = 0.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float Defense = 0.0f;
+	float MagicPower = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float PhysicalDefense = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float MagicDefense = 0.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
 	float Critical = 0.0f;
+
+	HandlerPtr OnApplyHandler = NULL;
+	HandlerPtr OnDoDamageHandler = NULL;
+	HandlerPtr OnTakeDamageHandler = NULL;
+	HandlerPtr OnTickHandler = NULL;
+	HandlerPtr OnDoHealHandler = NULL;
+	HandlerPtr OnTakeHealHandler = NULL;
+	HandlerPtr OnBreakHandler = NULL;
+	HandlerPtr OnRenewHandler = NULL;
+	HandlerPtr OnExpireHandler = NULL;
+	HandlerPtr OnRemoveHandler = NULL;
+	HandlerPtr OnCastHandler = NULL;
+	HandlerPtr OnChangeStateHandler = NULL;
 };
 
 USTRUCT(BlueprintType)
@@ -157,7 +178,6 @@ struct FHealModifier : public FModifierBase {
 USTRUCT(BlueprintType)
 struct FDamageModifier : public FModifierBase {
 	GENERATED_USTRUCT_BODY(BlueprintType)
-
 };
 
 // ==================================================================================================================================================
@@ -182,6 +202,9 @@ protected:
 	virtual void UpdateTimers(float DeltaTime);
 
 public:
+
+	TSubclassOf<AAbilityFXBase> CommitFX;
+	TSubclassOf<AAbilityFXBase> CastFX;
 
 	// Ability Owner.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
@@ -301,12 +324,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifiers")
 	TArray<FDamageModifier> DamageModifiers;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
-	FAnimation CastAnimation;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
-	FAnimation CommitAnimation;
-
 	virtual void BeginPlay() override;
 
 	// Called every frame
@@ -336,13 +353,6 @@ public:
 	void ClearChanneling();
 
 	bool UpdateChanneling(float DeltaTime);
-
-	virtual void OnStart(ACharacterBase* Target);
-	virtual void OnDamage(ACharacterBase* Target);
-	virtual void OnHeal(ACharacterBase* Target);
-	virtual void OnBreak(ACharacterBase* Target);
-	virtual void OnRenew(ACharacterBase* Targets);
-	virtual void OnExpire(ACharacterBase* Target);
 
 	// Network Replication Props (override).
 	void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;

@@ -11,6 +11,7 @@
 #include "Enums.h"
 #include "AbilityBase.h"
 #include "AbilityProjectile.h"
+#include "AbilityFXBase.h"
 #include "Global.generated.h"
 
 USTRUCT(BlueprintType)
@@ -123,4 +124,59 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Global")
 	TMap<int32, UAnimSequence*> AnimSequences;
 
+	// ==================================================================================
+	// ABILITY FX
+	// ==================================================================================
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Global")
+	TMap<int32, TSubclassOf<class AAbilityFXBase>> AbilityUseFXs;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Global")
+	TMap<int32, TSubclassOf<class AAbilityFXBase>> AbilityHitFXs;
+
+	// ==================================================================================
+	// SOUNDS
+	// ==================================================================================
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Global")
+	TArray<USoundBase*> SwordWhooshSounds;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Global")
+	TArray<USoundBase*> SwordHitSounds;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Global")
+	TArray<USoundBase*> WarriorGruntSounds;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Global")
+	TArray<USoundBase*> WarriorDamageSounds;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Global")
+	TArray<USoundBase*> WarriorDeathSounds;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Global")
+	TArray<USoundBase*> AssassinGruntSounds;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Global")
+	TArray<USoundBase*> AssassinDamageSounds;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Global")
+	TArray<USoundBase*> AssassinDeathSounds;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Global")
+	TArray<USoundBase*> WizardGruntSounds;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Global")
+	TArray<USoundBase*> WizardDamageSounds;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Global")
+	TArray<USoundBase*> WizardDeathSounds;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Global")
+	TArray<USoundBase*> ClericGruntSounds;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Global")
+	TArray<USoundBase*> ClericDamageSounds;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Global")
+	TArray<USoundBase*> ClericDeathSounds;
 };

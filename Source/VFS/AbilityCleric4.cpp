@@ -39,6 +39,5 @@ void AAbilityCleric4::SetupModifiers()
 	Damage.AbilityOwner = this;
 	Damage.Icon = Icon;
 	Damage.Health = 120.0f;
-	Damage.StartParticle = UGlobalLibrary::GetParticle(4);
 	DamageModifiers.Add(Damage);
 }

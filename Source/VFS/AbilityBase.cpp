@@ -14,6 +14,9 @@ AAbilityBase::AAbilityBase()
 	bNetUseOwnerRelevancy = true;
 	bNetLoadOnClient = true;
 
+	CommitFX = NULL;
+	CastFX = NULL;
+
 	Slot = 0;
 	Name = FName("No Name");
 	Description = "No Description";
@@ -126,13 +129,6 @@ bool AAbilityBase::UpdateChanneling(float DeltaTime)
 
 	return false;
 }
-
-void AAbilityBase::OnStart(ACharacterBase* Target) { }
-void AAbilityBase::OnDamage(ACharacterBase* Target) { }
-void AAbilityBase::OnHeal(ACharacterBase* Target) { }
-void AAbilityBase::OnBreak(ACharacterBase* Target) { }
-void AAbilityBase::OnRenew(ACharacterBase* Targets) { }
-void AAbilityBase::OnExpire(ACharacterBase* Target) { }
 
 void AAbilityBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {

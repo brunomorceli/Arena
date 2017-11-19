@@ -19,7 +19,10 @@
 #include "Enums.h"
 #include "ArenaPlayerState.h"
 #include "ArenaSaveGame.h"
+#include "AbilityFXBase.h"
 #include "CharacterBase.generated.h"
+
+class AAbilityFXBase;
 
 USTRUCT(BlueprintType)
 struct FStatus
@@ -28,6 +31,9 @@ struct FStatus
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	float Min;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
+	float MinBase;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	float Max;
@@ -39,6 +45,9 @@ struct FStatus
 	float Value;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
+	float ValueBase;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	float Regeneration;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
@@ -47,13 +56,14 @@ struct FStatus
 	TMap<int32, float> MaxMultipliers;
 	TMap<int32, float> RegenerationMultipliers;
 
-	void Setup(float MaxAmount, float RegenerationAmount=0.0f)
+	void Setup(float MinAmount,  float MaxAmount, float ValueAmount=0.0f, float RegenerationAmount=0.0f)
 	{
-		Min = 0.0f;
+		MinBase = MinAmount;
+		Min = MinBase;
 		MaxBase = MaxAmount;
 		Max = MaxBase;
-		Value = Max;
-
+		ValueBase = ValueAmount;
+		Value = ValueBase;
 		RegenerationBase = RegenerationAmount;
 		Regeneration = RegenerationBase;
 	}
@@ -64,8 +74,9 @@ struct FStatus
 		RegenerationMultipliers.Empty();
 
 		Max = MaxBase;
+		Min = MinBase;
 		Regeneration = RegenerationBase;
-		Value = Max;
+		Value = ValueBase;
 	}
 
 	float GetAmountByPercent(float MaxVal, float Percent)
@@ -151,18 +162,12 @@ struct FStatus
 };
 
 USTRUCT(BlueprintType)
-struct FAnimation
+struct FCharacterFX
 {
 	GENERATED_USTRUCT_BODY(BlueprintType)
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
-	int32 bLoop = true;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
-	float Duration = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
-	UAnimSequence* AnimSequence = NULL;
+	int32 PlayAnimation = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	UParticleSystem* LeftHandTrail = NULL;
@@ -178,6 +183,15 @@ struct FAnimation
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	float TrailDelay = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
+	USoundBase* Sound = NULL;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
+	float SoundDelay = 0.0f;
+
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
+	//TMap<ECharacterSocket, UParticleSystem*> Particles;
 };
 
 // ============================================================================================================================
@@ -185,7 +199,7 @@ struct FAnimation
 // ============================================================================================================================
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNotificationDelegate, FString, Message);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FChangeAnimStateDelegate, ECharacterAnimationState, NewAnimState, FAnimation, Animation);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FChangeAnimStateDelegate, ECharacterAnimationState, NewAnimState);
 
 UCLASS(config = Game)
 class ACharacterBase : public ACharacter
@@ -212,6 +226,12 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintAssignable, Category = "Notification")
 	FChangeAnimStateDelegate ChangeAnimStateDelegate;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	class UParticleSystemComponent* RootParticle;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	class UParticleSystemComponent* HeadParticle;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
 	class UParticleSystemComponent* ChestParticle;
@@ -279,19 +299,25 @@ public:
 	FStatus Speed;
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Status")
-	float Critical;
+	FStatus Critical;
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Status")
-	FStatus Power;
+	FStatus MagicPower;
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Status")
-	FStatus Defense;
+	FStatus PhysicalPower;
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Status")
-	FStatus MagicAbsorbing;
+	FStatus PhysicalDefense;
+
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Status")
+	FStatus MagicDefense;
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	FStatus PhyicalAbsorbing;
+
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Status")
+	FStatus MagicAbsorbing;
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	ACharacterBase* Target;
@@ -401,6 +427,21 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Utils")
 	bool FindFloor(FVector& Result, float Depth);
 
+	UFUNCTION(BlueprintCallable, Category = "Utils")
+	void PlaySound(USoundBase* Sound, float Delay);
+
+	UFUNCTION(BlueprintCallable, Category = "Utils")
+	void AddWeaponTrail(
+		UParticleSystemComponent* HandParticle,
+		UParticleSystem* Particle,
+		float Duration,
+		float Delay,
+		float TrailWidth
+	);
+
+	UFUNCTION(BlueprintCallable, Category = "Utils")
+	void PlayFX(TSubclassOf<AAbilityFXBase> Effect);
+
 	// ===================================================================================================================
 	// NETWORK METHODS
 	// ===================================================================================================================
@@ -469,34 +510,33 @@ public:
 	bool ServerSetTeam_Validate(EPlayerTeam NewTeam) { return true; }
 
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = "Network")
-	void ServerSetAnimState(ECharacterAnimationState NewAnimState, FAnimation Animation);
-	void ServerSetAnimState_Implementation(ECharacterAnimationState NewAnimState, FAnimation Animation) { MulticastSetAnimState(NewAnimState, Animation); }
-	bool ServerSetAnimState_Validate(ECharacterAnimationState NewAnimState, FAnimation Animation) { return true; }
+	void ServerSetAnimState(ECharacterAnimationState NewAnimState, TSubclassOf<AAbilityFXBase> Effect);
+	void ServerSetAnimState_Implementation(ECharacterAnimationState NewAnimState, TSubclassOf<AAbilityFXBase> Effect) { MulticastSetAnimState(NewAnimState, Effect); }
+	bool ServerSetAnimState_Validate(ECharacterAnimationState NewAnimState, TSubclassOf<AAbilityFXBase> Effect) { return true; }
 
 	UFUNCTION(NetMulticast, Reliable, Category = "Network")
-	void MulticastSetAnimState(ECharacterAnimationState NewAnimState, FAnimation Animation);
-	void MulticastSetAnimState_Implementation(ECharacterAnimationState NewAnimState, FAnimation Animation);
+	void MulticastSetAnimState(ECharacterAnimationState NewAnimState, TSubclassOf<AAbilityFXBase> Effect);
+	void MulticastSetAnimState_Implementation(ECharacterAnimationState NewAnimState, TSubclassOf<AAbilityFXBase> Effect);
 
 	UFUNCTION(NetMulticast, Reliable, Category = "Network")
 	void MulticastSetPawn(TSubclassOf<ACharacterBase> Character);
 	void MulticastSetPawn_Implementation(TSubclassOf<ACharacterBase> Character);
 
 	UFUNCTION(NetMulticast, Reliable, Category = "Network")
-	void MulticastSetChestParticle(UParticleSystem* Particlebool, bool Clear);
-	void MulticastSetChestParticle_Implementation(UParticleSystem* Particle, bool Clear);
-
-	UFUNCTION(NetMulticast, Reliable, Category = "Network")
-	void MulticastSetHandsParticles(UParticleSystem* LeftHand, UParticleSystem* RightHand);
-	void MulticastSetHandsParticles_Implementation(UParticleSystem* LeftHand, UParticleSystem* RightHand);
-
-	UFUNCTION(NetMulticast, Reliable, Category = "Network")
 	void MulticastSetAuraParticle(UParticleSystem* Particle);
 	void MulticastSetAuraParticle_Implementation(UParticleSystem* Particle);
 
+	UFUNCTION(NetMulticast, Reliable, Category = "Network")
+	void MulticastSetParticle(UParticleSystem* Particle, ECharacterSocket Socket);
+	void MulticastSetParticle_Implementation(UParticleSystem* Particle, ECharacterSocket Socket);
 
 	UFUNCTION(NetMulticast, Reliable, Category = "Network")
 	void MulticastSetMaxWalkSpeed(float Amount);
 	void MulticastSetMaxWalkSpeed_Implementation(float Amount);
+
+	UFUNCTION(NetMulticast, Unreliable, Category = "Network")
+	void MulticastPlayFX(TSubclassOf<AAbilityFXBase> Effect);
+	void MulticastPlayFX_Implementation(TSubclassOf<AAbilityFXBase> Effect);
 
 	void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
 };
