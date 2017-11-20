@@ -65,6 +65,15 @@ enum EAbilityValidation
 };
 
 UENUM(BlueprintType)
+enum EAbilityEvent
+{
+	EABE_Apply UMETA(DisplayName = "Apply"),
+	EABE_Break UMETA(DisplayName = "Break"),
+	EABE_Dispell UMETA(DisplayName = "Dispell"),
+	EABE_Expire UMETA(DisplayName = "Expire"),
+};
+
+UENUM(BlueprintType)
 enum EAbilitySchool
 {
 	ABS_Physical UMETA(DisplayName = "Physical"),
@@ -130,6 +139,14 @@ enum EModifierConstrain
 	MDCT_None UMETA(DisplayName = "None"),
 	MDCT_Unique UMETA(DisplayName = "Unique"),
 	MDCT_UniqueByPlayer UMETA(DisplayName = "UniqueByPlayer"),
+};
+
+UENUM(BlueprintType)
+enum EAbilityInfoType
+{
+	EAIT_Damage UMETA(DisplayName = "Damage"),
+	EAIT_Heal UMETA(DisplayName = "Heal"),
+	EAIT_Buff UMETA(DisplayName = "Buff"),
 };
 
 UENUM(BlueprintType)

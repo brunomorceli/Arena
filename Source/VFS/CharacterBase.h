@@ -189,9 +189,6 @@ struct FCharacterFX
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	float SoundDelay = 0.0f;
-
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
-	//TMap<ECharacterSocket, UParticleSystem*> Particles;
 };
 
 // ============================================================================================================================
@@ -223,7 +220,7 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintAssignable, Category = "Notification")
 	FNotificationDelegate NotificationDelegate;
-
+	
 	UPROPERTY(VisibleAnywhere, BlueprintAssignable, Category = "Notification")
 	FChangeAnimStateDelegate ChangeAnimStateDelegate;
 

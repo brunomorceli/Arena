@@ -20,4 +20,16 @@ public:
 	{
 		UGameplayStatics::PlaySoundAtLocation(World, Sounds[FMath::RandRange(0, Sounds.Num()-1)], Location);
 	}
+
+	UFUNCTION(BlueprintCallable, Category = "Utilities")
+	static bool IsCritical(float PercentChance)
+	{
+		return (FMath::RandRange(1, (int)(100 / PercentChance)) == 1 ? true : false);
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Utilities")
+	static float GetAmountPercentage(float Amount, float Percentage)
+	{
+		return Amount * ( Percentage / 100.0f);
+	}
 };

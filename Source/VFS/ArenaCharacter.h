@@ -9,11 +9,14 @@
 #include "CharacterBase.h"
 #include "AbilityBase.h"
 #include "ArenaGameInstance.h"
+#include "Utilities.h"
 #include "ArenaCharacter.generated.h"
 
 // ==================================================================================================================================================
 // CLASS
 // ==================================================================================================================================================
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNotifyAbilityInfoDelegate, FAbilityInfo, AbilityInfo);
 
 UCLASS(config=Game)
 class AArenaCharacter : public ACharacterBase
@@ -52,6 +55,10 @@ protected:
 	void CommitAbilityModifiers(AAbilityBase* Ability);
 
 public:
+
+	UPROPERTY(VisibleAnywhere, BlueprintAssignable, Category = "Notification")
+	FNotifyAbilityInfoDelegate AbilityInfoDelegate;
+
 	TMap<int32, AAbilityBase*> Abilities;
 
 	AArenaCharacter();
@@ -139,11 +146,21 @@ public:
 
 	void TickOvertimeModifier(FOvertimeModifier Modifier);
 
-	float CalculateDamageByBuffModifiers(float Amount, EModifierSchool School);
-	
-	float CalculateDamageByAbsorbingModifiers(float Amount, EModifierSchool School);
+	void CalculateDamage(FDamageModifier Modifier, FAbilityInfo &AbilityInfo);
 
-	void UpdateOnTakeDamage(FDamageModifier Modifier, float Amount);
+	void CalculateDamageByBuffModifiers(FDamageModifier Modifier, FAbilityInfo &AbilityInfo);
+	
+	void CalculateDamageByAbsorbingModifiers(FDamageModifier Modifier, FAbilityInfo &AbilityInfo);
+
+	void UpdateOnTakeDamage(FAbilityInfo AbilityInfo);
+
+	FAbilityInfo GetDefaultAbilityInfo(FModifierBase Modifier);
+	FAbilityInfo GetAbilityInfo(FAuraModifier Modifier);
+	FAbilityInfo GetAbilityInfo(FBuffModifier Modifier);
+	FAbilityInfo GetAbilityInfo(FAbsorbingModifier Modifier);
+	FAbilityInfo GetAbilityInfo(FDamageModifier Modifier);
+	FAbilityInfo GetAbilityInfo(FOvertimeModifier Modifier);
+	FAbilityInfo GetAbilityInfo(FHealModifier Modifier);
 
 	// ==========================================================================================
 	// NETWORK
@@ -181,6 +198,10 @@ public:
 	void ServerSetPlayerProfile(FPlayerProfile PlayerProfile);
 	void ServerSetPlayerProfile_Implementation(FPlayerProfile PlayerProfile);
 	bool ServerSetPlayerProfile_Validate(FPlayerProfile PlayerProfile) { return true; }
+
+	UFUNCTION(NetMulticast, Unreliable, Category = "Network")
+	void MulticastNotifyAbilityInfo(FAbilityInfo AbilityInfo);
+	void MulticastNotifyAbilityInfo_Implementation(FAbilityInfo AbilityInfo) { AbilityInfoDelegate.Broadcast(AbilityInfo); }
 
 	void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
 };

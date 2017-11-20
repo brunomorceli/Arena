@@ -116,7 +116,7 @@ ACharacterBase::ACharacterBase()
 	Mana.Setup(0.0f, 2000.0f, 2000.0f, 0.3f);
 	Energy.Setup(0.0f, 150.0f, 150.0f, 3.0f);
 	Speed.Setup(0.0f, 600.0f, 600.0f);
-	Critical.Setup(0.0f, 100.0f, 5.0f);
+	Critical.Setup(0.0f, 100.0f, 15.0f);
 
 	PhysicalPower.Setup(-100.0f, 100.0f, 0.0f);
 	MagicPower.Setup(-100.0f, 100.0f, 0.0f);
@@ -632,7 +632,7 @@ void ACharacterBase::ServerRespawn_Implementation()
 	Mana.Reset();
 	Energy.Reset();
 	Speed.Reset();
-	Critical.Value = 5.0f;
+	Critical.Reset();
 	MagicPower.Reset();
 	MagicDefense.Reset();
 	PhysicalDefense.Reset();

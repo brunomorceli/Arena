@@ -9,6 +9,7 @@
 #include "Runtime/Engine/Classes/Particles/ParticleSystem.h"
 #include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
 #include "Runtime/Engine/Classes/Engine/EngineTypes.h"
+#include "Runtime/Core/Public/Misc/Guid.h"
 
 #include "Enums.h"
 #include "CharacterBase.h"
@@ -22,13 +23,67 @@ class AAbilityBase;
 // ==================================================================================================================================================
 
 USTRUCT(BlueprintType)
+struct FAbilityInfo
+{
+	GENERATED_USTRUCT_BODY(BlueprintType)
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	TEnumAsByte<EAbilityEvent> Event = EABE_Apply;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	TEnumAsByte<EAbilityInfoType> Type = EAIT_Damage;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	int32 bIsHarmful = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	int32 bIsDispellable = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	int32 bExpires = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float TimeRemaining = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	int32 bCritical = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float Amount = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float Absorbed = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float Overkill = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	ACharacterBase* Causer = NULL;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	ACharacterBase* Target = NULL;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	AAbilityBase* Ability = NULL;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	UTexture2D* ModifierIcon = NULL;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	FName ModifierName = "";
+};
+
+USTRUCT(BlueprintType)
 struct FModifierBase
 {
 	GENERATED_USTRUCT_BODY(BlueprintType)
 
 public:
 
-	typedef void(*HandlerPtr)(AAbilityBase*, ACharacterBase*);
+	typedef void(*HandlerPtr)(FAbilityInfo);
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	FGuid ModifierId = FGuid();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
 	AAbilityBase* AbilityOwner;
@@ -54,6 +109,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
 	int32 bAllowEnemy = true;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
 	int32 bIsHarmful = true;
 
 	// School modifier.
@@ -91,6 +147,9 @@ public:
 	float Speed = 0.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float Critical = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
 	float PhysicalPower = 0.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
@@ -103,7 +162,19 @@ public:
 	float MagicDefense = 0.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float Critical = 0.0f;
+	float ModifierCritical = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float ModifierPhysicalPower = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float ModifierMagicPower = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float ModifierPhysicalDefense = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float ModifierMagicDefense = 0.0f;
 
 	HandlerPtr OnApplyHandler = NULL;
 	HandlerPtr OnDoDamageHandler = NULL;
@@ -117,6 +188,14 @@ public:
 	HandlerPtr OnRemoveHandler = NULL;
 	HandlerPtr OnCastHandler = NULL;
 	HandlerPtr OnChangeStateHandler = NULL;
+	HandlerPtr OnCommitAbility = NULL;
+	HandlerPtr OnCritical = NULL;
+
+	void RunHandler(HandlerPtr Handler, FAbilityInfo AbilityInfo)
+	{
+		if (!Handler || !AbilityOwner) { return; }
+		Handler(AbilityInfo);
+	}
 };
 
 USTRUCT(BlueprintType)
@@ -167,17 +246,27 @@ USTRUCT(BlueprintType)
 struct FAbsorbingModifier : public FModifierBase {
 	GENERATED_USTRUCT_BODY(BlueprintType)
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
+	int32 bUntilUse = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
+	float TimeRemaining = 20.0f;
 };
 
 USTRUCT(BlueprintType)
 struct FHealModifier : public FModifierBase {
 	GENERATED_USTRUCT_BODY(BlueprintType)
 
+public:
+
 };
 
 USTRUCT(BlueprintType)
 struct FDamageModifier : public FModifierBase {
 	GENERATED_USTRUCT_BODY(BlueprintType)
+
+public:
+
 };
 
 // ==================================================================================================================================================

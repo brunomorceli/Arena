@@ -41,8 +41,8 @@ void AAbilityWarrior1::SetupModifiers()
 	Damage.Icon = Icon;
 	Damage.Health = 100.0f;
 
-	Damage.OnApplyHandler = [](AAbilityBase* Ability, ACharacterBase* Target) {
-		Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(1));
+	Damage.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
+		AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(1));
 	};
 
 	DamageModifiers.Add(Damage);

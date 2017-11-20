@@ -40,9 +40,9 @@ void AAbilityWarrior2::SetupModifiers()
 	Damage.Icon = Icon;
 	Damage.Health = 100.0f;
 
-	Damage.OnApplyHandler = [](AAbilityBase* Ability, ACharacterBase* Target) {
-		Target->ServerKnockBack(Ability->CharacterOwner->GetActorLocation(), 1200.0f);
-		Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(2));
+	Damage.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
+		AbilityInfo.Target->ServerKnockBack(AbilityInfo.Causer->GetActorLocation(), 1200.0f);
+		AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(2));
 	};
 
 	DamageModifiers.Add(Damage);
