@@ -46,4 +46,18 @@ void AAbilityWarrior2::SetupModifiers()
 	};
 
 	DamageModifiers.Add(Damage);
+
+	FOvertimeModifier Overtime;
+	Overtime.AbilityOwner = this;
+	Overtime.Icon = Icon;
+	Overtime.Health = 50.0f;
+	Overtime.TickTime = 1.0f;
+	Overtime.TimeRemaining = 10.0f;
+	Overtime.bIsHarmful = true;
+
+	Overtime.OnTickHandler = [](FAbilityInfo AbilityInfo) {
+		AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(2));
+	};
+
+	OvertimeModifiers.Add(Overtime);
 }

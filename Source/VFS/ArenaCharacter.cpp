@@ -933,6 +933,9 @@ void AArenaCharacter::TickOvertimeModifier(FOvertimeModifier Modifier)
 {
 	if (!Modifier.AbilityOwner) { return; }
 
+	FAbilityInfo AbilityInfo = GetAbilityInfo(Modifier);
+	AbilityInfo.Amount = Modifier.Health;
+
 	if (Modifier.bIsHarmful)
 	{
 		Health.Damage(Modifier.Health, Modifier.bIsPercent);
@@ -951,6 +954,7 @@ void AArenaCharacter::TickOvertimeModifier(FOvertimeModifier Modifier)
 	}
 
 	if (Modifier.OnTickHandler) { Modifier.OnTickHandler(GetAbilityInfo(Modifier)); }
+	MulticastNotifyAbilityInfo(AbilityInfo);
 }
 
 void AArenaCharacter::CalculateDamage(FDamageModifier Modifier, FAbilityInfo &AbilityInfo)
@@ -1114,7 +1118,7 @@ FAbilityInfo AArenaCharacter::GetAbilityInfo(FDamageModifier Modifier)
 FAbilityInfo AArenaCharacter::GetAbilityInfo(FOvertimeModifier Modifier)
 {
 	FAbilityInfo AbilityInfo = GetDefaultAbilityInfo(Modifier);
-	AbilityInfo.bIsHarmful = Modifier.AbilityOwner->CharacterOwner->Team != Team;
+	AbilityInfo.bIsHarmful = Modifier.bIsHarmful;
 	AbilityInfo.Type = AbilityInfo.bIsHarmful ? EAIT_Damage : EAIT_Heal;
 	AbilityInfo.bIsDispellable = Modifier.bIsDispellable;
 	AbilityInfo.TimeRemaining = Modifier.TimeRemaining;
