@@ -955,6 +955,19 @@ void AArenaCharacter::TickOvertimeModifier(FOvertimeModifier Modifier)
 
 	if (Modifier.OnTickHandler) { Modifier.OnTickHandler(GetAbilityInfo(Modifier)); }
 	MulticastNotifyAbilityInfo(AbilityInfo);
+
+	if (Health.Value > 0.0f) { return; }
+
+	ACharacterBase* Causer = Cast<ACharacterBase>(Modifier.AbilityOwner->CharacterOwner);
+	if (!Causer) { return; }
+
+	AArenaPlayerState* CauserPlayerState = Cast<AArenaPlayerState>(Causer->PlayerState);
+	AArenaPlayerState* MyPlayerState = Cast<AArenaPlayerState>(PlayerState);
+
+	if (!CauserPlayerState || !MyPlayerState) { return; }
+
+	CauserPlayerState->ServerAddKill();
+	MyPlayerState->ServerAddDeath();
 }
 
 void AArenaCharacter::CalculateDamage(FDamageModifier Modifier, FAbilityInfo &AbilityInfo)
