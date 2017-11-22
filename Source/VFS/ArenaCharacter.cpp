@@ -909,6 +909,10 @@ void AArenaCharacter::ApplyHealModifier(FHealModifier Modifier)
 	Energy.Heal(Modifier.Energy, Modifier.bIsPercent);
 
 	if (Modifier.OnDoHealHandler) { Modifier.OnDoHealHandler(GetAbilityInfo(Modifier)); }
+
+	FAbilityInfo AbilityInfo = GetAbilityInfo(Modifier);
+	AbilityInfo.Amount = Modifier.Health;
+	MulticastNotifyAbilityInfo(AbilityInfo);
 }
 
 void AArenaCharacter::ApplyCosts(AAbilityBase* Ability)
@@ -942,7 +946,7 @@ void AArenaCharacter::TickOvertimeModifier(FOvertimeModifier Modifier)
 		Mana.Damage(Modifier.Mana, Modifier.bIsPercent);
 		Energy.Damage(Modifier.Energy, Modifier.bIsPercent);
 
-		if (Modifier.OnDoDamageHandler) { Modifier.OnDoDamageHandler(GetAbilityInfo(Modifier)); }
+		if (Modifier.OnDoDamageHandler) { Modifier.OnDoDamageHandler(AbilityInfo); }
 	}
 	else
 	{
@@ -950,10 +954,10 @@ void AArenaCharacter::TickOvertimeModifier(FOvertimeModifier Modifier)
 		Mana.Heal(Modifier.Mana, Modifier.bIsPercent);
 		Energy.Heal(Modifier.Energy, Modifier.bIsPercent);
 
-		if (Modifier.OnDoHealHandler) { Modifier.OnDoHealHandler(GetAbilityInfo(Modifier)); }
+		if (Modifier.OnDoHealHandler) { Modifier.OnDoHealHandler(AbilityInfo); }
 	}
 
-	if (Modifier.OnTickHandler) { Modifier.OnTickHandler(GetAbilityInfo(Modifier)); }
+	if (Modifier.OnTickHandler) { Modifier.OnTickHandler(AbilityInfo); }
 	MulticastNotifyAbilityInfo(AbilityInfo);
 
 	if (Health.Value > 0.0f) { return; }
@@ -1103,6 +1107,8 @@ FAbilityInfo AArenaCharacter::GetAbilityInfo(FBuffModifier Modifier)
 	AbilityInfo.bIsHarmful = Modifier.bIsHarmful;
 	AbilityInfo.bExpires = Modifier.bUntilUse;
 	AbilityInfo.TimeRemaining = Modifier.bUntilUse ? Modifier.TimeRemaining : 0.0f;
+	AbilityInfo.Target = this;
+	AbilityInfo.Causer = Modifier.AbilityOwner->CharacterOwner;
 
 	return AbilityInfo;
 }

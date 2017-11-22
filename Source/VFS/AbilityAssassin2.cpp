@@ -2,6 +2,7 @@
 
 #include "AbilityAssassin2.h"
 #include "GlobalLibrary.h"
+#include "ArenaCharacter.h"
 
 AAbilityAssassin2::AAbilityAssassin2()
 {
@@ -39,5 +40,24 @@ void AAbilityAssassin2::SetupModifiers()
 	Damage.AbilityOwner = this;
 	Damage.Icon = Icon;
 	Damage.Health = 250.0f;
+
+	Damage.OnTickHandler = [](FAbilityInfo AbilityInfo)
+	{
+		if (AbilityInfo.Amount <= 0.0f) { return; }
+
+		AArenaCharacter* Causer = Cast<AArenaCharacter>(AbilityInfo.Causer);
+		if (!Causer) { return; }
+
+		FHealModifier Heal;
+		Heal.AbilityOwner = AbilityInfo.Ability;
+		Heal.bAllowSelf = true;
+		Heal.bAllowEnemy = false;
+		Heal.bAllowTeam = false;
+		Heal.Health = AbilityInfo.Amount;
+		Heal.Icon = AbilityInfo.ModifierIcon;
+
+		Causer->ApplyHealModifier(Heal);
+	};
+
 	DamageModifiers.Add(Damage);
 }

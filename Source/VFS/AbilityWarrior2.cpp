@@ -2,6 +2,7 @@
 
 #include "AbilityWarrior2.h"
 #include "GlobalLibrary.h"
+#include "ArenaCharacter.h"
 
 AAbilityWarrior2::AAbilityWarrior2()
 {
@@ -56,7 +57,21 @@ void AAbilityWarrior2::SetupModifiers()
 	Overtime.bIsHarmful = true;
 
 	Overtime.OnTickHandler = [](FAbilityInfo AbilityInfo) {
-		AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(2));
+		AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(3));
+
+		if (AbilityInfo.Amount <= 0.0f) { return; }
+
+		AArenaCharacter* Causer = Cast<AArenaCharacter>(AbilityInfo.Causer);
+		if (!Causer) { return; }
+
+		FHealModifier Heal;
+		Heal.AbilityOwner = AbilityInfo.Ability;
+		Heal.bAllowSelf = true;
+		Heal.bAllowEnemy = false;
+		Heal.Health = AbilityInfo.Amount / 3.0f;
+		Heal.Icon = AbilityInfo.ModifierIcon;
+
+		Causer->ApplyHealModifier(Heal);
 	};
 
 	OvertimeModifiers.Add(Overtime);
