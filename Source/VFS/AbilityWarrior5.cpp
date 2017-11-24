@@ -41,17 +41,34 @@ void AAbilityWarrior5::SetupModifiers()
 	Damage.Icon = Icon;
 	Damage.Health = 100.0f;
 	Damage.bIsHarmful = true;
+	Damage.ModifierCritical = 50.0f;
 	DamageModifiers.Add(Damage);
 
 	FBuffModifier PhysicalDebuff;
 	PhysicalDebuff.AbilityOwner = this;
-	PhysicalDebuff.PhysicalDefense = -15.0f;
+	PhysicalDebuff.Name = "Debuff";
+	PhysicalDebuff.MaxStacks = 2;
+	PhysicalDebuff.PhysicalDefense = 20.0f;
 	PhysicalDebuff.School = MS_Physical;
 	PhysicalDebuff.bAllowSelf = false;
 	PhysicalDebuff.bAllowTeam = false;
 	PhysicalDebuff.bAllowEnemy = true;
 	PhysicalDebuff.bIsHarmful = true;
-	PhysicalDebuff.TimeRemaining = 10.0f;
+	PhysicalDebuff.TimeRemaining = 5.0f;
 
 	BuffModifiers.Add(PhysicalDebuff);
+
+	FBuffModifier PhysicalBuff;
+	PhysicalBuff.AbilityOwner = this;
+	PhysicalBuff.Name = "Buff";
+	PhysicalBuff.MaxStacks = 2;
+	PhysicalBuff.PhysicalPower = 20.0f;
+	PhysicalBuff.School = MS_Physical;
+	PhysicalBuff.bAllowSelf = true;
+	PhysicalBuff.bAllowTeam = false;
+	PhysicalBuff.bAllowEnemy = false;
+	PhysicalBuff.bIsHarmful = false;
+	PhysicalBuff.TimeRemaining = 5.0f;
+
+	BuffModifiers.Add(PhysicalBuff);
 }

@@ -24,37 +24,38 @@
 
 class AAbilityFXBase;
 
+// ==================================================================================================================================================
+// STATUS STRUCTURE
+// ==================================================================================================================================================
+
 USTRUCT(BlueprintType)
 struct FStatus
 {
 	GENERATED_USTRUCT_BODY(BlueprintType)
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
-	float Min;
+	float Min = 0.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
-	float MinBase;
+	float MinBase = 0.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
-	float Max;
+	float Max = 0.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
-	float MaxBase;
+	float MaxBase = 0.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
-	float Value;
+	float Value = 0.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
-	float ValueBase;
+	float ValueBase = 0.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
-	float Regeneration;
+	float Regeneration = 0.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Status")
 	float RegenerationBase;
-
-	TMap<int32, float> MaxMultipliers;
-	TMap<int32, float> RegenerationMultipliers;
 
 	void Setup(float MinAmount,  float MaxAmount, float ValueAmount=0.0f, float RegenerationAmount=0.0f)
 	{
@@ -70,13 +71,18 @@ struct FStatus
 
 	void Reset()
 	{
-		MaxMultipliers.Empty();
-		RegenerationMultipliers.Empty();
-
 		Max = MaxBase;
 		Min = MinBase;
 		Regeneration = RegenerationBase;
 		Value = ValueBase;
+	}
+
+	void ResetLimits()
+	{
+		float OldValue = Value;
+
+		Reset();
+		Value = OldValue;
 	}
 
 	float GetAmountByPercent(float MaxVal, float Percent)
@@ -93,7 +99,7 @@ struct FStatus
 		return (Percent ? GetPercentAmount(Amount) : Value) >= Amount;
 	}
 
-	float Clamp(float Amount, float bIsPercent=false)
+	float Clamp(float Amount, bool bIsPercent=false)
 	{
 		if (!bIsPercent) { Value = FMath::Clamp(Value + Amount, Min, Max); }
 		else { Value = FMath::Clamp(Value + GetAmountByPercent(Value, Amount), Min, Max); }
@@ -101,32 +107,9 @@ struct FStatus
 		return Value;
 	}
 
-	float Damage(float Amount, float bIsPercent=false) { return Clamp(-Amount, bIsPercent); }
+	float Damage(float Amount, bool bIsPercent=false) { return Clamp(-Amount, bIsPercent); }
 
-	float Heal(float Amount, float bIsPercent=false) { return Clamp(Amount, bIsPercent); }
-
-	void AddMaxMultiplier(int32 UniqueID, float Amount, bool bIsPercent = false)
-	{
-		if (!MaxMultipliers.Contains(UniqueID)) { MaxMultipliers.Add(UniqueID, 0.0f); }
-
-		float MultipliedAmount = bIsPercent ? GetAmountByPercent(Max, Amount) : Amount;
-		MaxMultipliers[UniqueID] += MultipliedAmount;
-		Max += MultipliedAmount;
-	}
-
-	void RemoveMaxMultiplier(int32 UniqueID)
-	{
-		if (!MaxMultipliers.Contains(UniqueID)) { return; }
-
-		Max -= MaxMultipliers[UniqueID];
-		MaxMultipliers.Remove(UniqueID);
-		Value = FMath::Clamp(Value, Min, Max);
-	}
-
-	void AddRegenerationMultiplier(int32 UniqueID, float Amount)
-	{
-		if (!MaxMultipliers.Contains(UniqueID)) { MaxMultipliers.Add(UniqueID, 0.0f); }
-	}
+	float Heal(float Amount, bool bIsPercent=false) { return Clamp(Amount, bIsPercent); }
 
 	float GetPercent() { return (Value * 100.0f) / Max; }
 

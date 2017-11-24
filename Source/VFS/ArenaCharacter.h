@@ -37,6 +37,8 @@ protected:
 
 	void UpdateBuffModifiers(float DeltaTime);
 
+	void RefreshBuffModifiersStatus();
+
 	void UpdateOvertimeModifiers(float DeltaTime);
 
 	void StartGlobalCountdown();
@@ -115,19 +117,19 @@ public:
 	FString GetErrorString(EAbilityValidation Validation);
 
 	// Aura Modifiers Array.
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Mofidiers")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mofidiers")
 	TArray<FAuraModifier> AuraModifiers;
 
 	// Buff Modifiers Array.
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Modifiers")
-	TArray<FBuffModifier> BuffModifiers;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifiers")
+	TMap<int32, FBuffModifier> BuffModifiers;
 
 	// Overtime Modifiers Array.
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Modifiers")
-	TArray<FOvertimeModifier> OvertimeModifiers;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifiers")
+	TMap<int32, FOvertimeModifier> OvertimeModifiers;
 
 	// Absorbing Modifier Array.
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Modifiers")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifiers")
 	TArray<FAbsorbingModifier> AbsorbingModifiers;
 
 	UFUNCTION(Category = "Modifiers")
@@ -146,13 +148,17 @@ public:
 
 	void TickOvertimeModifier(FOvertimeModifier Modifier);
 
-	void CalculateDamage(FDamageModifier Modifier, FAbilityInfo &AbilityInfo);
+	void CalculateDamage(FModifierBase Modifier, FAbilityInfo &AbilityInfo);
 
-	void CalculateDamageByBuffModifiers(FDamageModifier Modifier, FAbilityInfo &AbilityInfo);
+	void CalculateDamageByBuffModifiers(FModifierBase Modifier, FAbilityInfo &AbilityInfo);
 	
-	void CalculateDamageByAbsorbingModifiers(FDamageModifier Modifier, FAbilityInfo &AbilityInfo);
+	void CalculateDamageByAbsorbingModifiers(FModifierBase Modifier, FAbilityInfo &AbilityInfo);
+
+	void CalculateHeal(FModifierBase Modifier, FAbilityInfo &AbilityInfo);
 
 	void UpdateOnTakeDamage(FAbilityInfo AbilityInfo);
+	void UpdateOnTakeHeal(FAbilityInfo AbilityInfo);
+	void UpdateOnBreak(FAbilityInfo AbilityInfo);
 
 	FAbilityInfo GetDefaultAbilityInfo(FModifierBase Modifier);
 	FAbilityInfo GetAbilityInfo(FAuraModifier Modifier);

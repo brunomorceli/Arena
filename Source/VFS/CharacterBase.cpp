@@ -115,7 +115,7 @@ ACharacterBase::ACharacterBase()
 	Health.Setup(0.0f, 2000.0f, 2000.0f, 0.3f);
 	Mana.Setup(0.0f, 2000.0f, 2000.0f, 0.3f);
 	Energy.Setup(0.0f, 150.0f, 150.0f, 3.0f);
-	Speed.Setup(0.0f, 600.0f, 600.0f);
+	Speed.Setup(0.0f, 1200.0f, 600.0f);
 	Critical.Setup(0.0f, 100.0f, 15.0f);
 
 	PhysicalPower.Setup(-100.0f, 100.0f, 0.0f);

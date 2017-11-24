@@ -24,7 +24,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Utilities")
 	static bool IsCritical(float PercentChance)
 	{
-		return FMath::RandRange(0.0f, 100.0f) <= PercentChance;
+		if (PercentChance >= 100.0f) { return true; }
+		return PercentChance > 0.0f && FMath::RandRange(0.0f, 100.0f) <= PercentChance;
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Utilities")
