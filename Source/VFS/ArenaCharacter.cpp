@@ -1282,7 +1282,7 @@ FAbilityInfo AArenaCharacter::GetAbilityInfo(FBuffModifier Modifier)
 	AbilityInfo.bIsDispellable = Modifier.bIsDispellable;
 	AbilityInfo.bIsHarmful = Modifier.bIsHarmful;
 	AbilityInfo.bExpires = Modifier.bUntilUse;
-	AbilityInfo.TimeRemaining = Modifier.bUntilUse ? Modifier.TimeRemaining : 0.0f;
+	AbilityInfo.TimeRemaining = Modifier.TimeRemaining;
 	AbilityInfo.Target = this;
 	AbilityInfo.Causer = Modifier.AbilityOwner->CharacterOwner;
 

@@ -46,6 +46,7 @@ void AAbilityWarrior5::SetupModifiers()
 
 	FBuffModifier PhysicalDebuff;
 	PhysicalDebuff.AbilityOwner = this;
+	PhysicalDebuff.Icon = Icon;
 	PhysicalDebuff.Name = "Debuff";
 	PhysicalDebuff.MaxStacks = 2;
 	PhysicalDebuff.PhysicalDefense = 20.0f;
@@ -60,6 +61,7 @@ void AAbilityWarrior5::SetupModifiers()
 
 	FBuffModifier PhysicalBuff;
 	PhysicalBuff.AbilityOwner = this;
+	PhysicalBuff.Icon = UGlobalLibrary::GetIcon(453);
 	PhysicalBuff.Name = "Buff";
 	PhysicalBuff.MaxStacks = 2;
 	PhysicalBuff.PhysicalPower = 20.0f;
@@ -68,6 +70,7 @@ void AAbilityWarrior5::SetupModifiers()
 	PhysicalBuff.bAllowTeam = false;
 	PhysicalBuff.bAllowEnemy = false;
 	PhysicalBuff.bIsHarmful = false;
+	PhysicalBuff.bIsDispellable = false;
 	PhysicalBuff.TimeRemaining = 5.0f;
 
 	BuffModifiers.Add(PhysicalBuff);
