@@ -1279,6 +1279,7 @@ FAbilityInfo AArenaCharacter::GetAbilityInfo(FBuffModifier Modifier)
 {
 	FAbilityInfo AbilityInfo = GetDefaultAbilityInfo(Modifier);
 	AbilityInfo.Type = EAIT_Buff;
+	AbilityInfo.Event = EABE_Apply;
 	AbilityInfo.bIsDispellable = Modifier.bIsDispellable;
 	AbilityInfo.bIsHarmful = Modifier.bIsHarmful;
 	AbilityInfo.bExpires = Modifier.bUntilUse;
@@ -1430,6 +1431,13 @@ void AArenaCharacter::OnRep_PlayerClass()
 	LeftHandWeapon->SetSkeletalMesh(ClassPreset.LeftWeapon, false);
 	RightHandWeapon->SetSkeletalMesh(ClassPreset.RightWeapon, false);
 }
+
+void AArenaCharacter::MulticastNotifyAbilityInfo_Implementation(FAbilityInfo AbilityInfo)
+{
+	AddAbilityInfo(AbilityInfo);
+	AbilityInfoDelegate.Broadcast(AbilityInfo);
+}
+
 
 void AArenaCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {

@@ -23,60 +23,6 @@ class AAbilityBase;
 // ==================================================================================================================================================
 
 USTRUCT(BlueprintType)
-struct FAbilityInfo
-{
-	GENERATED_USTRUCT_BODY(BlueprintType)
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	TEnumAsByte<EAbilityEvent> Event = EABE_Apply;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	TEnumAsByte<EAbilityInfoType> Type = EAIT_Damage;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	int32 bIsHarmful = false;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	int32 bIsDispellable = false;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	int32 bExpires = false;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float TimeRemaining = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	int32 bCritical = false;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float Amount = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float Absorbed = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float Overkill = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	ACharacterBase* Causer = NULL;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	ACharacterBase* Target = NULL;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	ACharacterBase* Breaker = NULL;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	AAbilityBase* Ability = NULL;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	UTexture2D* ModifierIcon = NULL;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	FName ModifierName = "";
-};
-
-USTRUCT(BlueprintType)
 struct FModifierBase
 {
 	GENERATED_USTRUCT_BODY(BlueprintType)

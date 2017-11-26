@@ -20,9 +20,71 @@
 #include "ArenaPlayerState.h"
 #include "ArenaSaveGame.h"
 #include "AbilityFXBase.h"
+#include "AbilityBase.h"
 #include "CharacterBase.generated.h"
 
+class AAbilityBase;
 class AAbilityFXBase;
+
+// ==================================================================================================================================================
+// STATUS STRUCTURE
+// ==================================================================================================================================================
+
+USTRUCT(BlueprintType)
+struct FAbilityInfo
+{
+	GENERATED_USTRUCT_BODY(BlueprintType)
+
+public:
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	TEnumAsByte<EAbilityEvent> Event = EABE_Apply;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	TEnumAsByte<EAbilityInfoType> Type = EAIT_Damage;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	int32 bIsHarmful = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	int32 bIsDispellable = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	int32 bExpires = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float TimeRemaining = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	int32 bCritical = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float Amount = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float Absorbed = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float Overkill = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	ACharacterBase* Causer = NULL;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	ACharacterBase* Target = NULL;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	AAbilityBase* Ability = NULL;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	ACharacterBase* Breaker = NULL;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	UTexture2D* ModifierIcon = NULL;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	FName ModifierName = "";
+};
 
 // ==================================================================================================================================================
 // STATUS STRUCTURE
@@ -201,11 +263,21 @@ class ACharacterBase : public ACharacter
 
 public:
 
+
 	UPROPERTY(VisibleAnywhere, BlueprintAssignable, Category = "Notification")
 	FNotificationDelegate NotificationDelegate;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintAssignable, Category = "Notification")
 	FChangeAnimStateDelegate ChangeAnimStateDelegate;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	TMap<FName, FAbilityInfo> AbilityInfoList;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	TArray<FAbilityInfo> SummaryInfo;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	int32 SummaryInfoLimit;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
 	class UParticleSystemComponent* RootParticle;
@@ -421,6 +493,18 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Utils")
 	void PlayFX(TSubclassOf<AAbilityFXBase> Effect);
+
+	void AddAbilityInfo(FAbilityInfo AbilityInfo);
+
+	void RemoveAbilityInfo(FName ModifierName);
+
+	void AddSummary(FAbilityInfo AbilityInfo);
+
+	bool IsBuff(FAbilityInfo AbilityInfo);
+	
+	bool IsDebuff(FAbilityInfo AbilityInfo);
+
+	void UpdateBuffInfoTimers(float DeltaTime);
 
 	// ===================================================================================================================
 	// NETWORK METHODS

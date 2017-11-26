@@ -103,6 +103,9 @@ ACharacterBase::ACharacterBase()
 	bNetLoadOnClient = true;
 	bReplicateMovement = true;
 
+	SummaryInfo = TArray<FAbilityInfo>();
+	SummaryInfoLimit = 150;
+
 	State = CS_Idle;
 	AnimationState = CAS_None;
 
@@ -170,6 +173,7 @@ void ACharacterBase::Tick(float DeltaTime)
 
 	UpdateState();
 	UpdateAuraParticle();
+	UpdateBuffInfoTimers(DeltaTime);
 }
 
 void ACharacterBase::UpdateState()
@@ -592,6 +596,60 @@ void ACharacterBase::PlayFX(TSubclassOf<AAbilityFXBase> Effect)
 	if (!NewFX) { return; }
 
 	NewFX->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
+}
+
+void ACharacterBase::AddAbilityInfo(FAbilityInfo AbilityInfo)
+{
+	if (AbilityInfo.Target->GetUniqueID() != GetUniqueID() && AbilityInfo.Causer->GetUniqueID() != GetUniqueID()) { return; }
+
+	AddSummary(AbilityInfo);
+
+	if (!AbilityInfoList.Contains(AbilityInfo.ModifierName))
+	{
+		AbilityInfoList.Add(AbilityInfo.ModifierName, AbilityInfo);
+		return;
+	}
+
+	AbilityInfoList[AbilityInfo.ModifierName] = AbilityInfo;
+}
+
+void ACharacterBase::RemoveAbilityInfo(FName ModifierName)
+{
+	if (AbilityInfoList.Contains(ModifierName)) { AbilityInfoList.Remove(ModifierName); }
+}
+
+void ACharacterBase::AddSummary(FAbilityInfo AbilityInfo)
+{
+	SummaryInfo.Push(AbilityInfo);
+	if (SummaryInfo.Num() > SummaryInfoLimit) { SummaryInfo.RemoveAt(0); }
+}
+
+bool ACharacterBase::IsBuff(FAbilityInfo AbilityInfo)
+{
+	if (AbilityInfo.Type != EAIT_Buff && AbilityInfo.Type != EAIT_Heal) { return false; }
+	if (AbilityInfo.Target->GetUniqueID() != GetUniqueID() || !AbilityInfo.bIsHarmful) { return false; }
+
+	return true;
+}
+
+bool ACharacterBase::IsDebuff(FAbilityInfo AbilityInfo)
+{
+	if (AbilityInfo.Type != EAIT_Buff && AbilityInfo.Type != EAIT_Heal) { return false; }
+	if (AbilityInfo.Target->GetUniqueID() != GetUniqueID() || AbilityInfo.bIsHarmful) { return false; }
+
+	return true;
+}
+
+void ACharacterBase::UpdateBuffInfoTimers(float DeltaTime)
+{
+	TArray<FName> Keys;
+	AbilityInfoList.GenerateKeyArray(Keys);
+	for (int32 i = 0; i < Keys.Num(); i++)
+	{
+		FName Key = Keys[i];
+		AbilityInfoList[Key].TimeRemaining -= DeltaTime;
+		if (AbilityInfoList[Key].TimeRemaining <= 0.0f) { RemoveAbilityInfo(Key); }
+	}
 }
 
 // =====================================================================================================================================

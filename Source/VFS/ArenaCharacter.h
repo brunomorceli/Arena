@@ -207,7 +207,7 @@ public:
 
 	UFUNCTION(NetMulticast, Unreliable, Category = "Network")
 	void MulticastNotifyAbilityInfo(FAbilityInfo AbilityInfo);
-	void MulticastNotifyAbilityInfo_Implementation(FAbilityInfo AbilityInfo) { AbilityInfoDelegate.Broadcast(AbilityInfo); }
+	void MulticastNotifyAbilityInfo_Implementation(FAbilityInfo AbilityInfo);
 
 	void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
 };
