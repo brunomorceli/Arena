@@ -249,7 +249,7 @@ void ACharacterBase::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 	PlayerInputComponent->BindAction("LeftMouseButton", IE_Released, this, &ACharacterBase::InputLMR);
 
 	PlayerInputComponent->BindAction("RightMouseButton", IE_Pressed, this, &ACharacterBase::InputRMP);
-	PlayerInputComponent->BindAction("RightMouseButton", IE_Released, this, &ACharacterBase::InputLMR);
+	PlayerInputComponent->BindAction("RightMouseButton", IE_Released, this, &ACharacterBase::InputRMR);
 }
 
 void ACharacterBase::Jump()
@@ -665,19 +665,19 @@ void ACharacterBase::UpdateBuffInfoTimers(float DeltaTime)
 void ACharacterBase::InputLMP()
 {
 	bLeftMouse = true;
-	SetMouseCursor(false);
+	SetMouseCursor(!bRightMouse && !bLeftMouse);
 }
 
 void ACharacterBase::InputLMR()
 {
-	bRightMouse = false;
+	bLeftMouse = false;
 	SetMouseCursor(!bRightMouse && !bLeftMouse);
 }
 
 void ACharacterBase::InputRMP()
 {
 	bRightMouse = true;
-	SetMouseCursor(false);
+	SetMouseCursor(!bRightMouse && !bLeftMouse);
 }
 
 void ACharacterBase::InputRMR()
