@@ -51,6 +51,7 @@ void AAbilityWarrior2::SetupModifiers()
 	FOvertimeModifier Overtime;
 	Overtime.AbilityOwner = this;
 	Overtime.Icon = Icon;
+	Overtime.Name = "Overtime";
 	Overtime.Health = 50.0f;
 	Overtime.TickTime = 1.0f;
 	Overtime.TimeRemaining = 10.0f;

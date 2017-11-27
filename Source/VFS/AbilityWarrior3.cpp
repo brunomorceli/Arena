@@ -43,6 +43,7 @@ void AAbilityWarrior3::SetupModifiers()
 
 	FBuffModifier Stun;
 	Stun.AbilityOwner = this;
+	Stun.Name = "Stun";
 	Stun.Icon = Icon;
 	Stun.State = CS_Stun;
 	Stun.TimeRemaining = 2.0f;

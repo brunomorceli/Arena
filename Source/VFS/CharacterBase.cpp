@@ -26,6 +26,9 @@ ACharacterBase::ACharacterBase()
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
+	bLeftMouse = false;
+	bRightMouse = false;
+
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 0.0f, 0.0f); // ...at this rotation rate
@@ -240,6 +243,13 @@ void ACharacterBase::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 	PlayerInputComponent->BindAction("SelfTarget", IE_Pressed, this, &ACharacterBase::ServerSetSelfTarget);
 
 	PlayerInputComponent->BindAction("Escape", IE_Pressed, this, &ACharacterBase::ServerEscape);
+
+
+	PlayerInputComponent->BindAction("LeftMouseButton", IE_Pressed, this, &ACharacterBase::InputLMP);
+	PlayerInputComponent->BindAction("LeftMouseButton", IE_Released, this, &ACharacterBase::InputLMR);
+
+	PlayerInputComponent->BindAction("RightMouseButton", IE_Pressed, this, &ACharacterBase::InputRMP);
+	PlayerInputComponent->BindAction("RightMouseButton", IE_Released, this, &ACharacterBase::InputLMR);
 }
 
 void ACharacterBase::Jump()
@@ -650,6 +660,42 @@ void ACharacterBase::UpdateBuffInfoTimers(float DeltaTime)
 		AbilityInfoList[Key].TimeRemaining -= DeltaTime;
 		if (AbilityInfoList[Key].TimeRemaining <= 0.0f) { RemoveAbilityInfo(Key); }
 	}
+}
+
+void ACharacterBase::InputLMP()
+{
+	bLeftMouse = true;
+	SetMouseCursor(false);
+}
+
+void ACharacterBase::InputLMR()
+{
+	bRightMouse = false;
+	SetMouseCursor(!bRightMouse && !bLeftMouse);
+}
+
+void ACharacterBase::InputRMP()
+{
+	bRightMouse = true;
+	SetMouseCursor(false);
+}
+
+void ACharacterBase::InputRMR()
+{
+	bRightMouse = false;
+	SetMouseCursor(!bRightMouse && !bLeftMouse);
+}
+
+void ACharacterBase::SetMouseCursor(bool Show) {
+	UWorld* World = GetWorld();
+	if (!World) { return; }
+
+	APlayerController* PlayerController = World->GetFirstPlayerController();
+	if (!PlayerController) { return; }
+
+	PlayerController->bShowMouseCursor = Show;
+	PlayerController->bEnableClickEvents = true;
+	PlayerController->bEnableMouseOverEvents = true;
 }
 
 // =====================================================================================================================================

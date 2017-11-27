@@ -263,12 +263,17 @@ class ACharacterBase : public ACharacter
 
 public:
 
-
 	UPROPERTY(VisibleAnywhere, BlueprintAssignable, Category = "Notification")
 	FNotificationDelegate NotificationDelegate;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintAssignable, Category = "Notification")
 	FChangeAnimStateDelegate ChangeAnimStateDelegate;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mouse")
+	bool bLeftMouse;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mouse")
+	bool bRightMouse;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
 	TMap<FName, FAbilityInfo> AbilityInfoList;
@@ -505,6 +510,21 @@ public:
 	bool IsDebuff(FAbilityInfo AbilityInfo);
 
 	void UpdateBuffInfoTimers(float DeltaTime);
+
+	UFUNCTION(BlueprintCallable, Category = "Utils")
+	void InputLMP();
+
+	UFUNCTION(BlueprintCallable, Category = "Utils")
+	void InputLMR();
+
+	UFUNCTION(BlueprintCallable, Category = "Utils")
+	void InputRMP();
+
+	UFUNCTION(BlueprintCallable, Category = "Utils")
+	void InputRMR();
+
+	UFUNCTION(BlueprintCallable, Category = "Utils")
+	void SetMouseCursor(bool Show);
 
 	// ===================================================================================================================
 	// NETWORK METHODS
