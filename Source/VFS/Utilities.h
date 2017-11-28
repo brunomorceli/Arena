@@ -33,4 +33,25 @@ public:
 	{
 		return Amount * ( Percentage / 100.0f);
 	}
+
+	UFUNCTION(BlueprintCallable, Category = "Utilities")
+	static bool Trace(
+		UWorld* World,
+		TArray<AActor*> ActorsToIgnore,
+		const FVector& Start,
+		const FVector& End,
+		FHitResult& HitOut,
+		ECollisionChannel CollisionChannel = ECC_Pawn,
+		bool ReturnPhysMat = false
+	) {
+		if (!World) { return false; }
+
+		FCollisionQueryParams CollisionParams;
+		CollisionParams.bTraceComplex = true;
+		CollisionParams.AddIgnoredActors(ActorsToIgnore);
+		CollisionParams.bTraceAsyncScene = true;
+		CollisionParams.bReturnPhysicalMaterial = ReturnPhysMat;
+
+		return World->LineTraceSingleByChannel(HitOut, Start, End, ECollisionChannel::ECC_Pawn, CollisionParams);
+	}
 };

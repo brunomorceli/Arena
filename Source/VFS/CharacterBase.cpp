@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Utilities.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ACharacterBase
@@ -18,14 +19,19 @@ ACharacterBase::ACharacterBase()
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
 	// set our turn rates for input
-	BaseTurnRate = 0.0f;
-	BaseLookUpRate = 0.0f;
+	BaseTurnRate = 45.0f;
+	BaseLookUpRate = 45.0f;
+
 
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
+	bForward = false;
+	bBack = false;
+	bLeft = false;
+	bRight = false;
 	bLeftMouse = false;
 	bRightMouse = false;
 
@@ -34,6 +40,11 @@ ACharacterBase::ACharacterBase()
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 0.0f, 0.0f); // ...at this rotation rate
 	GetCharacterMovement()->JumpZVelocity = 500.f;
 	GetCharacterMovement()->AirControl = 0.2f;
+
+	// smooth movement settings.
+	GetCharacterMovement()->NetworkSmoothingMode = ENetworkSmoothingMode::Exponential;
+	GetCharacterMovement()->bIgnoreClientMovementErrorChecksAndCorrection = false;
+	bUseControllerRotationYaw = true;
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -284,10 +295,7 @@ void ACharacterBase::TouchStopped(ETouchIndex::Type FingerIndex, FVector Locatio
 
 void ACharacterBase::TurnAtRate(float Rate)
 {
-	if (State == CS_Stun || State == CS_Death)
-	{
-		return;
-	}
+	if (State == CS_Stun || State == CS_Death || (bLeftMouse && !bRightMouse)) { return; }
 
 	// calculate delta for this frame from the rate information
 	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
@@ -301,43 +309,59 @@ void ACharacterBase::LookUpAtRate(float Rate)
 
 void ACharacterBase::MoveForward(float Value)
 {
+	bForward = Value > 0.0f;
+	bBack = Value < 0.0f;
+
 	if (Controller == NULL || State == CS_Stun || State == CS_Death) { return; }
 	
-	//if (Value != 0.0f || bIsCasting)
-	if (Value != 0.0f)
-	{
-		SetActorRotToFollowCameraAngle();
-	}
+	if (bRightMouse) { SetActorRotToFollowCameraAngle(); }
 
 	if (State == CS_Stuck) { return; }
 
 	// find out which way is forward
-	const FRotator Rotation = Controller->GetControlRotation();
+	const FRotator Rotation = bRight ? Controller->GetControlRotation() : GetActorRotation();
 	const FRotator YawRotation(0, Rotation.Yaw, 0);
 
 	// get forward vector
 	const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 
-	if (Value < 0.0f) { Value = Value / 2.0f; }
+	// backpedal
+	if (bBack) { Value = Value / 2.0f; }
 
 	AddMovementInput(Direction, Value);
 }
 
 void ACharacterBase::MoveRight(float Value)
 {
+	bLeft = Value < 0.0f;
+	bRight = Value > 0.0f;
+
 	if (State == CS_Stun || State == CS_Stuck || State == CS_Death) { return; }
 
 	if (Controller == NULL || Value == 0.0f) { return; }
-	
-	// find out which way is right
-	const FRotator Rotation = Controller->GetControlRotation();
-	const FRotator YawRotation(0, Rotation.Yaw, 0);
-	
-	// get right vector 
-	const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-	// add movement in that direction
-	AddMovementInput(Direction, Value);	
+	// backpedal
+	if (bBack) { Value = Value / 3.0f; }
+
+	// strafe
+	if (bRightMouse)
+	{
+		// find out which way is right
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+		// get right vector
+		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+		// add movement in that direction
+		AddMovementInput(Direction, Value);
+		return;
+	}
+
+	// turn
+	AddControllerYawInput(bBack ? -Value : Value);
+
+	SetActorRotToFollowCameraAngle();
 }
 
 ACharacter* ACharacterBase::GetNearestCharacter()
@@ -665,12 +689,15 @@ void ACharacterBase::UpdateBuffInfoTimers(float DeltaTime)
 void ACharacterBase::InputLMP()
 {
 	bLeftMouse = true;
+	bUseControllerRotationYaw = false;
 	SetMouseCursor(!bRightMouse && !bLeftMouse);
+	GetTargetByClick();
 }
 
 void ACharacterBase::InputLMR()
 {
 	bLeftMouse = false;
+	bUseControllerRotationYaw = true;
 	SetMouseCursor(!bRightMouse && !bLeftMouse);
 }
 
@@ -698,6 +725,43 @@ void ACharacterBase::SetMouseCursor(bool Show) {
 	PlayerController->bEnableMouseOverEvents = true;
 }
 
+void ACharacterBase::GetTargetByClick()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "REACH-----------------");
+	UWorld* World = GetWorld();
+	if (!World) { return; }
+
+	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "[1]-----------------");
+	APlayerController* PlayerController = World->GetFirstPlayerController();
+	if (!PlayerController) { return; }
+
+	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "[2]-----------------");
+	UGameViewportClient* ViewPort = World->GetGameViewport();
+	if (!ViewPort) { return; }
+
+	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "[3]-----------------");
+	FVector2D MousePosition;
+	if (!ViewPort->GetMousePosition(MousePosition)) { return; }
+
+	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "[4]-----------------");
+	FVector WorldOrigin;
+	FVector WorldDirection;
+	if (!UGameplayStatics::DeprojectScreenToWorld(PlayerController, MousePosition, WorldOrigin, WorldDirection)) { return; }
+	
+
+	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "[5]-----------------");
+	FHitResult HitResult(ForceInit);
+	if (!UUtilities::Trace(World, TArray<AActor*>(), WorldOrigin, WorldOrigin + WorldDirection * 3000.0f, HitResult)) { return; }
+
+	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("Actor: %s"), *HitResult.GetActor()->GetName()));
+
+	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "[6]-----------------");
+	ACharacterBase* Character = Cast<ACharacterBase>(HitResult.GetActor());
+	if (!Character) { return; }
+
+	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "[7]-----------------");
+	ServerSetTarget(Character);
+}
 // =====================================================================================================================================
 // NETWORK METHODS
 // =====================================================================================================================================

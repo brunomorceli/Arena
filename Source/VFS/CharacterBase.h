@@ -270,6 +270,18 @@ public:
 	FChangeAnimStateDelegate ChangeAnimStateDelegate;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mouse")
+	bool bForward;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mouse")
+	bool bBack;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mouse")
+	bool bLeft;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mouse")
+	bool bRight;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mouse")
 	bool bLeftMouse;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mouse")
@@ -525,6 +537,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Utils")
 	void SetMouseCursor(bool Show);
+
+	UFUNCTION(BlueprintCallable, Category = "Utils")
+	void GetTargetByClick();
 
 	// ===================================================================================================================
 	// NETWORK METHODS
