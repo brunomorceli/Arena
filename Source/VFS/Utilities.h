@@ -6,6 +6,7 @@
 #include "UObject/NoExportTypes.h"
 #include "GameFramework/Character.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
+#include "Runtime/Engine/Classes/Kismet/KismetSystemLibrary.h"
 #include "Utilities.generated.h"
 
 UCLASS(Blueprintable, BlueprintType)
@@ -52,6 +53,6 @@ public:
 		CollisionParams.bTraceAsyncScene = true;
 		CollisionParams.bReturnPhysicalMaterial = ReturnPhysMat;
 
-		return World->LineTraceSingleByChannel(HitOut, Start, End, ECollisionChannel::ECC_Pawn, CollisionParams);
+		return World->LineTraceSingleByChannel(HitOut, Start, End, ECollisionChannel::ECC_WorldDynamic, CollisionParams);
 	}
 };

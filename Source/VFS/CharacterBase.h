@@ -56,6 +56,9 @@ public:
 	float TimeRemaining = 0.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	int32 Stacks = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
 	int32 bCritical = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
@@ -539,7 +542,7 @@ public:
 	void SetMouseCursor(bool Show);
 
 	UFUNCTION(BlueprintCallable, Category = "Utils")
-	void GetTargetByClick();
+	void GetTargetByClick(float Range, float CursorOffset);
 
 	// ===================================================================================================================
 	// NETWORK METHODS

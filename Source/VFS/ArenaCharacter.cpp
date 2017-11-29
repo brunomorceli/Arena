@@ -901,6 +901,7 @@ void AArenaCharacter::ApplyBuffModifier(FBuffModifier Modifier)
 		if (BuffModifiers[AbilityId].OnRenewHandler) { BuffModifiers[AbilityId].OnRenewHandler(AbilityInfo); }
 		if (!BuffModifiers[AbilityId].AddStack())
 		{
+			AbilityInfo.Stacks = BuffModifiers[AbilityId].Stacks;
 			return MulticastNotifyAbilityInfo(AbilityInfo);
 		}
 	}
@@ -912,7 +913,7 @@ void AArenaCharacter::ApplyBuffModifier(FBuffModifier Modifier)
 	}
 
 	RefreshBuffModifiersStatus();
-
+	AbilityInfo.Stacks = BuffModifiers[AbilityId].Stacks;
 	MulticastNotifyAbilityInfo(AbilityInfo);
 }
 

@@ -691,7 +691,7 @@ void ACharacterBase::InputLMP()
 	bLeftMouse = true;
 	bUseControllerRotationYaw = false;
 	SetMouseCursor(!bRightMouse && !bLeftMouse);
-	GetTargetByClick();
+	GetTargetByClick(6000.0f, -20.0f);
 }
 
 void ACharacterBase::InputLMR()
@@ -725,43 +725,39 @@ void ACharacterBase::SetMouseCursor(bool Show) {
 	PlayerController->bEnableMouseOverEvents = true;
 }
 
-void ACharacterBase::GetTargetByClick()
+void ACharacterBase::GetTargetByClick(float Range = 6000.0f, float CursorOffset = -20.0f)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "REACH-----------------");
 	UWorld* World = GetWorld();
 	if (!World) { return; }
 
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "[1]-----------------");
 	APlayerController* PlayerController = World->GetFirstPlayerController();
 	if (!PlayerController) { return; }
 
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "[2]-----------------");
 	UGameViewportClient* ViewPort = World->GetGameViewport();
 	if (!ViewPort) { return; }
 
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "[3]-----------------");
 	FVector2D MousePosition;
 	if (!ViewPort->GetMousePosition(MousePosition)) { return; }
 
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "[4]-----------------");
+	MousePosition.X += CursorOffset;
+	MousePosition.Y += CursorOffset;
+
 	FVector WorldOrigin;
 	FVector WorldDirection;
 	if (!UGameplayStatics::DeprojectScreenToWorld(PlayerController, MousePosition, WorldOrigin, WorldDirection)) { return; }
 	
-
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "[5]-----------------");
 	FHitResult HitResult(ForceInit);
-	if (!UUtilities::Trace(World, TArray<AActor*>(), WorldOrigin, WorldOrigin + WorldDirection * 3000.0f, HitResult)) { return; }
+	TArray<AActor*> ActorsToIgnore = TArray<AActor*>();
+	ActorsToIgnore.Push(this);
 
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("Actor: %s"), *HitResult.GetActor()->GetName()));
+	if (!UUtilities::Trace(World, ActorsToIgnore, WorldOrigin, WorldOrigin + WorldDirection * Range, HitResult)) { return; }
 
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "[6]-----------------");
 	ACharacterBase* Character = Cast<ACharacterBase>(HitResult.GetActor());
 	if (!Character) { return; }
 
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "[7]-----------------");
 	ServerSetTarget(Character);
 }
+
 // =====================================================================================================================================
 // NETWORK METHODS
 // =====================================================================================================================================
