@@ -425,6 +425,7 @@ void ACharacterBase::SetDeadState()
 	Mana.Value = 0.0f;
 	Energy.Value = 0.0f;
 	State = CS_Death;
+	AbilityInfoList.Empty();
 
 	FTimerHandle TimerHandler;
 	World->GetTimerManager().SetTimer(TimerHandler, this, &ACharacterBase::ServerRespawn, DeathDelay, false);
