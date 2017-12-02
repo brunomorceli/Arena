@@ -33,6 +33,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
 	bool bIsLoop;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
+	FName BuffName;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
 	float Delay;

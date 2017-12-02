@@ -184,8 +184,8 @@ public:
 	void ClientStartAbility_Implementation(int32 Slot);
 
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastSpawnProjectile(AArenaCharacter* CharacterTarget, AAbilityBase* Ability);
-	void MulticastSpawnProjectile_Implementation(AArenaCharacter* CharacterTarget, AAbilityBase* Ability);
+	void MulticastSpawnProjectile(AArenaCharacter* Causer, AArenaCharacter* CharacterTarget, AAbilityBase* Ability);
+	void MulticastSpawnProjectile_Implementation(AArenaCharacter* Causer, AArenaCharacter* CharacterTarget, AAbilityBase* Ability);
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerAddAbility(TSubclassOf<AAbilityBase> AbilityBase, int32 Slot);

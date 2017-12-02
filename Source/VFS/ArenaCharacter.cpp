@@ -467,7 +467,7 @@ void AArenaCharacter::CommitAbility(int32 Slot)
 void AArenaCharacter::CommitAbilityModifiers(AAbilityBase* Ability)
 {
 	UWorld* World = GetWorld();
-	if (!World || !Ability) { return; }
+	if (!World || !Ability || !HasAuthority()) { return; }
 
 	// Is a Target Ability.
 	if (Ability->AreaType == ABA_Target)
@@ -483,7 +483,7 @@ void AArenaCharacter::CommitAbilityModifiers(AAbilityBase* Ability)
 		if (Ability->CommitType == ABC_Projectile)
 		{
 			ArenaCharacter->ApplyDelayedModifiers(Ability);
-			return MulticastSpawnProjectile(Cast<AArenaCharacter>(Target), Ability);
+			return MulticastSpawnProjectile(this, Cast<AArenaCharacter>(Target), Ability);
 		}
 
 		return ArenaCharacter->ApplyModifiers(Ability);
@@ -512,7 +512,7 @@ void AArenaCharacter::CommitAbilityModifiers(AAbilityBase* Ability)
 			if (Ability->CommitType == ABC_Projectile)
 			{
 				ArenaCharacter->ApplyDelayedModifiers(Ability);
-				return MulticastSpawnProjectile(ArenaCharacter, Ability);
+				return MulticastSpawnProjectile(this, ArenaCharacter, Ability);
 			}
 
 			ArenaCharacter->ApplyModifiers(Ability);
@@ -546,7 +546,7 @@ void AArenaCharacter::CommitAbilityModifiers(AAbilityBase* Ability)
 			if (Ability->CommitType == ABC_Projectile)
 			{
 				ArenaCharacter->ApplyDelayedModifiers(Ability);
-				return MulticastSpawnProjectile(ArenaCharacter, Ability);
+				return MulticastSpawnProjectile(this, ArenaCharacter, Ability);
 			}
 
 			ArenaCharacter->ApplyModifiers(Ability);
@@ -1359,21 +1359,22 @@ void AArenaCharacter::ClientStartAbility_Implementation(int32 Slot)
 	 StartAbility(Slot);
 }
 
-void AArenaCharacter::MulticastSpawnProjectile_Implementation(AArenaCharacter* CharacterTarget, AAbilityBase* Ability)
+void AArenaCharacter::MulticastSpawnProjectile_Implementation(AArenaCharacter* Causer, AArenaCharacter* CharacterTarget, AAbilityBase* Ability)
 {
 	UWorld* World = GetWorld();
-	if (!World || !CharacterTarget || !Ability || !Ability->Projectile) { return; }
+	if (!World || !Causer || !CharacterTarget || !Ability || !Ability->Projectile) { return; }
 
-	USkeletalMeshComponent* Mesh = GetMesh();
+	if (this->GetUniqueID() != Causer->GetUniqueID()) { return; }
+
+	USkeletalMeshComponent* Mesh = Causer->GetMesh();
 	if (!Mesh) { return; }
 
 	FVector SocketLocation = Mesh->GetSocketLocation("hand_r_socket");
-	AAbilityProjectile* Projectile = World->SpawnActor<AAbilityProjectile>(Ability->Projectile, SocketLocation, GetActorRotation());
+	AAbilityProjectile* Projectile = World->SpawnActor<AAbilityProjectile>(Ability->Projectile, SocketLocation, FRotator::ZeroRotator);
 	if (!Projectile) { return; }
 
 	Projectile->Speed = Ability->ProjectileSpeed;
 	Projectile->Target = CharacterTarget;
-	if (Ability->ProjectileHitParticle) { Projectile->HitParticle = Ability->ProjectileHitParticle; }
 }
 
 void AArenaCharacter::ServerAddAbility_Implementation(TSubclassOf<AAbilityBase> AbilityBase, int32 Slot)

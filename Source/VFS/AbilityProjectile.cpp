@@ -13,7 +13,7 @@ AAbilityProjectile::AAbilityProjectile()
 	bNetLoadOnClient = true;
 
 	Speed = 1200.0f;
-	TimeRemaining = 7.0f;
+	TimeRemaining = 10.0f;
 
 	CollisionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("SphereCollision"));
 	CollisionSphere->SetupAttachment(RootComponent);

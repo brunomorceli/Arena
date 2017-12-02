@@ -19,7 +19,7 @@ AAbilityWarrior7::AAbilityWarrior7()
 	MaxDistance = 1500.0f;
 	MinDistance = 600.0f;
 	CountdownTime = 10.0f;
-	ProjectileSpeed = 2500.0f;
+	ProjectileSpeed = 3000.0f;
 
 	bAllowEnemy = true;
 	bAllowSelf = false;
@@ -53,6 +53,9 @@ void AAbilityWarrior7::SetupModifiers()
 	Root.Name = "Warrior Root";
 	Root.State = CS_Stuck;
 	Root.TimeRemaining = 5.0f;
+	Root.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
+		AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(7));
+	};
 
 	BuffModifiers.Add(Root);
 }
