@@ -21,8 +21,11 @@ void AArenaCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	SetupAbilities();
+
 	FTimerHandle MyTimer;
 	GetWorldTimerManager().SetTimer(MyTimer, this, &AArenaCharacter::ClientSetPlayerProfile, 0.5, false);
+	
 }
 
 void AArenaCharacter::Tick(float DeltaTime)
@@ -344,20 +347,20 @@ float AArenaCharacter::GetCountdownPercent(int32 Slot)
 // ABILITY
 // ==============================================================================================================================
 
-bool AArenaCharacter::AddAbility(TSubclassOf<AAbilityBase> AbilityBase, int32 Slot)
+AAbilityBase* AArenaCharacter::AddAbility(TSubclassOf<AAbilityBase> AbilityBase, int32 Slot)
 {
 	UWorld* World = GetWorld();
-	if (!World) { return false; }
+	if (!World) { return NULL; }
 
 	AAbilityBase* Ability = World->SpawnActor<AAbilityBase>(AbilityBase);
 
-	if (!Ability) { return false; }
+	if (!Ability) { return NULL; }
 
 	Ability->Slot = Slot;
 	Ability->CharacterOwner = this;
 	Abilities.Add(Slot, Ability);
 
-	return true;
+	return Ability;
 }
 
 AAbilityBase* AArenaCharacter::GetAbility(int32 Slot)
@@ -1332,6 +1335,27 @@ FAbilityInfo AArenaCharacter::GetAbilityInfo(FHealModifier Modifier)
 	return AbilityInfo;
 }
 
+void AArenaCharacter::SetupAbilities()
+{
+	SetAbility1();
+	SetAbility2();
+	SetAbility3();
+	SetAbility4();
+	SetAbility5();
+	SetAbility6();
+	SetAbility7();
+	SetAbility8();
+}
+
+void AArenaCharacter::SetAbility1() {}
+void AArenaCharacter::SetAbility2() {}
+void AArenaCharacter::SetAbility3() {}
+void AArenaCharacter::SetAbility4() {}
+void AArenaCharacter::SetAbility5() {}
+void AArenaCharacter::SetAbility6() {}
+void AArenaCharacter::SetAbility7() {}
+void AArenaCharacter::SetAbility8() {}
+
 // ==========================================================================================
 // NETWORK
 // ==========================================================================================
@@ -1390,6 +1414,14 @@ void AArenaCharacter::ClientAddAbility_Implementation(TSubclassOf<AAbilityBase> 
 
 void AArenaCharacter::ClientSetPlayerProfile_Implementation()
 {
+	AArenaPlayerState* MyPlayerState = Cast<AArenaPlayerState>(PlayerState);
+	if (!MyPlayerState) { return; }
+
+	Name = MyPlayerState->PlayerName;
+	Team = MyPlayerState->Team;
+
+	if (MyPlayerState->CharacterClass != ECCL_None) { return; }
+
 	UArenaGameInstance* MyGameInstance = Cast<UArenaGameInstance>(GetGameInstance());
 	if (!MyGameInstance) { return; }
 
@@ -1400,38 +1432,27 @@ void AArenaCharacter::ClientSetPlayerProfile_Implementation()
 
 void AArenaCharacter::ServerSetPlayerProfile_Implementation(FPlayerProfile PlayerProfile)
 {
-	AArenaPlayerState* ArenaPlayerState = Cast<AArenaPlayerState>(PlayerState);
-	if (!ArenaPlayerState) { return; }
+	AArenaPlayerState* MyPlayerState = Cast<AArenaPlayerState>(PlayerState);
+	if (!MyPlayerState) { return; }
 
-	Name = PlayerProfile.PlayerName.ToString();
-	PlayerClass = PlayerProfile.PlayerClass;
+	MyPlayerState->ServerSetClass(PlayerProfile.PlayerClass);
+	MyPlayerState->ServerSetPlayerName(PlayerProfile.PlayerName.ToString());
 
-	ArenaPlayerState->ServerSetClass(PlayerProfile.PlayerClass);
-	ArenaPlayerState->ServerSetPlayerName(PlayerProfile.PlayerName.ToString());
+	UWorld* World = GetWorld();
+	if (!World) { return; }
 
-	OnRep_PlayerClass();
+	AArenaGameMode* GameMode = Cast<AArenaGameMode>(World->GetAuthGameMode());
+	if (!GameMode) { return; }
 
-	FClassPreset ClassPreset = UGlobalLibrary::GetClass(PlayerProfile.PlayerClass);
+	TSubclassOf<APawn> PawnClass = GameMode->GetPawnClassByCharacterClass(PlayerProfile.PlayerClass);
+	if (!PawnClass) { return; }
 
-	for (int32 Index = 0; Index <ClassPreset.Abilities.Num(); Index++)
-	{
-		ServerAddAbility(ClassPreset.Abilities[Index], Index + 1);
-	}
+	SetPawn(PawnClass);
 }
 
 void AArenaCharacter::OnRep_PlayerClass()
 {
-	Super::OnRep_PlayerState();
-
-	FClassPreset ClassPreset = UGlobalLibrary::GetClass(PlayerClass);
-
-	if (ClassPreset.CharacterMesh)
-	{
-		GetMesh()->SetSkeletalMesh(ClassPreset.CharacterMesh, false);
-	}
-
-	LeftHandWeapon->SetSkeletalMesh(ClassPreset.LeftWeapon, false);
-	RightHandWeapon->SetSkeletalMesh(ClassPreset.RightWeapon, false);
+	Super::OnRep_PlayerClass();
 }
 
 void AArenaCharacter::MulticastNotifyAbilityInfo_Implementation(FAbilityInfo AbilityInfo)

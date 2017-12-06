@@ -12,6 +12,8 @@
 #include "ArenaCharacter.h"
 #include "ArenaGameMode.generated.h"
 
+class AArenaCharacter;
+
 /**
  * 
  */
@@ -23,7 +25,15 @@ class VFS_API AArenaGameMode : public AGameModeBase
 	bool bNextIsRed;
 
 public:
+
+	TSubclassOf<APawn> KhollBPClass;
+	TSubclassOf<APawn> MadEyeBPClass;
+	TSubclassOf<APawn> OrbusBPClass;
+	TSubclassOf<APawn> OsamuBPClass;
+
 	AArenaGameMode();
 
 	virtual void PostLogin(APlayerController * NewPlayer) override;
+
+	TSubclassOf<APawn> GetPawnClassByCharacterClass(TEnumAsByte<ECharacterClass> PlayerClass);
 };

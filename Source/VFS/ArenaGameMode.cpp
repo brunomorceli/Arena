@@ -8,11 +8,19 @@ AArenaGameMode::AArenaGameMode()
 	bNextIsRed = false;
 
 	// set default pawn class to our Blueprinted character
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Characters/Default/DefaultCharacterBP.DefaultCharacterBP_C"));
-	if (PlayerPawnBPClass.Class != NULL)
-	{
-		DefaultPawnClass = PlayerPawnBPClass.Class;
-	}
+	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Blueprints/Characters/DefaultCharacterBP.DefaultCharacterBP_C"));
+
+	static ConstructorHelpers::FClassFinder<APawn> KhollClass(TEXT("/Game/Blueprints/Characters/KhollCharacterBP.KhollCharacterBP_C"));
+	static ConstructorHelpers::FClassFinder<APawn> MadEyeClass(TEXT("/Game/Blueprints/Characters/MadEyeCharacterBP.MadEyeCharacterBP_C"));
+	static ConstructorHelpers::FClassFinder<APawn> OrbusClass(TEXT("/Game/Blueprints/Characters/OrbusCharacterBP.OrbusCharacterBP_C"));
+	static ConstructorHelpers::FClassFinder<APawn> OsamuClass(TEXT("/Game/Blueprints/Characters/OsamuCharacterBP.OsamuCharacterBP_C"));
+
+	if (PlayerPawnBPClass.Class != NULL) { DefaultPawnClass = PlayerPawnBPClass.Class; }
+
+	if (KhollClass.Succeeded()) { KhollBPClass = KhollClass.Class; }
+	if (MadEyeClass.Succeeded()) { MadEyeBPClass = MadEyeClass.Class; }
+	if (OrbusClass.Succeeded()) { OrbusBPClass = OrbusClass.Class; }
+	if (OsamuClass.Succeeded()) { OsamuBPClass = OsamuClass.Class; }
 
 	PlayerStateClass = AArenaPlayerState::StaticClass();
 	GameStateClass = AArenaGameState::StaticClass();
@@ -22,19 +30,45 @@ void AArenaGameMode::PostLogin(APlayerController * NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-	UWorld* World = GetWorld();
-	if (!World) { return; }
+	AArenaCharacter* Character = Cast<AArenaCharacter>(NewPlayer->GetPawn());
+	if (!Character) { return; }
 
-	ACharacterBase* CharacterBase = Cast<ACharacterBase>(NewPlayer->GetPawn());
-	if (!CharacterBase) { return; }
-
-	AArenaPlayerState* PlayerState = Cast<AArenaPlayerState>(NewPlayer->PlayerState);
+	AArenaPlayerState* PlayerState = Cast<AArenaPlayerState>(Character->PlayerState);
 	if (!PlayerState) { return; }
 
 	TEnumAsByte<EPlayerTeam> NewTeam = bNextIsRed ? EPT_Red : EPT_Blue;
-
 	PlayerState->ServerChangeTeam(NewTeam);
-	CharacterBase->Team = NewTeam;
 
 	bNextIsRed = !bNextIsRed;
+}
+
+TSubclassOf<APawn> AArenaGameMode::GetPawnClassByCharacterClass(TEnumAsByte<ECharacterClass> PlayerClass)
+{	
+	switch (PlayerClass)
+	{
+	case ECCL_Assassin:
+		return MadEyeBPClass;
+	case ECCL_Wizard:
+		return OrbusBPClass;
+	case ECCL_Cleric:
+		return OsamuBPClass;
+	case ECCL_Warrior:
+		return KhollBPClass;
+	default:
+		return NULL;
+	}
+
+	/*TEnumAsByte<EPlayerTeam> NewTeam = bNextIsRed ? EPT_Red : EPT_Blue;
+
+	PlayerState->ServerChangeTeam(NewTeam);
+	PlayerCharacter->Team = NewTeam;
+	//PlayerCharacter->Name = PlayerProfile.PlayerName.ToString();
+
+	AArenaPlayerState* ArenaPlayerState = Cast<AArenaPlayerState>(PlayerState);
+	if (!ArenaPlayerState) { return; }
+
+	ArenaPlayerState->ServerSetClass(PlayerProfile.PlayerClass);
+	ArenaPlayerState->ServerSetPlayerName(PlayerProfile.PlayerName.ToString());
+
+	bNextIsRed = !bNextIsRed;*/
 }

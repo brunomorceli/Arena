@@ -17,6 +17,7 @@
 #include "AbilityBase.generated.h"
 
 class AAbilityBase;
+class ACharacterBase;
 
 // ==================================================================================================================================================
 // MODIFIER
@@ -47,7 +48,7 @@ public:
 
 	// Modifier Description.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	FText Description;
+	FString Description;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
 	int32 bAllowSelf = false;

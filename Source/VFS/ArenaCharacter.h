@@ -10,7 +10,10 @@
 #include "AbilityBase.h"
 #include "ArenaGameInstance.h"
 #include "Utilities.h"
+#include "ArenaGameMode.h"
 #include "ArenaCharacter.generated.h"
+
+class AArenaGameMode;
 
 // ==================================================================================================================================================
 // CLASS
@@ -78,7 +81,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Abilities")
 	float GetCountdownPercent(int32 Slot);
 
-	bool AddAbility(TSubclassOf<AAbilityBase> AbilityBase, int32 Slot);
+	AAbilityBase* AddAbility(TSubclassOf<AAbilityBase> AbilityBase, int32 Slot);
 
 	UFUNCTION(BlueprintCallable, Category = "Abilities")
 	AAbilityBase* GetAbility(int32 Slot);
@@ -167,6 +170,16 @@ public:
 	FAbilityInfo GetAbilityInfo(FDamageModifier Modifier);
 	FAbilityInfo GetAbilityInfo(FOvertimeModifier Modifier);
 	FAbilityInfo GetAbilityInfo(FHealModifier Modifier);
+
+	virtual void SetupAbilities();
+	virtual void SetAbility1();
+	virtual void SetAbility2();
+	virtual void SetAbility3();
+	virtual void SetAbility4();
+	virtual void SetAbility5();
+	virtual void SetAbility6();
+	virtual void SetAbility7();
+	virtual void SetAbility8();
 
 	// ==========================================================================================
 	// NETWORK

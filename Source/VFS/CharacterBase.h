@@ -261,10 +261,10 @@ class ACharacterBase : public ACharacter
 
 	void UpdateAuraParticle();
 
+public:
+
 	UFUNCTION()
 	virtual void OnRep_PlayerClass();
-
-public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintAssignable, Category = "Notification")
 	FNotificationDelegate NotificationDelegate;
@@ -344,7 +344,7 @@ public:
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "State")
 	FString Name;
 
-	UPROPERTY(ReplicatedUsing = OnRep_PlayerClass, VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	UPROPERTY(ReplicatedUsing = OnRep_PlayerClass, EditAnywhere, BlueprintReadWrite, Category = "State")
 	TEnumAsByte<ECharacterClass> PlayerClass;
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = Camera)
@@ -544,6 +544,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Utils")
 	void GetTargetByClick(float Range, float CursorOffset);
 
+	UFUNCTION(BlueprintCallable, Category = "Utils")
+	void SetPawn(TSubclassOf<APawn> Character);
+
 	// ===================================================================================================================
 	// NETWORK METHODS
 	// ===================================================================================================================
@@ -621,8 +624,8 @@ public:
 	void MulticastSetAnimState_Implementation(ECharacterAnimationState NewAnimState, TSubclassOf<AAbilityFXBase> Effect);
 
 	UFUNCTION(NetMulticast, Reliable, Category = "Network")
-	void MulticastSetPawn(TSubclassOf<ACharacterBase> Character);
-	void MulticastSetPawn_Implementation(TSubclassOf<ACharacterBase> Character);
+	void MulticastSetPawn(TSubclassOf<APawn> Character);
+	void MulticastSetPawn_Implementation(TSubclassOf<APawn> Character) { SetPawn(Character); }
 
 	UFUNCTION(NetMulticast, Reliable, Category = "Network")
 	void MulticastSetAuraParticle(UParticleSystem* Particle);

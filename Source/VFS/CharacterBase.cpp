@@ -510,7 +510,7 @@ bool ACharacterBase::DirectionalHitTest(TArray<ACharacterBase*> &Characters, flo
 
 		if (!Character || Character->State == CS_Death) { continue; }
 
-		Characters.Add(Character);
+		Characters.AddUnique(Character);
 	}
 
 	return Characters.Num() > 0;
@@ -759,6 +759,29 @@ void ACharacterBase::GetTargetByClick(float Range = 6000.0f, float CursorOffset 
 	ServerSetTarget(Character);
 }
 
+void ACharacterBase::SetPawn(TSubclassOf<APawn> Character)
+{
+	if (!Character) { return; }
+
+	UWorld* World = GetWorld();
+	if (!World) { return; }
+
+	AController* PlayerController = World->GetFirstPlayerController();
+	if (!PlayerController) { return; }
+
+	APawn* CurrentPawn = PlayerController->GetPawn();
+	if (!CurrentPawn) { return; }
+
+	CurrentPawn->DetachFromControllerPendingDestroy();
+
+	PlayerController->UnPossess();
+
+	CurrentPawn->Destroy();
+
+	APawn* NewPawn = World->SpawnActor<APawn>(Character, GetActorLocation(), GetActorRotation());
+	PlayerController->Possess(NewPawn);
+}
+
 // =====================================================================================================================================
 // NETWORK METHODS
 // =====================================================================================================================================
@@ -881,29 +904,6 @@ void ACharacterBase::MulticastSetAnimState_Implementation(ECharacterAnimationSta
 	AnimationState = NewAnimState;
 	ChangeAnimStateDelegate.Broadcast(AnimationState);
 	PlayFX(Effect);
-}
-
-void ACharacterBase::MulticastSetPawn_Implementation(TSubclassOf<ACharacterBase> Character)
-{
-	if (!Character) { return; }
-
-	UWorld* World = GetWorld();
-	if (!World) { return; }
-
-	AController* PlayerController = World->GetFirstPlayerController();
-	if (!PlayerController) { return; }
-
-	APawn* CurrentPawn = PlayerController->GetPawn();
-	if (!CurrentPawn) { return; }
-
-	CurrentPawn->DetachFromControllerPendingDestroy();
-
-	PlayerController->UnPossess();
-
-	CurrentPawn->Destroy();
-
-	APawn* NewPawn = World->SpawnActor<APawn>(Character, GetActorLocation(), GetActorRotation());
-	PlayerController->Possess(NewPawn);
 }
 
 void ACharacterBase::MulticastSetAuraParticle_Implementation(UParticleSystem* Particle)
