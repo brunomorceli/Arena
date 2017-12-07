@@ -9,10 +9,7 @@
 #include "Enums.h"
 #include "ArenaGameState.h"
 #include "ArenaPlayerState.h"
-#include "ArenaCharacter.h"
 #include "ArenaGameMode.generated.h"
-
-class AArenaCharacter;
 
 /**
  * 

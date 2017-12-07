@@ -2,6 +2,7 @@
 
 #include "ArenaGameMode.h"
 #include "UObject/ConstructorHelpers.h"
+#include "ArenaCharacter.h"
 
 AArenaGameMode::AArenaGameMode()
 {
@@ -9,17 +10,18 @@ AArenaGameMode::AArenaGameMode()
 
 	// set default pawn class to our Blueprinted character
 	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Blueprints/Characters/DefaultCharacterBP.DefaultCharacterBP_C"));
-
-	static ConstructorHelpers::FClassFinder<APawn> KhollClass(TEXT("/Game/Blueprints/Characters/KhollCharacterBP.KhollCharacterBP_C"));
-	static ConstructorHelpers::FClassFinder<APawn> MadEyeClass(TEXT("/Game/Blueprints/Characters/MadEyeCharacterBP.MadEyeCharacterBP_C"));
-	static ConstructorHelpers::FClassFinder<APawn> OrbusClass(TEXT("/Game/Blueprints/Characters/OrbusCharacterBP.OrbusCharacterBP_C"));
-	static ConstructorHelpers::FClassFinder<APawn> OsamuClass(TEXT("/Game/Blueprints/Characters/OsamuCharacterBP.OsamuCharacterBP_C"));
-
 	if (PlayerPawnBPClass.Class != NULL) { DefaultPawnClass = PlayerPawnBPClass.Class; }
 
+	ConstructorHelpers::FClassFinder<APawn> KhollClass(TEXT("/Game/Blueprints/Characters/KhollCharacterBP.KhollCharacterBP_C"));
 	if (KhollClass.Succeeded()) { KhollBPClass = KhollClass.Class; }
+
+	ConstructorHelpers::FClassFinder<APawn> MadEyeClass(TEXT("/Game/Blueprints/Characters/MadEyeCharacterBP.MadEyeCharacterBP_C"));
 	if (MadEyeClass.Succeeded()) { MadEyeBPClass = MadEyeClass.Class; }
+
+	ConstructorHelpers::FClassFinder<APawn> OrbusClass(TEXT("/Game/Blueprints/Characters/OrbusCharacterBP.OrbusCharacterBP_C"));
 	if (OrbusClass.Succeeded()) { OrbusBPClass = OrbusClass.Class; }
+
+	ConstructorHelpers::FClassFinder<APawn> OsamuClass(TEXT("/Game/Blueprints/Characters/OsamuCharacterBP.OsamuCharacterBP_C"));
 	if (OsamuClass.Succeeded()) { OsamuBPClass = OsamuClass.Class; }
 
 	PlayerStateClass = AArenaPlayerState::StaticClass();

@@ -5,6 +5,9 @@
 ACharacterKholl::ACharacterKholl()
 {
 	PlayerClass = ECharacterClass::ECCL_Warrior;
+
+	Critical.ValueBase = 20.0f;
+	Critical.Reset();
 }
 
 void ACharacterKholl::BeginPlay()
@@ -30,7 +33,7 @@ void ACharacterKholl::SetAbility1()
 	FDamageModifier Damage;
 	Damage.AbilityOwner = Abilities[1];
 	Damage.Icon = Abilities[1]->Icon;
-	Damage.Health = 100.0f;
+	Damage.Health = 130.0f;
 	Damage.ModifierCritical = 30.0f;
 	Damage.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
 		AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(1));
@@ -51,6 +54,7 @@ void ACharacterKholl::SetAbility2()
 	Ability->AreaType = ABA_Directional;
 	Ability->DirectionalRadius = 100.0f;
 	Ability->DirectionalRange = 200.0f;
+	Ability->EnergyCost = 40.0f;
 	Ability->bAllowEnemy = true;
 	Ability->bAllowSelf = false;
 	Ability->bAllowTeam = false;
@@ -60,11 +64,11 @@ void ACharacterKholl::SetAbility2()
 	FDamageModifier Damage;
 	Damage.AbilityOwner = Ability;
 	Damage.Icon = Ability->Icon;
-	Damage.Health = 100.0f;
+	Damage.Health = 250.0f;
 	Damage.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
 		AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(2));
 
-		if (!AbilityInfo.Ability || !UUtilities::IsCritical(25.0f)) { return; }
+		if (!AbilityInfo.Ability || !UUtilities::IsCritical(50.0f)) { return; }
 
 		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
 		if (!Target) { return; }
@@ -101,6 +105,7 @@ void ACharacterKholl::SetAbility3()
 	Ability->MaxDistance = 300.0f;
 	Ability->AbilityType = ABST_Instant;
 	Ability->AreaType = ABA_Target;
+	Ability->EnergyCost = 35.0f;
 	Ability->bAllowEnemy = true;
 	Ability->bAllowSelf = false;
 	Ability->bAllowTeam = false;
@@ -139,41 +144,29 @@ void ACharacterKholl::SetAbility4()
 	Ability->CountdownTime = 60.0f;
 	Ability->AbilityType = ABST_Instant;
 	Ability->AreaType = ABA_Target;
-	Ability->bAllowEnemy = false;
+	Ability->EnergyCost = 40.0f;
 	Ability->bAllowSelf = true;
+	Ability->bAllowEnemy = false;
 	Ability->bAllowTeam = false;
 	Ability->LoadIcon("/Game/Sprites/Icons/19.19");
 
-	FBuffModifier MagicDefense;
-	MagicDefense.AbilityOwner = Ability;
-	MagicDefense.Icon = Ability->Icon;
-	MagicDefense.Name = "Shield Wall - Magic Defense";
-	MagicDefense.Description = "Magic Defense is increased by 90%.";
-	MagicDefense.MagicDefense = 90.0f;
-	MagicDefense.School = MS_Physical;
-	MagicDefense.bAllowSelf = true;
-	MagicDefense.bAllowTeam = true;
-	MagicDefense.bAllowEnemy = true;
-	MagicDefense.bIsHarmful = false;
-	MagicDefense.TimeRemaining = 5.0f;
-	MagicDefense.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
+	FBuffModifier Buff;
+	Buff.AbilityOwner = Ability;
+	Buff.Icon = Ability->Icon;
+	Buff.Name = "Shield Wall";
+	Buff.Description = "Magic Defense is increased by 90%.";
+	Buff.MagicDefense = 90.0f;
+	Buff.PhysicalDefense = 70.0f;
+	Buff.School = MS_Physical;
+	Buff.bAllowSelf = true;
+	Buff.bAllowTeam = false;
+	Buff.bAllowEnemy = true;
+	Buff.bIsHarmful = false;
+	Buff.TimeRemaining = 10.0f;
+	Buff.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
 		AbilityInfo.Causer->MulticastPlayFX(UGlobalLibrary::GetAbilityUseFX(4));
 	};
-	Ability->BuffModifiers.Add(MagicDefense);
-
-	FBuffModifier PhysicalDefense;
-	PhysicalDefense.AbilityOwner = Ability;
-	PhysicalDefense.Icon = Ability->Icon;
-	PhysicalDefense.Name = "Shield Wall - Physical Defense";
-	PhysicalDefense.Description = "Physical Defense is increased by 70%.";
-	PhysicalDefense.MagicDefense = 70.0f;
-	PhysicalDefense.School = MS_Physical;
-	PhysicalDefense.bAllowSelf = true;
-	PhysicalDefense.bAllowTeam = false;
-	PhysicalDefense.bAllowEnemy = false;
-	PhysicalDefense.bIsHarmful = false;
-	PhysicalDefense.TimeRemaining = 10.0f;
-	Ability->BuffModifiers.Add(PhysicalDefense);
+	Ability->BuffModifiers.Add(Buff);
 }
 
 void ACharacterKholl::SetAbility5()

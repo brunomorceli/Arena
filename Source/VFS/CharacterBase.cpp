@@ -131,7 +131,7 @@ ACharacterBase::ACharacterBase()
 
 	Health.Setup(0.0f, 2000.0f, 2000.0f, 0.3f);
 	Mana.Setup(0.0f, 2000.0f, 2000.0f, 0.3f);
-	Energy.Setup(0.0f, 150.0f, 150.0f, 3.0f);
+	Energy.Setup(0.0f, 150.0f, 150.0f, 4.0f);
 	Speed.Setup(0.0f, 1200.0f, 600.0f);
 	Critical.Setup(0.0f, 100.0f, 15.0f);
 
@@ -143,32 +143,26 @@ ACharacterBase::ACharacterBase()
 	RegenerationInterval = 0.333f;
 
 	DeathDelay = 5.0f;
-
-	UWorld* World = GetWorld();
-	if (!World) { return; }
-
-	World->GetTimerManager().SetTimer(RegenerationTimer, this, &ACharacterBase::RegenerateStatus, RegenerationInterval, true);
 }
 
 void ACharacterBase::RegenerateStatus()
 {
-	if (!HasAuthority() || State == CS_Death || CS_Spectate) { return; }
+	if (!HasAuthority() || State == CS_Death || State == CS_Spectate) { return; }
 
 	float DeltaTime = RegenerationInterval;
 
-	float HealthRegen = Health.Regeneration * DeltaTime;
-	Health.Heal(HealthRegen);
-
-	float ManaRegen = Mana.Regeneration * DeltaTime;
-	Mana.Heal(ManaRegen);
-
-	float EnergyRegen = Energy.Regeneration * DeltaTime;
-	Energy.Heal(EnergyRegen);
+	Health.Clamp(Health.Regeneration * DeltaTime, true);
+	Mana.Clamp(Mana.Regeneration * DeltaTime, true);
+	Energy.Clamp(Energy.Regeneration * DeltaTime, false);
 }
 
 void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (!HasAuthority()) { return; }
+	FTimerHandle MyTimer;
+	GetWorldTimerManager().SetTimer(MyTimer, this, &ACharacterBase::RegenerateStatus, RegenerationInterval, true);
 }
 
 void ACharacterBase::Tick(float DeltaTime)
@@ -762,23 +756,23 @@ void ACharacterBase::GetTargetByClick(float Range = 6000.0f, float CursorOffset 
 void ACharacterBase::SetPawn(TSubclassOf<APawn> Character)
 {
 	if (!Character) { return; }
-
+	
 	UWorld* World = GetWorld();
 	if (!World) { return; }
 
-	AController* PlayerController = World->GetFirstPlayerController();
+	APlayerController* PlayerController = Cast<APlayerController>(Controller);
 	if (!PlayerController) { return; }
 
 	APawn* CurrentPawn = PlayerController->GetPawn();
 	if (!CurrentPawn) { return; }
 
 	CurrentPawn->DetachFromControllerPendingDestroy();
-
 	PlayerController->UnPossess();
-
 	CurrentPawn->Destroy();
 
 	APawn* NewPawn = World->SpawnActor<APawn>(Character, GetActorLocation(), GetActorRotation());
+	if (!NewPawn) { return; }
+
 	PlayerController->Possess(NewPawn);
 }
 

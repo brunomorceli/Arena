@@ -23,9 +23,9 @@ void AArenaCharacter::BeginPlay()
 
 	SetupAbilities();
 
+	if (!HasAuthority()) { return; }
 	FTimerHandle MyTimer;
 	GetWorldTimerManager().SetTimer(MyTimer, this, &AArenaCharacter::ClientSetPlayerProfile, 0.5, false);
-	
 }
 
 void AArenaCharacter::Tick(float DeltaTime)
@@ -193,27 +193,27 @@ void AArenaCharacter::RefreshBuffModifiersStatus()
 
 	Health.Max += HealthBuff;
 	Health.Max -= HealthDebuff;
-	Health.Clamp(0.0f);
+	Health.Clamp(0.0f, false);
 
 	Mana.Max += ManaBuff;
 	Mana.Max -= ManaDebuff;
-	Mana.Clamp(0.0f);
+	Mana.Clamp(0.0f, false);
 
 	Energy.Max += EnergyBuff;
 	Energy.Max -= EnergyDebuff;
-	Energy.Clamp(0.0f);
+	Energy.Clamp(0.0f, false);
 
 	Critical.Value += CriticalBuff;
 	Critical.Value -= CriticalDebuff;
 
-	Critical.Clamp(CriticalBuff - CriticalDebuff);
+	Critical.Clamp(CriticalBuff - CriticalDebuff, false);
 
-	Speed.Clamp(SpeedBuff - SpeedDebuff);
-
-	MagicPower.Clamp(MagicPowerBuff - MagicPowerDebuff);
-	MagicDefense.Clamp(MagicDefenseBuff - MagicDefenseDebuff);
-	PhysicalPower.Clamp(PhysicalPowerBuff - PhysicalPowerDebuff);
-	PhysicalDefense.Clamp(PhysicalDefenseBuff - PhysicalDefenseDebuff);
+	Speed.Clamp(SpeedBuff - SpeedDebuff, false);
+	
+	MagicPower.Clamp(MagicPowerBuff - MagicPowerDebuff, false);
+	MagicDefense.Clamp(MagicDefenseBuff - MagicDefenseDebuff, false);
+	PhysicalPower.Clamp(PhysicalPowerBuff - PhysicalPowerDebuff, false);
+	PhysicalDefense.Clamp(PhysicalDefenseBuff - PhysicalDefenseDebuff, false);
 
 	MulticastSetMaxWalkSpeed(Speed.Value);
 }
@@ -495,10 +495,10 @@ void AArenaCharacter::CommitAbilityModifiers(AAbilityBase* Ability)
 	// Is a Directional Ability.
 	if (Ability->AreaType == ABA_Directional)
 	{
+		ApplyCosts(Ability);
+
 		TArray<ACharacterBase*> Characters;
 		if (!DirectionalHitTest(Characters, Ability->DirectionalRadius, Ability->DirectionalRange)) { return; }
-
-		ApplyCosts(Ability);
 
 		for (auto Character : Characters)
 		{
@@ -525,10 +525,10 @@ void AArenaCharacter::CommitAbilityModifiers(AAbilityBase* Ability)
 	// Is an Area On Effect Ability.
 	if (Ability->AreaType == EAbilityArea::ABA_AreaOnEffect)
 	{
+		ApplyCosts(Ability);
+
 		TArray<AActor*> FoundActors;
 		UGameplayStatics::GetAllActorsOfClass(World, ACharacterBase::StaticClass(), FoundActors);
-
-		ApplyCosts(Ability);
 
 		for (auto Actor : FoundActors)
 		{
@@ -893,7 +893,7 @@ void AArenaCharacter::ApplyAuraModifier(FAuraModifier Modifier)
 void AArenaCharacter::ApplyBuffModifier(FBuffModifier Modifier)
 {
 	if (!HasAuthority() || !Modifier.AbilityOwner) { return; }
-
+	
 	FAbilityInfo AbilityInfo = GetAbilityInfo(Modifier);
 	int32 AbilityId = Modifier.AbilityOwner->GetUniqueID();
 
@@ -1417,11 +1417,6 @@ void AArenaCharacter::ClientSetPlayerProfile_Implementation()
 	AArenaPlayerState* MyPlayerState = Cast<AArenaPlayerState>(PlayerState);
 	if (!MyPlayerState) { return; }
 
-	Name = MyPlayerState->PlayerName;
-	Team = MyPlayerState->Team;
-
-	if (MyPlayerState->CharacterClass != ECCL_None) { return; }
-
 	UArenaGameInstance* MyGameInstance = Cast<UArenaGameInstance>(GetGameInstance());
 	if (!MyGameInstance) { return; }
 
@@ -1434,6 +1429,11 @@ void AArenaCharacter::ServerSetPlayerProfile_Implementation(FPlayerProfile Playe
 {
 	AArenaPlayerState* MyPlayerState = Cast<AArenaPlayerState>(PlayerState);
 	if (!MyPlayerState) { return; }
+
+	Name = MyPlayerState->PlayerName;
+	Team = MyPlayerState->Team;
+
+	if (MyPlayerState->CharacterClass != ECCL_None) { return; }
 
 	MyPlayerState->ServerSetClass(PlayerProfile.PlayerClass);
 	MyPlayerState->ServerSetPlayerName(PlayerProfile.PlayerName.ToString());
