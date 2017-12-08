@@ -72,6 +72,8 @@ public:
 	virtual void UpdateState() override;
 	void ValidateCast();
 
+	ACharacterBase* AbilityTarget;
+
 	UFUNCTION(BlueprintCallable, Category = "Abilities")
 	bool IsCountdown(int32 Slot);
 

@@ -229,6 +229,7 @@ void ACharacterKholl::SetAbility6()
 	Ability->bAllowSelf = true;
 	Ability->bAllowEnemy = false;
 	Ability->bAllowTeam = false;
+	Ability->CommitFX = UGlobalLibrary::GetAbilityUseFX(6);
 
 	FBuffModifier Buff;
 	Buff.AbilityOwner = Ability;

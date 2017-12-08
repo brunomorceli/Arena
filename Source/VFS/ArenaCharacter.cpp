@@ -5,8 +5,7 @@
 
 AArenaCharacter::AArenaCharacter()
 {
-	UWorld* World = GetWorld();
-	if (!World) { return; }
+	AbilityTarget = NULL;
 
 	CastTimeRemaining = 0;
 
@@ -475,7 +474,7 @@ void AArenaCharacter::CommitAbilityModifiers(AAbilityBase* Ability)
 	// Is a Target Ability.
 	if (Ability->AreaType == ABA_Target)
 	{
-		AArenaCharacter* ArenaCharacter = Cast<AArenaCharacter>(Target);
+		AArenaCharacter* ArenaCharacter = Cast<AArenaCharacter>(AbilityTarget);
 
 		bool LineOfSight = GetController()->LineOfSightTo(ArenaCharacter, FVector::ZeroVector);
 		if (!LineOfSight || !ArenaCharacter->IsValidModifierState()) { return; }
@@ -486,7 +485,7 @@ void AArenaCharacter::CommitAbilityModifiers(AAbilityBase* Ability)
 		if (Ability->CommitType == ABC_Projectile)
 		{
 			ArenaCharacter->ApplyDelayedModifiers(Ability);
-			return MulticastSpawnProjectile(this, Cast<AArenaCharacter>(Target), Ability);
+			return MulticastSpawnProjectile(this, ArenaCharacter, Ability);
 		}
 
 		return ArenaCharacter->ApplyModifiers(Ability);
@@ -578,10 +577,14 @@ EAbilityValidation AArenaCharacter::ValidateStartAbility(int32 Slot)
 	if (Ability->AreaType == EAbilityArea::ABA_Target)
 	{
 		EAbilityValidation Validation = ValidateTarget(Ability, this, Target);
-		if (Validation != ABV_Allowed) {
+		if (Validation != ABV_Allowed)
+		{
 			if (!Ability->bAllowSelf) { return Validation; }
-			Target = this;
-			ServerSetTarget(this);
+			AbilityTarget = this;
+		}
+		else
+		{
+			AbilityTarget = Target;
 		}
 	}
 
@@ -600,12 +603,12 @@ EAbilityValidation AArenaCharacter::ValidateStartCast(AAbilityBase* Ability)
 	if (Ability->AreaType == ABA_Directional || Ability->AreaType == ABA_AreaOnEffect) { return ABV_Allowed; }
 
 	// Target Abilities Validation.
-	float Distance = FVector::Distance(GetActorLocation(), Target->GetActorLocation());
+	float Distance = FVector::Distance(GetActorLocation(), AbilityTarget->GetActorLocation());
 	if (Distance < Ability->MinDistance) { return ABV_TooClose; }
 	if (Distance > Ability->MaxDistance) { return ABV_TooFar; }
 
-	if (!GetController()->LineOfSightTo(Target, FVector::ZeroVector)) { return EAbilityValidation::ABV_OutOfSight; }
-	if (GetAngle(this, Target) > Ability->MaxAngle) { return EAbilityValidation::ABV_OutOfSight; }
+	if (!GetController()->LineOfSightTo(AbilityTarget, FVector::ZeroVector)) { return EAbilityValidation::ABV_OutOfSight; }
+	if (GetAngle(this, AbilityTarget) > Ability->MaxAngle) { return EAbilityValidation::ABV_OutOfSight; }
 
 	return ABV_Allowed;
 }
@@ -623,8 +626,8 @@ EAbilityValidation AArenaCharacter::ValidateStartChanneling(AAbilityBase* Abilit
 	if (Distance < Ability->MinDistance) { return ABV_TooClose; }
 	if (Distance > Ability->MaxDistance) { return ABV_TooFar; }
 
-	if (!GetController()->LineOfSightTo(Target, FVector::ZeroVector)) { return EAbilityValidation::ABV_OutOfSight; }
-	if (GetAngle(this, Target) > Ability->MaxAngle) { return EAbilityValidation::ABV_OutOfSight; }
+	if (!GetController()->LineOfSightTo(AbilityTarget, FVector::ZeroVector)) { return EAbilityValidation::ABV_OutOfSight; }
+	if (GetAngle(this, AbilityTarget) > Ability->MaxAngle) { return EAbilityValidation::ABV_OutOfSight; }
 
 	return ABV_Allowed;
 }
@@ -637,12 +640,12 @@ EAbilityValidation AArenaCharacter::ValidateStartInstant(AAbilityBase* Ability)
 	if (Ability->AreaType == ABA_Directional || Ability->AreaType == ABA_AreaOnEffect) { return ABV_Allowed; }
 
 	// Target Abilities Validation.
-	float Distance = FVector::Distance(GetActorLocation(), Target->GetActorLocation());
+	float Distance = FVector::Distance(GetActorLocation(), AbilityTarget->GetActorLocation());
 	if (Distance < Ability->MinDistance) { return ABV_TooClose; }
 	if (Distance > Ability->MaxDistance) { return ABV_TooFar; }
 
-	if (!GetController()->LineOfSightTo(Target, FVector::ZeroVector)) { return EAbilityValidation::ABV_OutOfSight; }
-	if (GetAngle(this, Target) > Ability->MaxAngle) { return EAbilityValidation::ABV_OutOfSight; }
+	if (!GetController()->LineOfSightTo(AbilityTarget, FVector::ZeroVector)) { return EAbilityValidation::ABV_OutOfSight; }
+	if (GetAngle(this, AbilityTarget) > Ability->MaxAngle) { return EAbilityValidation::ABV_OutOfSight; }
 
 	return ABV_Allowed;
 }
