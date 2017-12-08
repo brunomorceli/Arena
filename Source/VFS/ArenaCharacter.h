@@ -181,6 +181,23 @@ public:
 	virtual void SetAbility7();
 	virtual void SetAbility8();
 
+	bool RemoveBuffModifier(int32 Key, ACharacterBase* Breaker);
+	bool RemoveRandomBuffModifier(bool bIsHarmful, ACharacterBase* Breaker);
+	int32 RemoveBuffModifiers(bool bIsHarmful, ACharacterBase* Breaker);
+	int32 RemoveAllBuffModifiers(ACharacterBase* Breaker);
+	int32 RemoveSnareBuffModifiers(ACharacterBase* Breaker);
+	int32 RemoveStuckBuffModifiers(ACharacterBase* Breaker);
+
+	bool RemoveAbsorbingModifier(int32 Key, ACharacterBase* Breaker);
+	bool RemoveRandomAbsorbingModifier(bool bIsHarmful, ACharacterBase* Breaker);
+	int32 RemoveAbsorbingModifiers(bool bIsHarmful, ACharacterBase* Breaker);
+	int32 RemoveAllAbsorbingModifiers(ACharacterBase* Breaker);
+
+	bool RemoveOvertimeModifier(int32 Key, ACharacterBase* Breaker);
+	bool RemoveRandomOvertimeModifier(bool bIsHarmful, ACharacterBase* Breaker);
+	int32 RemoveOvertimeModifiers(bool bIsHarmful, ACharacterBase* Breaker);
+	int32 RemoveAllOvertimeModifiers(ACharacterBase* Breaker);
+
 	// ==========================================================================================
 	// NETWORK
 	// ==========================================================================================
@@ -221,6 +238,10 @@ public:
 	UFUNCTION(NetMulticast, Unreliable, Category = "Network")
 	void MulticastNotifyAbilityInfo(FAbilityInfo AbilityInfo);
 	void MulticastNotifyAbilityInfo_Implementation(FAbilityInfo AbilityInfo);
+
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void ClientClickAbility(int32 Slot);
+	void ClientClickAbility_Implementation(int32 Slot) { ServerStartAbility(Slot); }
 
 	void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
 };

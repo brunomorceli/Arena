@@ -86,7 +86,6 @@ void ACharacterKholl::SetAbility2()
 			AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(3));
 		};
 
-
 		Target->ApplyOvertimeModifier(Overtime);
 	};
 	Ability->DamageModifiers.Add(Damage);
@@ -177,14 +176,16 @@ void ACharacterKholl::SetAbility5()
 	if (!Ability) { return; }
 	
 	Ability->Name = "Shield Blow";
-	Ability->Description = "Hit the target using the shield causing 100 HP damage and causing 20% of physical damage by 10 seconds.";
+	Ability->Description = "Hit the target using the shield causing 100 HP damage and causing 20% of physical damage for 10 seconds.";
 	Ability->MaxDistance = 300.0f;
 	Ability->AbilityType = ABST_Instant;
 	Ability->AreaType = ABA_Target;
 	Ability->bAllowEnemy = true;
 	Ability->bAllowSelf = false;
 	Ability->bAllowTeam = false;
-	Ability->CountdownTime = 30.0f;
+	Ability->EnergyCost = 50.0f;
+	Ability->CountdownTime = 60.0f;
+	Ability->CommitFX = UGlobalLibrary::GetAbilityUseFX(5);
 	Ability->LoadIcon("/Game/Sprites/Icons/157.157");
 
 	FDamageModifier Damage;
@@ -205,7 +206,7 @@ void ACharacterKholl::SetAbility5()
 	PhysicalDebuff.bAllowTeam = false;
 	PhysicalDebuff.bAllowEnemy = true;
 	PhysicalDebuff.bIsHarmful = true;
-	PhysicalDebuff.TimeRemaining = 10.0f;
+	PhysicalDebuff.TimeRemaining = 6.0f;
 
 	Ability->BuffModifiers.Add(PhysicalDebuff);
 }
@@ -216,6 +217,40 @@ void ACharacterKholl::SetAbility6()
 
 	AAbilityBase* Ability = AddAbility(AAbilityBase::StaticClass(), 6);
 	if (!Ability) { return; }
+
+	Ability->Name = "Warrior's will";
+	Ability->Description = "Remove all snare effect for 3 seconds and increase the movement speed by 50%.";
+	Ability->LoadIcon("/Game/Sprites/Icons/305.305");
+	Ability->MaxDistance = 300.0f;
+	Ability->AbilityType = ABST_Instant;
+	Ability->AreaType = ABA_Target;
+	Ability->CountdownTime = 25.0f;
+	Ability->EnergyCost = 15.0f;
+	Ability->bAllowSelf = true;
+	Ability->bAllowEnemy = false;
+	Ability->bAllowTeam = false;
+
+	FBuffModifier Buff;
+	Buff.AbilityOwner = Ability;
+	Buff.Icon = Ability->Icon;
+	Buff.Name = "Warrior's will";
+	Buff.Description = "Increase the movement speed by 50%.";
+	Buff.Speed = 300.0f;
+	Buff.School = MS_Physical;
+	Buff.bAllowSelf = true;
+	Buff.bAllowTeam = false;
+	Buff.bAllowEnemy = false;
+	Buff.bIsHarmful = false;
+	Buff.TimeRemaining = 3.0f;
+	Buff.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
+		AArenaCharacter* Causer = Cast<AArenaCharacter>(AbilityInfo.Causer);
+		if (!Causer) { return; }
+
+		Causer->MulticastPlayFX(UGlobalLibrary::GetAbilityUseFX(4));
+		Causer->RemoveSnareBuffModifiers(Causer);
+		Causer->RemoveStuckBuffModifiers(Causer);
+	};
+	Ability->BuffModifiers.Add(Buff);
 }
 
 void ACharacterKholl::SetAbility7()
@@ -262,6 +297,6 @@ void ACharacterKholl::SetAbility8()
 {
 	Super::SetAbility8();
 
-	AAbilityBase* Ability = AddAbility(AAbilityBase::StaticClass(), 8);
-	if (!Ability) { return; }
+	//AAbilityBase* Ability = AddAbility(AAbilityBase::StaticClass(), 8);
+	//if (!Ability) { return; }
 }

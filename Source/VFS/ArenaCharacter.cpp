@@ -1356,6 +1356,322 @@ void AArenaCharacter::SetAbility6() {}
 void AArenaCharacter::SetAbility7() {}
 void AArenaCharacter::SetAbility8() {}
 
+bool AArenaCharacter::RemoveBuffModifier(int32 Key, ACharacterBase* Breaker = NULL)
+{
+	if (!BuffModifiers.Contains(Key)) { return false; }
+
+	FAbilityInfo AbilityInfo = GetAbilityInfo(BuffModifiers[Key]);
+	AbilityInfo.Breaker = Breaker;
+	AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+
+	if (BuffModifiers[Key].OnBreakHandler) { BuffModifiers[Key].OnBreakHandler(AbilityInfo); }
+	if (BuffModifiers[Key].OnRemoveHandler) { BuffModifiers[Key].OnRemoveHandler(AbilityInfo); }
+
+	BuffModifiers.Remove(Key);
+	MulticastNotifyAbilityInfo(AbilityInfo);
+
+	return true;
+}
+
+bool AArenaCharacter::RemoveRandomBuffModifier(bool bIsHarmful, ACharacterBase* Breaker = NULL)
+{
+	TArray<int32> BuffKeys;
+	TArray<int32> Keys;
+	BuffModifiers.GenerateKeyArray(Keys);
+	for (auto Key : Keys)
+	{
+		if (BuffModifiers[Key].bIsHarmful == (bIsHarmful ? 1 : 0)) { BuffKeys.Push(Key); }
+	}
+
+	if (BuffKeys.Num() < 1) return false;
+	int32 Key = BuffKeys[FMath::RandRange(0, BuffKeys.Num() - 1)];
+
+	FAbilityInfo AbilityInfo = GetAbilityInfo(BuffModifiers[Key]);
+	AbilityInfo.Breaker = Breaker;
+	AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+
+	if (BuffModifiers[Key].OnBreakHandler) { BuffModifiers[Key].OnBreakHandler(AbilityInfo); }
+	if (BuffModifiers[Key].OnRemoveHandler) { BuffModifiers[Key].OnRemoveHandler(AbilityInfo); }
+
+	BuffModifiers.Remove(Key);
+	MulticastNotifyAbilityInfo(AbilityInfo);
+
+	return true;
+}
+
+int32 AArenaCharacter::RemoveBuffModifiers(bool bIsHarmful, ACharacterBase* Breaker = NULL)
+{
+	int32 Total = 0;
+
+	TArray<int32> Keys;
+	BuffModifiers.GenerateKeyArray(Keys);
+	for (auto Key : Keys)
+	{
+		if (BuffModifiers[Key].bIsHarmful != (bIsHarmful ? 1 : 0)) { continue; }
+
+		FAbilityInfo AbilityInfo = GetAbilityInfo(BuffModifiers[Key]);
+		AbilityInfo.Breaker = Breaker;
+		AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+
+		if (BuffModifiers[Key].OnBreakHandler) { BuffModifiers[Key].OnBreakHandler(AbilityInfo); }
+		if (BuffModifiers[Key].OnRemoveHandler) { BuffModifiers[Key].OnRemoveHandler(AbilityInfo); }
+
+		MulticastNotifyAbilityInfo(AbilityInfo);
+
+		BuffModifiers.Remove(Key);
+		MulticastNotifyAbilityInfo(AbilityInfo);
+
+		Total++;
+	}
+
+	return Total;
+}
+
+int32 AArenaCharacter::RemoveAllBuffModifiers(ACharacterBase* Breaker = NULL)
+{
+	int32 Total = BuffModifiers.Num();
+
+	TArray<int32> Keys;
+	BuffModifiers.GenerateKeyArray(Keys);
+	for (auto Key : Keys)
+	{
+		FAbilityInfo AbilityInfo = GetAbilityInfo(BuffModifiers[Key]);
+		AbilityInfo.Breaker = Breaker;
+		AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+
+		if (BuffModifiers[Key].OnBreakHandler) { BuffModifiers[Key].OnBreakHandler(AbilityInfo); }
+		if (BuffModifiers[Key].OnRemoveHandler) { BuffModifiers[Key].OnRemoveHandler(AbilityInfo); }
+
+		MulticastNotifyAbilityInfo(AbilityInfo);
+	}
+
+	BuffModifiers.Empty();
+
+	return Total;
+}
+
+bool AArenaCharacter::RemoveAbsorbingModifier(int32 Key, ACharacterBase* Breaker = NULL)
+{
+	if (AbsorbingModifiers.IsValidIndex(Key)) { return false; }
+
+	FAbilityInfo AbilityInfo = GetAbilityInfo(AbsorbingModifiers[Key]);
+	AbilityInfo.Breaker = Breaker;
+	AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+
+	if (AbsorbingModifiers[Key].OnBreakHandler) { AbsorbingModifiers[Key].OnBreakHandler(AbilityInfo); }
+	if (AbsorbingModifiers[Key].OnRemoveHandler) { AbsorbingModifiers[Key].OnRemoveHandler(AbilityInfo); }
+
+	AbsorbingModifiers.RemoveAt(Key);
+	MulticastNotifyAbilityInfo(AbilityInfo);
+
+	return true;
+}
+
+bool AArenaCharacter::RemoveRandomAbsorbingModifier(bool bIsHarmful, ACharacterBase* Breaker = NULL)
+{
+	if (AbsorbingModifiers.Num() < 1) return false;
+	int32 Key = FMath::RandRange(0, AbsorbingModifiers.Num() - 1);
+
+	FAbilityInfo AbilityInfo = GetAbilityInfo(AbsorbingModifiers[Key]);
+	AbilityInfo.Breaker = Breaker;
+	AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+
+	if (AbsorbingModifiers[Key].OnBreakHandler) { AbsorbingModifiers[Key].OnBreakHandler(AbilityInfo); }
+	if (AbsorbingModifiers[Key].OnRemoveHandler) { AbsorbingModifiers[Key].OnRemoveHandler(AbilityInfo); }
+
+	AbsorbingModifiers.RemoveAt(Key);
+	MulticastNotifyAbilityInfo(AbilityInfo);
+
+	return true;
+}
+
+int32 AArenaCharacter::RemoveAbsorbingModifiers(bool bIsHarmful, ACharacterBase* Breaker = NULL)
+{
+	int32 Total = 0;
+
+	for (int32 Key = 0; Key < AbsorbingModifiers.Num();)
+	{
+		if (AbsorbingModifiers[Key].bIsHarmful != (bIsHarmful ? 1 : 0))
+		{
+			Key++;
+			continue;
+		}
+
+		FAbilityInfo AbilityInfo = GetAbilityInfo(AbsorbingModifiers[Key]);
+		AbilityInfo.Breaker = Breaker;
+		AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+
+		if (AbsorbingModifiers[Key].OnBreakHandler) { AbsorbingModifiers[Key].OnBreakHandler(AbilityInfo); }
+		if (AbsorbingModifiers[Key].OnRemoveHandler) { AbsorbingModifiers[Key].OnRemoveHandler(AbilityInfo); }
+
+		AbsorbingModifiers.RemoveAt(Key);
+		MulticastNotifyAbilityInfo(AbilityInfo);
+	}
+
+	return Total;
+}
+
+int32 AArenaCharacter::RemoveAllAbsorbingModifiers(ACharacterBase* Breaker = NULL)
+{
+	int32 Total = AbsorbingModifiers.Num();
+
+	for (int32 Key = 0; Key < AbsorbingModifiers.Num(); Key++)
+	{
+		FAbilityInfo AbilityInfo = GetAbilityInfo(AbsorbingModifiers[Key]);
+		AbilityInfo.Breaker = Breaker;
+		AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+
+		if (AbsorbingModifiers[Key].OnBreakHandler) { AbsorbingModifiers[Key].OnBreakHandler(AbilityInfo); }
+		if (AbsorbingModifiers[Key].OnRemoveHandler) { AbsorbingModifiers[Key].OnRemoveHandler(AbilityInfo); }
+		MulticastNotifyAbilityInfo(AbilityInfo);
+	}
+
+	AbsorbingModifiers.Empty();
+
+	return Total;
+}
+
+int32 AArenaCharacter::RemoveSnareBuffModifiers(ACharacterBase* Breaker = NULL)
+{
+	int32 Total = 0;
+
+	TArray<int32> Keys;
+	BuffModifiers.GenerateKeyArray(Keys);
+	for (auto Key : Keys)
+	{
+		if (BuffModifiers[Key].bIsHarmful == 0 || BuffModifiers[Key].Speed == 0.0f) { continue; }
+
+		FAbilityInfo AbilityInfo = GetAbilityInfo(BuffModifiers[Key]);
+		AbilityInfo.Breaker = Breaker;
+		AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+
+		if (BuffModifiers[Key].OnBreakHandler) { BuffModifiers[Key].OnBreakHandler(AbilityInfo); }
+		if (BuffModifiers[Key].OnRemoveHandler) { BuffModifiers[Key].OnRemoveHandler(AbilityInfo); }
+
+		MulticastNotifyAbilityInfo(AbilityInfo);
+
+		BuffModifiers.Remove(Key);
+		MulticastNotifyAbilityInfo(AbilityInfo);
+
+		Total++;
+	}
+
+	return Total;
+}
+
+int32 AArenaCharacter::RemoveStuckBuffModifiers(ACharacterBase* Breaker = NULL)
+{
+	int32 Total = 0;
+
+	TArray<int32> Keys;
+	BuffModifiers.GenerateKeyArray(Keys);
+	for (auto Key : Keys)
+	{
+		if (BuffModifiers[Key].bIsHarmful == 0 || BuffModifiers[Key].State != CS_Stuck) { continue; }
+
+		FAbilityInfo AbilityInfo = GetAbilityInfo(BuffModifiers[Key]);
+		AbilityInfo.Breaker = Breaker;
+		AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+
+		if (BuffModifiers[Key].OnBreakHandler) { BuffModifiers[Key].OnBreakHandler(AbilityInfo); }
+		if (BuffModifiers[Key].OnRemoveHandler) { BuffModifiers[Key].OnRemoveHandler(AbilityInfo); }
+
+		MulticastNotifyAbilityInfo(AbilityInfo);
+
+		BuffModifiers.Remove(Key);
+		MulticastNotifyAbilityInfo(AbilityInfo);
+
+		Total++;
+	}
+
+	return Total;
+}
+
+bool AArenaCharacter::RemoveOvertimeModifier(int32 Key, ACharacterBase* Breaker = NULL)
+{
+	if (!OvertimeModifiers.Contains(Key)) { return false; }
+
+	FAbilityInfo AbilityInfo = GetAbilityInfo(OvertimeModifiers[Key]);
+	AbilityInfo.Breaker = Breaker;
+	AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+
+	if (OvertimeModifiers[Key].OnBreakHandler) { OvertimeModifiers[Key].OnBreakHandler(AbilityInfo); }
+	if (OvertimeModifiers[Key].OnRemoveHandler) { OvertimeModifiers[Key].OnRemoveHandler(AbilityInfo); }
+
+	OvertimeModifiers.Remove(Key);
+	return true;
+}
+
+bool AArenaCharacter::RemoveRandomOvertimeModifier(bool bIsHarmful, ACharacterBase* Breaker = NULL)
+{
+	TArray<int32> BuffKeys;
+	TArray<int32> Keys;
+	OvertimeModifiers.GenerateKeyArray(Keys);
+	for (auto Key : Keys)
+	{
+		if (OvertimeModifiers[Key].bIsHarmful == (bIsHarmful ? 1 : 0)) { BuffKeys.Push(Key); }
+	}
+
+	if (BuffKeys.Num() < 1) return false;
+	int32 Key = BuffKeys[FMath::RandRange(0, BuffKeys.Num() - 1)];
+
+	FAbilityInfo AbilityInfo = GetAbilityInfo(OvertimeModifiers[Key]);
+	AbilityInfo.Breaker = Breaker;
+	AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+
+	if (OvertimeModifiers[Key].OnBreakHandler) { OvertimeModifiers[Key].OnBreakHandler(AbilityInfo); }
+	if (OvertimeModifiers[Key].OnRemoveHandler) { OvertimeModifiers[Key].OnRemoveHandler(AbilityInfo); }
+
+	OvertimeModifiers.Remove(Key);
+
+	return true;
+}
+
+int32 AArenaCharacter::RemoveOvertimeModifiers(bool bIsHarmful, ACharacterBase* Breaker = NULL)
+{
+	int32 Total = 0;
+
+	TArray<int32> Keys;
+	OvertimeModifiers.GenerateKeyArray(Keys);
+	for (auto Key : Keys)
+	{
+		if (OvertimeModifiers[Key].bIsHarmful != (bIsHarmful ? 1 : 0)) { continue; }
+
+		FAbilityInfo AbilityInfo = GetAbilityInfo(OvertimeModifiers[Key]);
+		AbilityInfo.Breaker = Breaker;
+		AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+
+		if (OvertimeModifiers[Key].OnBreakHandler) { OvertimeModifiers[Key].OnBreakHandler(AbilityInfo); }
+		if (OvertimeModifiers[Key].OnRemoveHandler) { OvertimeModifiers[Key].OnRemoveHandler(AbilityInfo); }
+
+		OvertimeModifiers.Remove(Key);
+		Total++;
+	}
+
+	return Total;
+}
+
+int32 AArenaCharacter::RemoveAllOvertimeModifiers(ACharacterBase* Breaker = NULL)
+{
+	int32 Total = OvertimeModifiers.Num();
+
+	TArray<int32> Keys;
+	OvertimeModifiers.GenerateKeyArray(Keys);
+	for (auto Key : Keys)
+	{
+		FAbilityInfo AbilityInfo = GetAbilityInfo(OvertimeModifiers[Key]);
+		AbilityInfo.Breaker = Breaker;
+		AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+
+		if (OvertimeModifiers[Key].OnBreakHandler) { OvertimeModifiers[Key].OnBreakHandler(AbilityInfo); }
+		if (OvertimeModifiers[Key].OnRemoveHandler) { OvertimeModifiers[Key].OnRemoveHandler(AbilityInfo); }
+	}
+
+	OvertimeModifiers.Empty();
+
+	return Total;
+}
+
 // ==========================================================================================
 // NETWORK
 // ==========================================================================================
