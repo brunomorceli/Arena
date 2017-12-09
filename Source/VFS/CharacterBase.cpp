@@ -169,6 +169,11 @@ void ACharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (!bForward && bLeftMouse && bRightMouse)
+	{
+		ACharacterBase::MoveForward(300.0f);
+	}
+
 	// clear the target
 	if (Target)
 	{

@@ -22,21 +22,52 @@ void ACharacterWizard::SetAbility1()
 	AAbilityBase* Ability = AddAbility(AAbilityBase::StaticClass(), 1);
 	if (!Ability) { return; }
 
-	Ability->Name = "Sword Strike";
-	Ability->Description = "A powerful attack.";
-	Ability->LoadIcon("/Game/Sprites/Icons/401.401");
-	Ability->MaxDistance = 300.0f;
-	Ability->AbilityType = ABST_Instant;
+	Ability->Name = "Fireball";
+	Ability->Description = "150HP and 50% chance to add fire dot.";
+	Ability->AbilityType = ABST_Castable;
+	Ability->CastTime = 1.5f;
 	Ability->AreaType = ABA_Target;
-	Ability->CommitFX = UGlobalLibrary::GetAbilityUseFX(1);
+	Ability->CommitType = ABC_Projectile;
+	Ability->Projectile = UGlobalLibrary::GetProjectile(3);
+	Ability->ProjectileSpeed = 2000.0f;
+	Ability->MaxDistance = 1800.0f;
+	Ability->MinDistance = 0.0f;
+	Ability->ManaCost = 10.0f;
+	Ability->bAllowEnemy = true;
+	Ability->bAllowSelf = false;
+	Ability->bAllowTeam = false;
+	Ability->LoadIcon("/Game/Sprites/Icons/309.309");
 
 	FDamageModifier Damage;
 	Damage.AbilityOwner = Abilities[1];
 	Damage.Icon = Abilities[1]->Icon;
-	Damage.Health = 130.0f;
-	Damage.ModifierCritical = 30.0f;
+	Damage.Health = 150.0f;
 	Damage.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(1));
+		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+		if (!Target) { return; }
+		if (!UUtilities::IsCritical(50.0f)) { return; }
+
+		FOvertimeModifier Dot;
+		Dot.AbilityOwner = AbilityInfo.Ability;
+		Dot.Name = "Fireball";
+		Dot.Description = "Does 30HP damage every 2 seconds.";
+		Dot.Icon = AbilityInfo.Ability->Icon;
+		Dot.TimeRemaining = 10.0f;
+		Dot.TickTime = 2.0f;
+		Dot.HealthAmount = 30.0f;
+		Dot.bIsStackable = true;
+		Dot.MaxStacks = 4;
+		Dot.bIsHarmful = true;
+		Dot.bAllowEnemy = true;
+		Dot.bAllowSelf = false;
+		Dot.bAllowTeam = false;
+		Dot.OnTickHandler = [](FAbilityInfo AbilityInfo) {
+			AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+			if (!Target) { return; }
+			Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(5));
+		};
+
+		Target->ApplyOvertimeModifier(Dot);
 	};
 	Ability->DamageModifiers.Add(Damage);
 }
@@ -48,12 +79,13 @@ void ACharacterWizard::SetAbility2()
 	AAbilityBase* Ability = AddAbility(AAbilityBase::StaticClass(), 2);
 	if (!Ability) { return; }
 
-	Ability->Name = "Frostbolt";
-	Ability->Description = "300HP and Slow by 50% by 5 seconds.";
+	Ability->Name = "Frost Bolt";
+	Ability->Description = "300HP and Slow by 50% by 7 seconds.";
 	Ability->AbilityType = ABST_Castable;
 	Ability->AreaType = ABA_Target;
 	Ability->CommitType = ABC_Projectile;
 	Ability->Projectile = UGlobalLibrary::GetProjectile(2);
+	Ability->ProjectileSpeed = 2000.0f;
 	Ability->MaxDistance = 1800.0f;
 	Ability->MinDistance = 0.0f;
 	Ability->ManaCost = 100.0f;
@@ -68,12 +100,15 @@ void ACharacterWizard::SetAbility2()
 	Damage.AbilityOwner = Ability;
 	Damage.Icon = Ability->Icon;
 	Damage.Health = 250.0f;
+	Damage.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
+		if (AbilityInfo.Target) { AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(7)); }
+	};
 	Ability->DamageModifiers.Add(Damage);
 
 	FBuffModifier Debuff;
 	Debuff.AbilityOwner = Ability;
 	Debuff.Icon = Ability->Icon;
-	Debuff.Name = "Frostbolt";
+	Debuff.Name = "Frost Bolt";
 	Debuff.Description = "Snared by 50%.";
 	Debuff.Speed = 300.0f;
 	Debuff.School = MS_Magic;
@@ -81,7 +116,7 @@ void ACharacterWizard::SetAbility2()
 	Debuff.bAllowTeam = false;
 	Debuff.bAllowEnemy = true;
 	Debuff.bIsHarmful = true;
-	Debuff.TimeRemaining = 5.0f;
+	Debuff.TimeRemaining = 7.0f;
 
 	Ability->BuffModifiers.Add(Debuff);
 }
@@ -93,36 +128,37 @@ void ACharacterWizard::SetAbility3()
 	AAbilityBase* Ability = AddAbility(AAbilityBase::StaticClass(), 3);
 	if (!Ability) { return; }
 
-	Ability->Name = "Push";
-	Ability->Description = "Knockback the target causing 50% slow for 5 seconds.";
+	Ability->Name = "Live Furnace";
+	Ability->Description = "Burn the target doing 250HP Damage and slow the target by 70% for 2 seconds.";
 	Ability->CountdownTime = 15.0f;
-	Ability->MaxDistance = 300.0f;
+	Ability->MaxDistance = 1500.0f;
+	Ability->MaxAngle = 360.0f;
 	Ability->AbilityType = ABST_Instant;
 	Ability->AreaType = ABA_Target;
-	Ability->EnergyCost = 35.0f;
+	Ability->ManaCost = 130.0f;
 	Ability->bAllowEnemy = true;
 	Ability->bAllowSelf = false;
 	Ability->bAllowTeam = false;
-	Ability->LoadIcon("/Game/Sprites/Icons/228.228");
+	Ability->LoadIcon("/Game/Sprites/Icons/345.345");
 
 	FDamageModifier Damage;
 	Damage.AbilityOwner = Ability;
 	Damage.Icon = Ability->Icon;
 	Damage.Health = 100.0f;
 	Damage.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AbilityInfo.Target->ServerKnockBack(AbilityInfo.Causer->GetActorLocation(), 400.0f);
+		AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(6));
 	};
 
 	Ability->DamageModifiers.Add(Damage);
 
 	FBuffModifier Slow;
 	Slow.AbilityOwner = Ability;
-	Slow.Name = "Push - Slow";
-	Slow.Description = "50% Slow.";
+	Slow.Name = "Live Funace";
+	Slow.Description = "70% Slow.";
 	Slow.Icon = Ability->Icon;
-	Slow.Speed = 300.0f;
+	Slow.Speed = 600.0f * 0.7f;
 	Slow.bIsHarmful = true;
-	Slow.TimeRemaining = 5.0f;
+	Slow.TimeRemaining = 2.0f;
 	Ability->BuffModifiers.Add(Slow);
 }
 

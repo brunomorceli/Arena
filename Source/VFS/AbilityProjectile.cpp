@@ -78,9 +78,5 @@ void AAbilityProjectile::OnOverlapBegin(
 )
 {
 	if (!Target || OtherActor->GetUniqueID() != Target->GetUniqueID()) { return; }
-
-	// [need to be updated]
-	//if (HitParticle) { Target->MulticastSetChestParticle(HitParticle, false); }
-
 	Destroy();
 }

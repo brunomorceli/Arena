@@ -263,15 +263,15 @@ public:
 	{
 		if (Stacks > MaxStacks) { return false; }
 
-		HealthAmount = Health * Stacks;
-		ManaAmount = Mana * Stacks;
-		EnergyAmount = Energy * Stacks;
-		SpeedAmount = Speed * Stacks;
-		CriticalAmount = Critical * Stacks;
-		MagicPowerAmount = MagicPower * Stacks;
-		MagicDefenseAmount = MagicDefense * Stacks;
-		PhysicalPowerAmount = PhysicalPower * Stacks;
-		PhysicalDefenseAmount = PhysicalDefense * Stacks;
+		Health = HealthAmount * Stacks;
+		Mana = ManaAmount * Stacks;
+		Energy = EnergyAmount * Stacks;
+		Speed = SpeedAmount * Stacks;
+		Critical = CriticalAmount * Stacks;
+		MagicPower = MagicPowerAmount * Stacks;
+		MagicDefense = MagicDefenseAmount * Stacks;
+		PhysicalPower = PhysicalPowerAmount * Stacks;
+		PhysicalDefense = PhysicalDefenseAmount * Stacks;
 
 		Stacks++;
 

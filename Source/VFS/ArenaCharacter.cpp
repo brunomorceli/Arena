@@ -974,18 +974,14 @@ void AArenaCharacter::ApplyOvertimeModifier(FOvertimeModifier Modifier)
 	{
 		OvertimeModifiers[AbilityId].TimeRemaining = Modifier.TimeRemaining;
 		if (OvertimeModifiers[AbilityId].OnRenewHandler) { OvertimeModifiers[AbilityId].OnRenewHandler(AbilityInfo); }
-
-		if (!OvertimeModifiers[AbilityId].AddStack())
-		{
-			return MulticastNotifyAbilityInfo(AbilityInfo);
-		}
 	}
 	else
 	{
 		OvertimeModifiers.Add(AbilityId, Modifier);
-		if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(AbilityInfo); }
+		if (OvertimeModifiers[AbilityId].OnRenewHandler) { OvertimeModifiers[AbilityId].OnApplyHandler(AbilityInfo); }
 	}
 
+	OvertimeModifiers[AbilityId].AddStack();
 	MulticastNotifyAbilityInfo(AbilityInfo);
 }
 
