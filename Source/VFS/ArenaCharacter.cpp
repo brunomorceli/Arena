@@ -890,7 +890,7 @@ void AArenaCharacter::ApplyDelayedModifiers(AAbilityBase* Ability)
 
 void AArenaCharacter::ApplyAuraModifier(FAuraModifier Modifier)
 {
-	if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(GetAbilityInfo(Modifier)); }
+	//if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(GetAbilityInfo(Modifier)); }
 }
 
 void AArenaCharacter::ApplyBuffModifier(FBuffModifier Modifier)
@@ -925,14 +925,18 @@ void AArenaCharacter::ApplyBuffModifier(FBuffModifier Modifier)
 
 void AArenaCharacter::ApplyAbsorbingModifier(FAbsorbingModifier Modifier)
 {
+	Modifier.AddStack();
+	FAbilityInfo AbilityInfo = GetAbilityInfo(Modifier);
+
 	AbsorbingModifiers.Add(Modifier);
-	if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(GetAbilityInfo(Modifier)); }
+	if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(AbilityInfo); }
 }
 
 void AArenaCharacter::ApplyDamageModifier(FDamageModifier Modifier)
 {
 	if (!Modifier.AbilityOwner) { return; }
 
+	Modifier.AddStack();
 	FAbilityInfo AbilityInfo = GetAbilityInfo(Modifier);
 
 	CalculateDamage(Modifier, AbilityInfo);
@@ -973,21 +977,28 @@ void AArenaCharacter::ApplyOvertimeModifier(FOvertimeModifier Modifier)
 	if (OvertimeModifiers.Contains(AbilityId))
 	{
 		OvertimeModifiers[AbilityId].TimeRemaining = Modifier.TimeRemaining;
+		OvertimeModifiers[AbilityId].AddStack();
+		AbilityInfo.Stacks = OvertimeModifiers[AbilityId].Stacks;
+
 		if (OvertimeModifiers[AbilityId].OnRenewHandler) { OvertimeModifiers[AbilityId].OnRenewHandler(AbilityInfo); }
 	}
 	else
 	{
 		OvertimeModifiers.Add(AbilityId, Modifier);
+		OvertimeModifiers[AbilityId].AddStack();
+		AbilityInfo.Stacks = OvertimeModifiers[AbilityId].Stacks;
+
 		if (OvertimeModifiers[AbilityId].OnRenewHandler) { OvertimeModifiers[AbilityId].OnApplyHandler(AbilityInfo); }
 	}
 
-	OvertimeModifiers[AbilityId].AddStack();
 	MulticastNotifyAbilityInfo(AbilityInfo);
 }
 
 void AArenaCharacter::ApplyHealModifier(FHealModifier Modifier)
 {
 	if (!Modifier.AbilityOwner) { return; }
+
+	Modifier.AddStack();
 
 	FAbilityInfo AbilityInfo = GetAbilityInfo(Modifier);
 
@@ -1008,9 +1019,9 @@ void AArenaCharacter::ApplyHealModifier(FHealModifier Modifier)
 
 void AArenaCharacter::CalculateHeal(FModifierBase Modifier, FAbilityInfo &AbilityInfo)
 {
-	if (Modifier.Health <= 0.0f) { return; }
+	if (Modifier.HealthAmount <= 0.0f) { return; }
 
-	AbilityInfo.Amount = Health.GetModifierAmount(Modifier.Health, Modifier.bIsPercent);
+	AbilityInfo.Amount = Health.GetModifierAmount(Modifier.HealthAmount, Modifier.bIsPercent);
 
 	// Calculate the power.
 	float PowerPercent = 0.0f;
@@ -1107,9 +1118,9 @@ void AArenaCharacter::TickOvertimeModifier(FOvertimeModifier Modifier)
 
 void AArenaCharacter::CalculateDamage(FModifierBase Modifier, FAbilityInfo &AbilityInfo)
 {
-	if (Modifier.Health <= 0.0f ) { return; }
+	if (Modifier.HealthAmount <= 0.0f ) { return; }
 
-	AbilityInfo.Amount = Health.GetModifierAmount(Modifier.Health, Modifier.bIsPercent);
+	AbilityInfo.Amount = Health.GetModifierAmount(Modifier.HealthAmount, Modifier.bIsPercent);
 
 	// Calculate the power.
 	float PowerPercent = 0.0f;
@@ -1265,6 +1276,8 @@ FAbilityInfo AArenaCharacter::GetDefaultAbilityInfo(FModifierBase Modifier)
 	AbilityInfo.bIsDispellable = Modifier.bIsDispellable;
 	AbilityInfo.ModifierIcon = Modifier.Icon;
 	AbilityInfo.ModifierName = Modifier.Name;
+	AbilityInfo.ModifierDescription = Modifier.Description;
+	AbilityInfo.Stacks = Modifier.Stacks;
 
 	return AbilityInfo;
 }

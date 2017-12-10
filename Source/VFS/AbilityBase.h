@@ -82,7 +82,7 @@ public:
 	int32 MaxStacks = 1;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
-	int32 Stacks = 1;
+	int32 Stacks = 0;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
 	float Health = 0.0f;
@@ -110,6 +110,33 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
 	float MagicDefense = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float HealthAmount = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float ManaAmount = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float EnergyAmount = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float SpeedAmount = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float CriticalAmount = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float MagicPowerAmount = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float MagicDefenseAmount = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float PhysicalPowerAmount = 0.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float PhysicalDefenseAmount = 0.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
 	float ModifierCritical = 0.0f;
@@ -140,6 +167,24 @@ public:
 	HandlerPtr OnChangeStateHandler = NULL;
 	HandlerPtr OnCommitAbility = NULL;
 	HandlerPtr OnCritical = NULL;
+
+	bool AddStack()
+	{
+		if (Stacks > MaxStacks) { return false; }
+		Stacks++;
+
+		HealthAmount = Health * Stacks;
+		ManaAmount = Mana * Stacks;
+		EnergyAmount = Energy * Stacks;
+		SpeedAmount = Speed * Stacks;
+		CriticalAmount = Critical * Stacks;
+		MagicPowerAmount = MagicPower * Stacks;
+		MagicDefenseAmount = MagicDefense * Stacks;
+		PhysicalPowerAmount = PhysicalPower * Stacks;
+		PhysicalDefenseAmount = PhysicalDefense * Stacks;
+
+		return true;
+	}
 };
 
 USTRUCT(BlueprintType)
@@ -161,33 +206,6 @@ struct FBuffModifier : public FModifierBase {
 
 public:
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float HealthAmount = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float ManaAmount = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float EnergyAmount = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float SpeedAmount = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float CriticalAmount = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float MagicPowerAmount = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float MagicDefenseAmount = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float PhysicalPowerAmount = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float PhysicalDefenseAmount = 0.0f;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
 	int32 bUntilUse = false;
 
@@ -196,25 +214,6 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
 	TEnumAsByte<ECharacterState> State = CS_Idle;
-
-	bool AddStack()
-	{
-		if (Stacks > MaxStacks) { return false; }
-
-		HealthAmount = Health * Stacks;
-		ManaAmount = Mana * Stacks;
-		EnergyAmount = Energy * Stacks;
-		SpeedAmount = Speed * Stacks;
-		CriticalAmount = Critical * Stacks;
-		MagicPowerAmount = MagicPower * Stacks;
-		MagicDefenseAmount = MagicDefense * Stacks;
-		PhysicalPowerAmount = PhysicalPower * Stacks;
-		PhysicalDefenseAmount = PhysicalDefense * Stacks;
-
-		Stacks++;
-
-		return true;
-	}
 };
 
 USTRUCT(BlueprintType)
@@ -231,52 +230,6 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Modifier")
 	float TickTime = 2.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float HealthAmount = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float ManaAmount = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float EnergyAmount = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float SpeedAmount = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float CriticalAmount = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float MagicPowerAmount = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float MagicDefenseAmount = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float PhysicalPowerAmount = 0.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	float PhysicalDefenseAmount = 0.0f;
-
-	bool AddStack()
-	{
-		if (Stacks > MaxStacks) { return false; }
-
-		Health = HealthAmount * Stacks;
-		Mana = ManaAmount * Stacks;
-		Energy = EnergyAmount * Stacks;
-		Speed = SpeedAmount * Stacks;
-		Critical = CriticalAmount * Stacks;
-		MagicPower = MagicPowerAmount * Stacks;
-		MagicDefense = MagicDefenseAmount * Stacks;
-		PhysicalPower = PhysicalPowerAmount * Stacks;
-		PhysicalDefense = PhysicalDefenseAmount * Stacks;
-
-		Stacks++;
-
-		return true;
-	}
 };
 
 USTRUCT(BlueprintType)

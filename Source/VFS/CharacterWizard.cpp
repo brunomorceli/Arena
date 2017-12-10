@@ -54,7 +54,7 @@ void ACharacterWizard::SetAbility1()
 		Dot.Icon = AbilityInfo.Ability->Icon;
 		Dot.TimeRemaining = 10.0f;
 		Dot.TickTime = 2.0f;
-		Dot.HealthAmount = 30.0f;
+		Dot.Health = 30.0f;
 		Dot.bIsStackable = true;
 		Dot.MaxStacks = 4;
 		Dot.bIsHarmful = true;
@@ -156,6 +156,7 @@ void ACharacterWizard::SetAbility3()
 	Slow.Name = "Live Funace";
 	Slow.Description = "70% Slow.";
 	Slow.Icon = Ability->Icon;
+	Slow.MaxStacks = 1;
 	Slow.Speed = 600.0f * 0.7f;
 	Slow.bIsHarmful = true;
 	Slow.TimeRemaining = 2.0f;

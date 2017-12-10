@@ -87,6 +87,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
 	FName ModifierName = "";
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	FString ModifierDescription = "";
 };
 
 // ==================================================================================================================================================
@@ -289,6 +292,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mouse")
 	bool bRightMouse;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mouse")
+	bool bTargetLoS;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
 	TMap<FName, FAbilityInfo> AbilityInfoList;
@@ -546,6 +552,15 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Utils")
 	void SetPawn(TSubclassOf<APawn> Character);
+
+	UFUNCTION(BlueprintCallable, Category = "Utils")
+	bool CheckTargetLoS();
+
+	UFUNCTION(BlueprintCallable, Category = "Utils")
+	bool IsMainTarget();
+
+	UFUNCTION(BlueprintCallable, Category = "Utils")
+	bool IsEnemy();
 
 	// ===================================================================================================================
 	// NETWORK METHODS

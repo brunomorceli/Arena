@@ -34,6 +34,7 @@ ACharacterBase::ACharacterBase()
 	bRight = false;
 	bLeftMouse = false;
 	bRightMouse = false;
+	bTargetLoS = false;
 
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
@@ -169,6 +170,8 @@ void ACharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	bTargetLoS = CheckTargetLoS();
+
 	if (!bForward && bLeftMouse && bRightMouse)
 	{
 		ACharacterBase::MoveForward(300.0f);
@@ -183,6 +186,7 @@ void ACharacterBase::Tick(float DeltaTime)
 			ServerSetTarget(NULL);
 		}
 	}
+
 
 	UpdateState();
 	UpdateAuraParticle();
@@ -691,7 +695,7 @@ void ACharacterBase::InputLMP()
 	bLeftMouse = true;
 	bUseControllerRotationYaw = false;
 	SetMouseCursor(!bRightMouse && !bLeftMouse);
-	GetTargetByClick(6000.0f, -20.0f);
+	GetTargetByClick(6000.0f, 0.0f);
 }
 
 void ACharacterBase::InputLMR()
@@ -779,6 +783,40 @@ void ACharacterBase::SetPawn(TSubclassOf<APawn> Character)
 	if (!NewPawn) { return; }
 
 	PlayerController->Possess(NewPawn);
+}
+
+bool ACharacterBase::CheckTargetLoS()
+{
+	AController* Controller = GetController();
+	if (!Target || !Controller) { return false; }
+
+	return Controller->LineOfSightTo(Target, FVector::ZeroVector);
+}
+
+bool ACharacterBase::IsMainTarget()
+{
+	UWorld* World = GetWorld();
+	if (!World) { return false; }
+
+	ACharacterBase* FirstCharacter = Cast<ACharacterBase>(UGameplayStatics::GetPlayerCharacter(World, 0));
+	if (!FirstCharacter) { return false; }
+
+	if (!FirstCharacter->Target) { return false; }
+
+	return FirstCharacter->Target->GetUniqueID() == GetUniqueID();
+}
+
+bool ACharacterBase::IsEnemy()
+{
+	UWorld* World = GetWorld();
+	if (!World) { return false; }
+
+	ACharacterBase* FirstCharacter = Cast<ACharacterBase>(UGameplayStatics::GetPlayerCharacter(World, 0));
+	if (!FirstCharacter) { return false; }
+
+	if (!FirstCharacter->Target) { return false; }
+
+	return FirstCharacter->Team != Team;
 }
 
 // =====================================================================================================================================
