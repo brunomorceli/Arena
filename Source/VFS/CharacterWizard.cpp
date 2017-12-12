@@ -170,34 +170,18 @@ void ACharacterWizard::SetAbility4()
 	AAbilityBase* Ability = AddAbility(AAbilityBase::StaticClass(), 4);
 	if (!Ability) { return; }
 
-	Ability->Name = "Shield Wall";
-	Ability->Description = "Increase the physical defense by 70% and magic defense by 90% for 5 seconds.";
+	Ability->Name = "Force Wall";
+	Ability->Description = "Add a force wall that only the invoker would overlap for 5 seconds.";
 	Ability->CountdownTime = 60.0f;
 	Ability->AbilityType = ABST_Instant;
 	Ability->AreaType = ABA_Target;
-	Ability->EnergyCost = 40.0f;
+	Ability->ManaCost = 200.0f;
 	Ability->bAllowSelf = true;
 	Ability->bAllowEnemy = false;
 	Ability->bAllowTeam = false;
-	Ability->LoadIcon("/Game/Sprites/Icons/19.19");
+	Ability->LoadIcon("/Game/Sprites/Icons/18.18");
 
-	FBuffModifier Buff;
-	Buff.AbilityOwner = Ability;
-	Buff.Icon = Ability->Icon;
-	Buff.Name = "Shield Wall";
-	Buff.Description = "Magic Defense is increased by 90%.";
-	Buff.MagicDefense = 90.0f;
-	Buff.PhysicalDefense = 70.0f;
-	Buff.School = MS_Physical;
-	Buff.bAllowSelf = true;
-	Buff.bAllowTeam = false;
-	Buff.bAllowEnemy = true;
-	Buff.bIsHarmful = false;
-	Buff.TimeRemaining = 10.0f;
-	Buff.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AbilityInfo.Causer->MulticastPlayFX(UGlobalLibrary::GetAbilityUseFX(4));
-	};
-	Ability->BuffModifiers.Add(Buff);
+	Ability->CommitFX = UGlobalLibrary::GetAbilityUseFX(7);
 }
 
 void ACharacterWizard::SetAbility5()
@@ -207,40 +191,34 @@ void ACharacterWizard::SetAbility5()
 	AAbilityBase* Ability = AddAbility(AAbilityBase::StaticClass(), 5);
 	if (!Ability) { return; }
 
-	Ability->Name = "Shield Blow";
-	Ability->Description = "Hit the target using the shield causing 100 HP damage and causing 20% of physical damage for 10 seconds.";
-	Ability->MaxDistance = 300.0f;
+	Ability->Name = "Frost Nova";
+	Ability->Description = "Snare all enemy targets whithin X yards for 4s.";
+	Ability->MaxDistance = 600.0f;
 	Ability->AbilityType = ABST_Instant;
-	Ability->AreaType = ABA_Target;
-	Ability->bAllowEnemy = true;
-	Ability->bAllowSelf = false;
-	Ability->bAllowTeam = false;
-	Ability->EnergyCost = 50.0f;
-	Ability->CountdownTime = 60.0f;
-	Ability->CommitFX = UGlobalLibrary::GetAbilityUseFX(5);
-	Ability->LoadIcon("/Game/Sprites/Icons/157.157");
+	Ability->AreaType = ABA_AreaOnEffect;
+	Ability->MaxAngle = 360.0f;
+	Ability->ManaCost = 100.0f;
+	Ability->CountdownTime = 30.0f;
+	Ability->CommitFX = UGlobalLibrary::GetAbilityUseFX(8);
+	Ability->LoadIcon("/Game/Sprites/Icons/118.118");
 
 	FDamageModifier Damage;
+	Damage.Name = "Frost Nova Damage";
 	Damage.AbilityOwner = Ability;
 	Damage.Icon = Ability->Icon;
 	Damage.Health = 100.0f;
 	Damage.bIsHarmful = true;
 	Ability->DamageModifiers.Add(Damage);
 
-	FBuffModifier PhysicalDebuff;
-	PhysicalDebuff.AbilityOwner = Ability;
-	PhysicalDebuff.Icon = Ability->Icon;
-	PhysicalDebuff.Name = "Shield Blow";
-	PhysicalDebuff.Description = "Physical damage is increased by 20%.";
-	PhysicalDebuff.PhysicalDefense = 20.0f;
-	PhysicalDebuff.School = MS_Physical;
-	PhysicalDebuff.bAllowSelf = false;
-	PhysicalDebuff.bAllowTeam = false;
-	PhysicalDebuff.bAllowEnemy = true;
-	PhysicalDebuff.bIsHarmful = true;
-	PhysicalDebuff.TimeRemaining = 6.0f;
+	FBuffModifier Root;
+	Root.AbilityOwner = Ability;
+	Root.Icon = Ability->Icon;
+	Root.Name = "Frost Nova";
+	Root.Description = "Incapable to move.";
+	Root.State = CS_Stuck;
+	Root.TimeRemaining = 4.0f;
 
-	Ability->BuffModifiers.Add(PhysicalDebuff);
+	Ability->BuffModifiers.Add(Root);
 }
 
 void ACharacterWizard::SetAbility6()
@@ -261,7 +239,7 @@ void ACharacterWizard::SetAbility6()
 	Ability->bAllowSelf = true;
 	Ability->bAllowEnemy = false;
 	Ability->bAllowTeam = false;
-	Ability->CommitFX = UGlobalLibrary::GetAbilityUseFX(6);
+	Ability->CommitFX = UGlobalLibrary::GetAbilityUseFX(5);
 
 	FBuffModifier Buff;
 	Buff.AbilityOwner = Ability;

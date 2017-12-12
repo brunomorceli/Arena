@@ -170,7 +170,7 @@ struct FStatus
 	float Clamp(float Amount, bool bIsPercent=false)
 	{
 		if (!bIsPercent) { Value = FMath::Clamp(Value + Amount, Min, Max); }
-		else { Value = FMath::Clamp(Value + GetAmountByPercent(Value, Amount), Min, Max); }
+		else { Value = FMath::Clamp(Value + GetAmountByPercent(Max, Amount), Min, Max); }
 
 		return Value;
 	}
@@ -654,7 +654,7 @@ public:
 	void MulticastSetMaxWalkSpeed(float Amount);
 	void MulticastSetMaxWalkSpeed_Implementation(float Amount);
 
-	UFUNCTION(NetMulticast, Unreliable, Category = "Network")
+	UFUNCTION(NetMulticast, Reliable, Category = "Network")
 	void MulticastPlayFX(TSubclassOf<AAbilityFXBase> Effect);
 	void MulticastPlayFX_Implementation(TSubclassOf<AAbilityFXBase> Effect);
 
