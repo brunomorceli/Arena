@@ -941,6 +941,20 @@ void ACharacterBase::MulticastSetAnimState_Implementation(ECharacterAnimationSta
 	AnimationState = NewAnimState;
 	ChangeAnimStateDelegate.Broadcast(AnimationState);
 	PlayFX(Effect);
+
+	if (NewAnimState == CAS_Cast || NewAnimState == CAS_Channel || NewAnimState == CAS_None) { return; }
+
+	UWorld* World = GetWorld();
+	if (!World) { return; }
+
+	FTimerHandle TimerHandle;
+	FTimerDelegate TimerDel;
+
+	TimerDel.BindLambda([this]() {
+		ChangeAnimStateDelegate.Broadcast(CAS_None);
+	});
+
+	World->GetTimerManager().SetTimer(TimerHandle, TimerDel, 0.01f, false);
 }
 
 void ACharacterBase::MulticastSetAuraParticle_Implementation(UParticleSystem* Particle)
