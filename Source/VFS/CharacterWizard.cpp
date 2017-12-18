@@ -228,40 +228,48 @@ void ACharacterWizard::SetAbility6()
 	AAbilityBase* Ability = AddAbility(AAbilityBase::StaticClass(), 6);
 	if (!Ability) { return; }
 
-	Ability->Name = "Warrior's will";
-	Ability->Description = "Remove all snare effect for 3 seconds and increase the movement speed by 50%.";
-	Ability->LoadIcon("/Game/Sprites/Icons/305.305");
-	Ability->MaxDistance = 300.0f;
+	Ability->Name = "Magic Trigger";
+	Ability->Description = "Silence the target for 5 seconds after he use any ability.";
 	Ability->AbilityType = ABST_Instant;
 	Ability->AreaType = ABA_Target;
-	Ability->CountdownTime = 25.0f;
-	Ability->EnergyCost = 15.0f;
-	Ability->bAllowSelf = true;
-	Ability->bAllowEnemy = false;
+	Ability->MaxDistance = 1800.0f;
+	Ability->ManaCost = 100.0f;
+	Ability->bAllowEnemy = true;
+	Ability->bAllowSelf = false;
 	Ability->bAllowTeam = false;
-	Ability->CommitFX = UGlobalLibrary::GetAbilityUseFX(5);
+	Ability->CommitFX = UGlobalLibrary::GetAbilityUseFX(2);
+	Ability->LoadIcon("/Game/Sprites/Icons/16.16");
 
-	FBuffModifier Buff;
-	Buff.AbilityOwner = Ability;
-	Buff.Icon = Ability->Icon;
-	Buff.Name = "Warrior's will";
-	Buff.Description = "Increase the movement speed by 50%.";
-	Buff.Speed = 300.0f;
-	Buff.School = MS_Physical;
-	Buff.bAllowSelf = true;
-	Buff.bAllowTeam = false;
-	Buff.bAllowEnemy = false;
-	Buff.bIsHarmful = false;
-	Buff.TimeRemaining = 3.0f;
-	Buff.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AArenaCharacter* Causer = Cast<AArenaCharacter>(AbilityInfo.Causer);
-		if (!Causer) { return; }
+	FBuffModifier Debuff;
+	Debuff.AbilityOwner = Ability;
+	Debuff.Icon = Ability->Icon;
+	Debuff.Name = "Magic Trigger";
+	Debuff.Description = "Silence the target for 5 seconds after he use any ability.";
+	Debuff.School = MS_Magic;
+	Debuff.bAllowSelf = false;
+	Debuff.bAllowTeam = false;
+	Debuff.bAllowEnemy = true;
+	Debuff.bIsHarmful = true;
+	Debuff.TimeRemaining = 3.0f;
+	Debuff.OnUseAbility = [](FAbilityInfo AbilityInfo) {
+		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+		if (!Target) { return; }
 
-		Causer->MulticastPlayFX(UGlobalLibrary::GetAbilityUseFX(4));
-		Causer->RemoveSnareBuffModifiers(Causer);
-		Causer->RemoveStuckBuffModifiers(Causer);
+		Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(7));
+
+		FBuffModifier Silence;
+		Silence.AbilityOwner = AbilityInfo.Ability;
+		Silence.Icon = AbilityInfo.Ability->Icon;
+		Silence.Name = "Magic Trigger";
+		Silence.Description = "Silenced for 5s.";
+		Silence.School = MS_Magic;
+		Silence.bIsHarmful = true;
+		Silence.State = CS_Stun;
+		Silence.TimeRemaining = 5.0f;
+
+		Target->ApplyBuffModifier(Silence);
 	};
-	Ability->BuffModifiers.Add(Buff);
+	Ability->BuffModifiers.Add(Debuff);
 }
 
 void ACharacterWizard::SetAbility7()
@@ -271,37 +279,40 @@ void ACharacterWizard::SetAbility7()
 	AAbilityBase* Ability = AddAbility(AAbilityBase::StaticClass(), 7);
 	if (!Ability) { return; }
 
-	Ability->Name = "Bola";
-	Ability->Description = "Roots the target for 5 seconds.";
+	Ability->Name = "Magic Shell";
+	Ability->Description = "Gives invulnerability for 1 second to you or an allied target..";
 	Ability->MaxDistance = 300.0f;
 	Ability->AbilityType = ABST_Instant;
 	Ability->AreaType = ABA_Target;
-	Ability->CommitType = ABC_Projectile;
-	Ability->MaxDistance = 1500.0f;
-	Ability->MinDistance = 600.0f;
-	Ability->CountdownTime = 10.0f;
-	Ability->ProjectileSpeed = 3000.0f;
-	Ability->LoadIcon("/Game/Sprites/Icons/475.475");
-	Ability->Projectile = UGlobalLibrary::GetProjectile(1);
+	Ability->MaxDistance = 1200.0f;
+	Ability->CountdownTime = 35.0f;
+	Ability->ManaCost = 100.0f;
+	Ability->bAllowEnemy = false;
+	Ability->bAllowTeam = true;
+	Ability->bAllowSelf = true;
+	Ability->LoadIcon("/Game/Sprites/Icons/121.121");
 
-	FDamageModifier Damage;
-	Damage.AbilityOwner = Ability;
-	Damage.Icon = Ability->Icon;
-	Damage.Health = 100.0f;
-	Ability->DamageModifiers.Add(Damage);
+	FBuffModifier Buff;
+	Buff.AbilityOwner = Ability;
+	Buff.Icon = Ability->Icon;
+	Buff.Name = "Magic Shell";
+	Buff.Description = "Invulnerable.";
+	Buff.bAllowEnemy = false;
+	Buff.bAllowTeam = true;
+	Buff.bAllowSelf = true;
+	Buff.State = CS_Invunerable;
+	Buff.TimeRemaining = 1.0f;
+	Buff.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
+		AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(8));
 
-	FBuffModifier Root;
-	Root.AbilityOwner = Ability;
-	Root.Icon = Ability->Icon;
-	Root.Name = "Bola - Root";
-	Root.Description = "Incapable to move.";
-	Root.State = CS_Stuck;
-	Root.TimeRemaining = 5.0f;
-	Root.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(7));
+		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+		if (!Target) { return; }
+
+		Target->RemoveSnareBuffModifiers(AbilityInfo.Causer);
+		Target->RemoveStuckBuffModifiers(AbilityInfo.Causer);
 	};
 
-	Ability->BuffModifiers.Add(Root);
+	Ability->BuffModifiers.Add(Buff);
 }
 
 void ACharacterWizard::SetAbility8()

@@ -36,7 +36,7 @@ void AArenaCharacter::Tick(float DeltaTime)
 
 	if (CastTimeRemaining == 0.0f && (AnimationState == CAS_Cast || AnimationState == CAS_Channel))
 	{
-		StopCast();
+		StopCast(true);
 	}
 }
 
@@ -70,7 +70,7 @@ void AArenaCharacter::UpdateState()
 
 void AArenaCharacter::ValidateCast()
 {
-	if (IsCasting() && ValidateStartAbility(CastAbility->Slot) != ABV_Allowed) { StopCast(); }
+	if (IsCasting() && ValidateStartAbility(CastAbility->Slot) != ABV_Allowed) { StopCast(true); }
 }
 
 void AArenaCharacter::UpdateTimers(float DeltaTime)
@@ -394,7 +394,7 @@ EAbilityValidation AArenaCharacter::StartAbility(int32 Slot)
 void  AArenaCharacter::StopAbility(int32 Slot)
 {
 	if (!Abilities.Contains(Slot)) { return; }
-	StopCast();
+	StopCast(true);
 	State = CS_Idle;
 }
 
@@ -402,18 +402,19 @@ void AArenaCharacter::StartCast(int32 Slot)
 {
 	if (!Abilities.Contains(Slot)) { return; }
 
-	StopCast();
+	StopCast(true);
 
 	CastAbility = Abilities[Slot];
 	CastTimeRemaining = CastAbility->CastTime;
 	ServerSetAnimState(CastAbility->AbilityType == ABST_Castable ? CAS_Cast : CAS_Channel, CastAbility->CastFX);
 }
 
-void AArenaCharacter::StopCast()
+void AArenaCharacter::StopCast(bool ChangeAnimation)
 {
 	CastTimeRemaining = 0.0f;
 	CastAbility = NULL;
-	ServerSetAnimState(CAS_None, NULL);
+
+	if (ChangeAnimation) { ServerSetAnimState(CAS_None, NULL); }
 }
 
 void AArenaCharacter::CommitAbility(int32 Slot)
@@ -423,16 +424,27 @@ void AArenaCharacter::CommitAbility(int32 Slot)
 	AAbilityBase* Ability = Abilities[Slot];
 
 	// Countdown.
-	StopCast();
+	StopCast(false);
 	Ability->StartCountdown();
 	if (Ability->AbilityType == ABST_Instant) { StartGlobalCountdown(); }
 
 	if (!HasAuthority()) { return; }
 
+	TArray<int32> Keys;
+	BuffModifiers.GenerateKeyArray(Keys);
+	for (auto Key : Keys)
+	{
+		if (!BuffModifiers[Key].OnUseAbility) { continue; }
+		FAbilityInfo AbilityInfo = GetAbilityInfo(BuffModifiers[Key]);
+		int32 AbilityId = BuffModifiers[Key].AbilityOwner->GetUniqueID();
+
+		BuffModifiers[Key].OnUseAbility(AbilityInfo);
+	}
+
 	CommitAbilityModifiers(Ability);
 
 	TEnumAsByte<ECharacterAnimationState> AnimationState;
-	switch (Ability->Slot)
+	switch (Slot)
 	{
 		case 1:
 			AnimationState = CAS_Ability1;
@@ -900,6 +912,17 @@ void AArenaCharacter::ApplyBuffModifier(FBuffModifier Modifier)
 	FAbilityInfo AbilityInfo = GetAbilityInfo(Modifier);
 	int32 AbilityId = Modifier.AbilityOwner->GetUniqueID();
 
+	// Target is Invunerable
+	if (State == CS_Invunerable && Modifier.bIsHarmful == 1)
+	{
+		AbilityInfo.bDenied = true;
+		AbilityInfo.TimeRemaining = 0.0f;
+		MulticastNotifyAbilityInfo(AbilityInfo);
+
+		if (Modifier.OnDenied) { Modifier.OnDenied(AbilityInfo); }
+		return;
+	}
+
 	if (BuffModifiers.Contains(AbilityId))
 	{
 		BuffModifiers[AbilityId].TimeRemaining = Modifier.TimeRemaining;	
@@ -928,6 +951,17 @@ void AArenaCharacter::ApplyAbsorbingModifier(FAbsorbingModifier Modifier)
 	Modifier.AddStack();
 	FAbilityInfo AbilityInfo = GetAbilityInfo(Modifier);
 
+	// Target is Invunerable
+	if (State == CS_Invunerable && Modifier.bIsHarmful == 1)
+	{
+		AbilityInfo.bDenied = true;
+		AbilityInfo.TimeRemaining = 0.0f;
+		MulticastNotifyAbilityInfo(AbilityInfo);
+
+		if (Modifier.OnDenied) { Modifier.OnDenied(AbilityInfo); }
+		return;
+	}
+
 	AbsorbingModifiers.Add(Modifier);
 	if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(AbilityInfo); }
 }
@@ -938,6 +972,17 @@ void AArenaCharacter::ApplyDamageModifier(FDamageModifier Modifier)
 
 	Modifier.AddStack();
 	FAbilityInfo AbilityInfo = GetAbilityInfo(Modifier);
+
+	// Target is Invunerable
+	if (State == CS_Invunerable && Modifier.bIsHarmful == 1)
+	{
+		AbilityInfo.bDenied = true;
+		AbilityInfo.TimeRemaining = 0.0f;
+		MulticastNotifyAbilityInfo(AbilityInfo);
+
+		if (Modifier.OnDenied) { Modifier.OnDenied(AbilityInfo); }
+		return;
+	}
 
 	CalculateDamage(Modifier, AbilityInfo);
 	if (AbilityInfo.Amount >= 0.0f)
@@ -973,6 +1018,17 @@ void AArenaCharacter::ApplyOvertimeModifier(FOvertimeModifier Modifier)
 
 	FAbilityInfo AbilityInfo = GetAbilityInfo(Modifier);
 	int32 AbilityId = Modifier.AbilityOwner->GetUniqueID();
+
+	// Target is Invunerable
+	if (State == CS_Invunerable && Modifier.bIsHarmful == 1)
+	{
+		AbilityInfo.bDenied = true;
+		AbilityInfo.TimeRemaining = 0.0f;
+		MulticastNotifyAbilityInfo(AbilityInfo);
+
+		if (Modifier.OnDenied) { Modifier.OnDenied(AbilityInfo); }
+		return;
+	}
 
 	if (OvertimeModifiers.Contains(AbilityId))
 	{

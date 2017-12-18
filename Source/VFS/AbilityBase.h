@@ -167,10 +167,13 @@ public:
 	HandlerPtr OnChangeStateHandler = NULL;
 	HandlerPtr OnCommitAbility = NULL;
 	HandlerPtr OnCritical = NULL;
+	HandlerPtr OnDenied = NULL;
+	HandlerPtr OnBeforeUseAbility = NULL;
+	HandlerPtr OnUseAbility = NULL;
 
 	bool AddStack()
 	{
-		if (Stacks > MaxStacks) { return false; }
+		if (Stacks >= MaxStacks) { return false; }
 		Stacks++;
 
 		HealthAmount = Health * Stacks;

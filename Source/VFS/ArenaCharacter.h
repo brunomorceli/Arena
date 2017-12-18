@@ -54,7 +54,7 @@ protected:
 	void StartCast(int32 Slot);
 
 	// Start Cast.
-	void StopCast();
+	void StopCast(bool ChangeAnimation);
 
 	void CommitAbility(int32 Slot);
 	void CommitAbilityModifiers(AAbilityBase* Ability);

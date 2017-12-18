@@ -53,6 +53,9 @@ public:
 	int32 bExpires = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	int32 bDenied = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
 	float TimeRemaining = 0.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")

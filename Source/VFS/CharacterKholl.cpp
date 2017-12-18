@@ -186,7 +186,7 @@ void ACharacterKholl::SetAbility5()
 	Ability->EnergyCost = 50.0f;
 	Ability->CountdownTime = 60.0f;
 	Ability->CommitFX = UGlobalLibrary::GetAbilityUseFX(5);
-	Ability->LoadIcon("/Game/Sprites/Icons/157.157");
+	Ability->LoadIcon("/Game/Sprites/Icons/475.475");
 
 	FDamageModifier Damage;
 	Damage.AbilityOwner = Ability;
@@ -245,7 +245,7 @@ void ACharacterKholl::SetAbility6()
 	Buff.TimeRemaining = 3.0f;
 	Buff.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
 		AArenaCharacter* Causer = Cast<AArenaCharacter>(AbilityInfo.Causer);
-		if (!Causer) { return; }
+		if (!Causer || Causer->GetUniqueID() == AbilityInfo.Target->GetUniqueID()) { return; }
 
 		Causer->MulticastPlayFX(UGlobalLibrary::GetAbilityUseFX(4));
 		Causer->RemoveSnareBuffModifiers(Causer);
@@ -261,7 +261,7 @@ void ACharacterKholl::SetAbility7()
 	AAbilityBase* Ability = AddAbility(AAbilityBase::StaticClass(), 7);
 	if (!Ability) { return; }
 
-	Ability->Name = "Bola";
+	Ability->Name = "Tangled Chains";
 	Ability->Description = "Roots the target for 5 seconds.";
 	Ability->MaxDistance = 300.0f;
 	Ability->AbilityType = ABST_Instant;
@@ -271,7 +271,7 @@ void ACharacterKholl::SetAbility7()
 	Ability->MinDistance = 600.0f;
 	Ability->CountdownTime = 10.0f;
 	Ability->ProjectileSpeed = 3000.0f;
-	Ability->LoadIcon("/Game/Sprites/Icons/475.475");
+	Ability->LoadIcon("/Game/Sprites/Icons/418.418");
 	Ability->Projectile = UGlobalLibrary::GetProjectile(1);
 
 	FDamageModifier Damage;
@@ -283,7 +283,7 @@ void ACharacterKholl::SetAbility7()
 	FBuffModifier Root;
 	Root.AbilityOwner = Ability;
 	Root.Icon = Ability->Icon;
-	Root.Name = "Bola - Root";
+	Root.Name = "Tangled Chains";
 	Root.Description = "Incapable to move.";
 	Root.State = CS_Stuck;
 	Root.TimeRemaining = 5.0f;
