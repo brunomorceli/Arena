@@ -93,7 +93,7 @@ void AArenaCharacter::UpdateTimers(float DeltaTime)
 
 	if (Type == ABST_Channeling && CastAbility->UpdateChanneling(DeltaTime))
 	{
-		return CommitAbilityModifiers(CastAbility);
+		return CommitAbilityModifiers(CastAbility, true);
 	}
 }
 
@@ -382,8 +382,17 @@ EAbilityValidation AArenaCharacter::StartAbility(int32 Slot)
 	Validation = ValidateCost(Ability);
 	if (Validation != ABV_Allowed) { return Validation; }
 
-	if (Ability->AbilityType == ABST_Castable || Ability->AbilityType == ABST_Channeling) {
+	if (Ability->AbilityType == ABST_Castable || Ability->AbilityType == ABST_Channeling)
+	{
 		StartCast(Slot);
+
+		if (Ability->AbilityType == ABST_Channeling)
+		{
+			ApplyCosts(Ability);
+			Ability->StartCountdown();
+			if (Ability->CommitFX) { ServerSetAnimState(CAS_Channel, Ability->CommitFX); }
+		}
+
 		return ABV_Allowed;
 	}
 
@@ -441,7 +450,7 @@ void AArenaCharacter::CommitAbility(int32 Slot)
 		BuffModifiers[Key].OnUseAbility(AbilityInfo);
 	}
 
-	CommitAbilityModifiers(Ability);
+	CommitAbilityModifiers(Ability, false);
 
 	TEnumAsByte<ECharacterAnimationState> AnimationState;
 	switch (Slot)
@@ -478,7 +487,7 @@ void AArenaCharacter::CommitAbility(int32 Slot)
 	ServerSetAnimState(AnimationState, Ability->CommitFX);
 }
 
-void AArenaCharacter::CommitAbilityModifiers(AAbilityBase* Ability)
+void AArenaCharacter::CommitAbilityModifiers(AAbilityBase* Ability, bool withoutCost)
 {
 	UWorld* World = GetWorld();
 	if (!World || !Ability || !HasAuthority()) { return; }
@@ -491,7 +500,7 @@ void AArenaCharacter::CommitAbilityModifiers(AAbilityBase* Ability)
 		bool LineOfSight = GetController()->LineOfSightTo(ArenaCharacter, FVector::ZeroVector);
 		if (!LineOfSight || !ArenaCharacter->IsValidModifierState()) { return; }
 
-		ApplyCosts(Ability);
+		if (!withoutCost) { ApplyCosts(Ability); }
 
 		// Must generate a projectile.
 		if (Ability->CommitType == ABC_Projectile)
@@ -506,7 +515,7 @@ void AArenaCharacter::CommitAbilityModifiers(AAbilityBase* Ability)
 	// Is a Directional Ability.
 	if (Ability->AreaType == ABA_Directional)
 	{
-		ApplyCosts(Ability);
+		if (!withoutCost) { ApplyCosts(Ability); }
 
 		TArray<ACharacterBase*> Characters;
 		if (!DirectionalHitTest(Characters, Ability->DirectionalRadius, Ability->DirectionalRange)) { return; }
@@ -536,7 +545,7 @@ void AArenaCharacter::CommitAbilityModifiers(AAbilityBase* Ability)
 	// Is an Area On Effect Ability.
 	if (Ability->AreaType == EAbilityArea::ABA_AreaOnEffect)
 	{
-		ApplyCosts(Ability);
+		if (!withoutCost) { ApplyCosts(Ability); }
 
 		TArray<AActor*> FoundActors;
 		UGameplayStatics::GetAllActorsOfClass(World, ACharacterBase::StaticClass(), FoundActors);

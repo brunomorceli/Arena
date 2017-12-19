@@ -57,7 +57,7 @@ protected:
 	void StopCast(bool ChangeAnimation);
 
 	void CommitAbility(int32 Slot);
-	void CommitAbilityModifiers(AAbilityBase* Ability);
+	void CommitAbilityModifiers(AAbilityBase* Ability, bool withoutCost);
 
 public:
 

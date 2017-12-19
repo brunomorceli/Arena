@@ -278,9 +278,6 @@ public:
 protected:
 	float CountdownTimeRemaining;
 
-	float ChannelingTime;
-	float ChannelingTotalTime;
-
 	virtual void UpdateTimers(float DeltaTime);
 
 public:
@@ -315,6 +312,12 @@ public:
 	// Cast Time.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
 	float CastTime;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float ChannelingTime;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float ChannelingTotalTime;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
 	bool bCastInMovement;

@@ -23,7 +23,7 @@ void ACharacterWizard::SetAbility1()
 	if (!Ability) { return; }
 
 	Ability->Name = "Fireball";
-	Ability->Description = "150HP and 50% chance to add fire dot.";
+	Ability->Description = "150HP and 66% chance to add fire dot.";
 	Ability->AbilityType = ABST_Castable;
 	Ability->CastTime = 1.5f;
 	Ability->AreaType = ABA_Target;
@@ -45,7 +45,7 @@ void ACharacterWizard::SetAbility1()
 	Damage.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
 		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
 		if (!Target) { return; }
-		if (!UUtilities::IsCritical(50.0f)) { return; }
+		if (!UUtilities::IsCritical(66.66f)) { return; }
 
 		FOvertimeModifier Dot;
 		Dot.AbilityOwner = AbilityInfo.Ability;
@@ -93,7 +93,6 @@ void ACharacterWizard::SetAbility2()
 	Ability->bAllowEnemy = true;
 	Ability->bAllowSelf = false;
 	Ability->bAllowTeam = false;
-	Ability->CommitFX = UGlobalLibrary::GetAbilityUseFX(2);
 	Ability->LoadIcon("/Game/Sprites/Icons/105.105");
 
 	FDamageModifier Damage;
@@ -234,6 +233,7 @@ void ACharacterWizard::SetAbility6()
 	Ability->AreaType = ABA_Target;
 	Ability->MaxDistance = 1800.0f;
 	Ability->ManaCost = 100.0f;
+	Ability->CountdownTime = 22.0f;
 	Ability->bAllowEnemy = true;
 	Ability->bAllowSelf = false;
 	Ability->bAllowTeam = false;
@@ -244,18 +244,20 @@ void ACharacterWizard::SetAbility6()
 	Debuff.AbilityOwner = Ability;
 	Debuff.Icon = Ability->Icon;
 	Debuff.Name = "Magic Trigger";
-	Debuff.Description = "Silence the target for 5 seconds after he use any ability.";
+	Debuff.Description = "In the next 2 seconds if the affect target to use any magical ability he will be silenced for 5 seconds.";
 	Debuff.School = MS_Magic;
 	Debuff.bAllowSelf = false;
 	Debuff.bAllowTeam = false;
 	Debuff.bAllowEnemy = true;
 	Debuff.bIsHarmful = true;
-	Debuff.TimeRemaining = 3.0f;
+	Debuff.TimeRemaining = 2.0f;
 	Debuff.OnUseAbility = [](FAbilityInfo AbilityInfo) {
 		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
-		if (!Target) { return; }
+		if (!Target || !AbilityInfo.Ability || AbilityInfo.Ability->SchoolType != ABS_Magic) { return; }
 
 		Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(7));
+
+		Target->RemoveBuffModifier(AbilityInfo.Ability->GetUniqueID(), NULL);
 
 		FBuffModifier Silence;
 		Silence.AbilityOwner = AbilityInfo.Ability;
@@ -319,6 +321,27 @@ void ACharacterWizard::SetAbility8()
 {
 	Super::SetAbility8();
 
-	//AAbilityBase* Ability = AddAbility(AAbilityBase::StaticClass(), 8);
-	//if (!Ability) { return; }
+	AAbilityBase* Ability = AddAbility(AAbilityBase::StaticClass(), 8);
+	if (!Ability) { return; }
+
+	Ability->Name = "Laser Beam";
+	Ability->Description = "100 Damage every 1 second.";
+	Ability->AbilityType = ABST_Channeling;
+	Ability->AreaType = ABA_Target;
+	Ability->MaxDistance = 1800.0f;
+	Ability->MinDistance = 0.0f;
+	Ability->ManaCost = 400.0f;
+	Ability->CountdownTime = 30.0f;
+	Ability->CastTime = 3.0f;
+	Ability->ChannelingTime = 0.5f;
+	Ability->ChannelingTotalTime = 0.5f;
+	Ability->CommitFX = UGlobalLibrary::GetAbilityUseFX(9);
+	Ability->LoadIcon("/Game/Sprites/Icons/417.417");
+
+	FDamageModifier Damage;
+	Damage.AbilityOwner = Ability;
+	Damage.Icon = Ability->Icon;
+	Damage.Health = 100.0f;
+	Damage.ModifierCritical = 15.0f;
+	Ability->DamageModifiers.Add(Damage);
 }

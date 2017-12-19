@@ -131,8 +131,8 @@ ACharacterBase::ACharacterBase()
 	TargetMaxDistance = 5000.0f;
 
 	Health.Setup(0.0f, 2000.0f, 2000.0f, 0.3f);
-	Mana.Setup(0.0f, 2000.0f, 2000.0f, 0.3f);
-	Energy.Setup(0.0f, 150.0f, 150.0f, 4.0f);
+	Mana.Setup(0.0f, 2000.0f, 2000.0f, 1.5f);
+	Energy.Setup(0.0f, 150.0f, 150.0f, 6.0f);
 	Speed.Setup(0.0f, 1200.0f, 600.0f);
 	Critical.Setup(0.0f, 100.0f, 15.0f);
 
