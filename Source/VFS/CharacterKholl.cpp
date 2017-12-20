@@ -8,6 +8,9 @@ ACharacterKholl::ACharacterKholl()
 
 	Critical.ValueBase = 20.0f;
 	Critical.Reset();
+
+	Energy.RegenerationBase = 10.0f;
+	Energy.Reset();
 }
 
 void ACharacterKholl::BeginPlay()
@@ -139,11 +142,11 @@ void ACharacterKholl::SetAbility4()
 	if (!Ability) { return; }
 
 	Ability->Name = "Shield Wall";
-	Ability->Description = "Increase the physical defense by 70% and magic defense by 90% for 5 seconds.";
-	Ability->CountdownTime = 60.0f;
+	Ability->Description = "Increase the physical defense by 50% and magic defense by 70% for 5 seconds.";
+	Ability->CountdownTime = 30.0f;
 	Ability->AbilityType = ABST_Instant;
 	Ability->AreaType = ABA_Target;
-	Ability->EnergyCost = 40.0f;
+	Ability->EnergyCost = 10.0f;
 	Ability->bAllowSelf = true;
 	Ability->bAllowEnemy = false;
 	Ability->bAllowTeam = false;
@@ -153,7 +156,7 @@ void ACharacterKholl::SetAbility4()
 	Buff.AbilityOwner = Ability;
 	Buff.Icon = Ability->Icon;
 	Buff.Name = "Shield Wall";
-	Buff.Description = "Magic Defense is increased by 90%.";
+	Buff.Description = "Magic Defense is increased by 70% and Physical Defense by 50%.";
 	Buff.MagicDefense = 90.0f;
 	Buff.PhysicalDefense = 70.0f;
 	Buff.School = MS_Physical;
@@ -161,10 +164,11 @@ void ACharacterKholl::SetAbility4()
 	Buff.bAllowTeam = false;
 	Buff.bAllowEnemy = true;
 	Buff.bIsHarmful = false;
-	Buff.TimeRemaining = 10.0f;
+	Buff.TimeRemaining = 5.0f;
 	Buff.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AbilityInfo.Causer->MulticastPlayFX(UGlobalLibrary::GetAbilityUseFX(4));
+		AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityUseFX(4));
 	};
+
 	Ability->BuffModifiers.Add(Buff);
 }
 
@@ -175,7 +179,7 @@ void ACharacterKholl::SetAbility5()
 	AAbilityBase* Ability = AddAbility(AAbilityBase::StaticClass(), 5);
 	if (!Ability) { return; }
 	
-	Ability->Name = "Shield Blow";
+	Ability->Name = "Shockwave";
 	Ability->Description = "Hit the target using the shield causing 100 HP damage and causing 20% of physical damage for 10 seconds.";
 	Ability->MaxDistance = 300.0f;
 	Ability->AbilityType = ABST_Instant;
@@ -184,7 +188,7 @@ void ACharacterKholl::SetAbility5()
 	Ability->bAllowSelf = false;
 	Ability->bAllowTeam = false;
 	Ability->EnergyCost = 50.0f;
-	Ability->CountdownTime = 60.0f;
+	Ability->CountdownTime = 30.0f;
 	Ability->CommitFX = UGlobalLibrary::GetAbilityUseFX(5);
 	Ability->LoadIcon("/Game/Sprites/Icons/475.475");
 
@@ -262,14 +266,13 @@ void ACharacterKholl::SetAbility7()
 	if (!Ability) { return; }
 
 	Ability->Name = "Tangled Chains";
-	Ability->Description = "Roots the target for 5 seconds.";
+	Ability->Description = "Roots the target for 4 seconds.";
 	Ability->MaxDistance = 300.0f;
 	Ability->AbilityType = ABST_Instant;
 	Ability->AreaType = ABA_Target;
 	Ability->CommitType = ABC_Projectile;
 	Ability->MaxDistance = 1500.0f;
-	Ability->MinDistance = 600.0f;
-	Ability->CountdownTime = 10.0f;
+	Ability->CountdownTime = 18.0f;
 	Ability->ProjectileSpeed = 3000.0f;
 	Ability->LoadIcon("/Game/Sprites/Icons/418.418");
 	Ability->Projectile = UGlobalLibrary::GetProjectile(1);
@@ -286,7 +289,7 @@ void ACharacterKholl::SetAbility7()
 	Root.Name = "Tangled Chains";
 	Root.Description = "Incapable to move.";
 	Root.State = CS_Stuck;
-	Root.TimeRemaining = 5.0f;
+	Root.TimeRemaining = 4.0f;
 	Root.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
 		AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(7));
 	};

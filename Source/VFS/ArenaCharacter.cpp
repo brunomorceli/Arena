@@ -7,7 +7,7 @@ AArenaCharacter::AArenaCharacter()
 {
 	AbilityTarget = NULL;
 
-	CastTimeRemaining = 0;
+	CastTimeRemaining = 0.0f;
 
 	GlobalCountdownTime = 1.0f;
 	GlobalCountdownTimeRemaining = 0.0f;
@@ -311,6 +311,7 @@ bool AArenaCharacter::IsCountdown(int32 Slot) {
 float AArenaCharacter::GetCountdownRemaining(int32 Slot)
 {
 	if (!Abilities.Contains(Slot)) { return 0.0f; }
+
 	AAbilityBase* Ability = Abilities[Slot];
 
 	if (Ability->AbilityType == EAbilityStartType::ABST_Instant)

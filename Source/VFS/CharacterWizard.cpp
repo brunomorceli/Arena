@@ -143,7 +143,7 @@ void ACharacterWizard::SetAbility3()
 	FDamageModifier Damage;
 	Damage.AbilityOwner = Ability;
 	Damage.Icon = Ability->Icon;
-	Damage.Health = 100.0f;
+	Damage.Health = 250.0f;
 	Damage.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
 		AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(6));
 	};
