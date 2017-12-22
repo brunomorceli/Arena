@@ -11,15 +11,31 @@
 #include "ArenaPlayerState.generated.h"
 
 
-/**
- * 
- */
+USTRUCT(BlueprintType)
+struct FChatMsg
+{
+	GENERATED_USTRUCT_BODY(BlueprintType)
+
+public:
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+		AActor* Sender;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+		FText Message;
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNotifyChatMsgDelegate, const FChatMsg, ChatMsg);
+
 UCLASS()
 class VFS_API AArenaPlayerState : public APlayerState
 {
 	GENERATED_BODY()
 
 public:
+
+	UPROPERTY(BlueprintAssignable, VisibleAnywhere, Category = "Chat")
+	FNotifyChatMsgDelegate NotifyChatMsgDelegate;
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Match")
 	TEnumAsByte<ECharacterClass> CharacterClass;
@@ -76,4 +92,14 @@ public:
 	void ServerAddDeath();
 	void ServerAddDeath_Implementation() { Deaths++; }
 	bool ServerAddDeath_Validate() { return true; }
+
+
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = "Network")
+	void ServerNotifyChatMsg(AActor* Sender, const FText& Message);
+	void ServerNotifyChatMsg_Implementation(AActor* Sender, const FText& Message);
+	bool ServerNotifyChatMsg_Validate(AActor* Sender, const FText& Message) { return true; }
+
+	UFUNCTION(Client, Reliable, Category = "Network")
+	void ClientNotifyChatMsg(const FChatMsg& ChatMsg);
+	void ClientNotifyChatMsg_Implementation(const FChatMsg& ChatMsg) { NotifyChatMsgDelegate.Broadcast(ChatMsg); }
 };

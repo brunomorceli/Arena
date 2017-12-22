@@ -248,12 +248,11 @@ void ACharacterKholl::SetAbility6()
 	Buff.bIsHarmful = false;
 	Buff.TimeRemaining = 3.0f;
 	Buff.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AArenaCharacter* Causer = Cast<AArenaCharacter>(AbilityInfo.Causer);
-		if (!Causer || Causer->GetUniqueID() == AbilityInfo.Target->GetUniqueID()) { return; }
+		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+		if (!Target) { return; }
 
-		Causer->MulticastPlayFX(UGlobalLibrary::GetAbilityUseFX(4));
-		Causer->RemoveSnareBuffModifiers(Causer);
-		Causer->RemoveStuckBuffModifiers(Causer);
+		Target->RemoveSnareBuffModifiers(Target);
+		Target->RemoveStuckBuffModifiers(Target);
 	};
 	Ability->BuffModifiers.Add(Buff);
 }

@@ -32,6 +32,29 @@ void AArenaPlayerState::ServerSetClass_Implementation(ECharacterClass NewClass)
 	CharacterClass = NewClass;
 }
 
+void AArenaPlayerState::ServerNotifyChatMsg_Implementation(AActor* Sender, const FText& Message)
+{
+	if (!Sender || Message.ToString().Len() == 0) { return; }
+
+	FChatMsg ChatMsg;
+	ChatMsg.Sender = Sender;
+	ChatMsg.Message = Message;
+
+	UWorld* World = GetWorld();
+	if (!World) { return; }
+
+	AGameStateBase* GameState = World->GetGameState();
+	if (!GameState) { return; }
+
+	for (APlayerState* Player : GameState->PlayerArray)
+	{
+		AArenaPlayerState* PlayerState = Cast<AArenaPlayerState>(Player);
+		if (!PlayerState) { continue; }
+
+		PlayerState->ClientNotifyChatMsg(ChatMsg);
+	}
+}
+
 void AArenaPlayerState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
