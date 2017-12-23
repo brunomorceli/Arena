@@ -39,7 +39,8 @@ void ACharacterKholl::SetAbility1()
 	Damage.Health = 130.0f;
 	Damage.ModifierCritical = 30.0f;
 	Damage.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(1));
+		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+		if (Target) { Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(1)); }
 	};
 	Ability->DamageModifiers.Add(Damage);
 }
@@ -69,16 +70,17 @@ void ACharacterKholl::SetAbility2()
 	Damage.Icon = Ability->Icon;
 	Damage.Health = 250.0f;
 	Damage.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(2));
-
-		if (!AbilityInfo.Ability || !UUtilities::IsCritical(50.0f)) { return; }
-
 		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
 		if (!Target) { return; }
 
+		Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(2));
+
+		AAbilityBase* Ability = Cast<AAbilityBase>(AbilityInfo.Ability);
+		if (!Ability || !UUtilities::IsCritical(50.0f)) { return; }
+
 		FOvertimeModifier Overtime;
 		Overtime.AbilityOwner = AbilityInfo.Ability;
-		Overtime.Icon = AbilityInfo.Ability->Icon;
+		Overtime.Icon = Ability->Icon;
 		Overtime.Name = "Slash Attack Bleeding";
 		Overtime.Description = "30 physical damage every 1 second.";
 		Overtime.Health = 30.0f;
@@ -86,7 +88,8 @@ void ACharacterKholl::SetAbility2()
 		Overtime.TimeRemaining = 10.0f;
 		Overtime.bIsHarmful = true;
 		Overtime.OnTickHandler = [](FAbilityInfo AbilityInfo) {
-			AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(3));
+			AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+			if (Target) { Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(3)); }
 		};
 
 		Target->ApplyOvertimeModifier(Overtime);
@@ -118,7 +121,8 @@ void ACharacterKholl::SetAbility3()
 	Damage.Icon = Ability->Icon;
 	Damage.Health = 100.0f;
 	Damage.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AbilityInfo.Target->ServerKnockBack(AbilityInfo.Causer->GetActorLocation(), 400.0f);
+		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+		if (Target) { Target->ServerKnockBack(AbilityInfo.Causer->GetActorLocation(), 400.0f); }
 	};
 
 	Ability->DamageModifiers.Add(Damage);
@@ -166,7 +170,8 @@ void ACharacterKholl::SetAbility4()
 	Buff.bIsHarmful = false;
 	Buff.TimeRemaining = 5.0f;
 	Buff.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityUseFX(4));
+		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+		if (Target) { Target->MulticastPlayFX(UGlobalLibrary::GetAbilityUseFX(4)); }
 	};
 
 	Ability->BuffModifiers.Add(Buff);
@@ -290,7 +295,8 @@ void ACharacterKholl::SetAbility7()
 	Root.State = CS_Stuck;
 	Root.TimeRemaining = 4.0f;
 	Root.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(7));
+		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+		if (Target) { Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(7)); }
 	};
 
 	Ability->BuffModifiers.Add(Root);

@@ -45,13 +45,17 @@ void ACharacterWizard::SetAbility1()
 	Damage.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
 		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
 		if (!Target) { return; }
+
+		AAbilityBase* Ability = Cast<AAbilityBase>(AbilityInfo.Ability);
+		if (!Ability) { return; }
+
 		if (!UUtilities::IsCritical(66.66f)) { return; }
 
 		FOvertimeModifier Dot;
 		Dot.AbilityOwner = AbilityInfo.Ability;
 		Dot.Name = "Fireball";
 		Dot.Description = "Does 30HP damage every 2 seconds.";
-		Dot.Icon = AbilityInfo.Ability->Icon;
+		Dot.Icon = Ability->Icon;
 		Dot.TimeRemaining = 10.0f;
 		Dot.TickTime = 2.0f;
 		Dot.Health = 30.0f;
@@ -100,7 +104,8 @@ void ACharacterWizard::SetAbility2()
 	Damage.Icon = Ability->Icon;
 	Damage.Health = 250.0f;
 	Damage.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		if (AbilityInfo.Target) { AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(7)); }
+		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+		if (Target) { Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(7)); }
 	};
 	Ability->DamageModifiers.Add(Damage);
 
@@ -145,7 +150,8 @@ void ACharacterWizard::SetAbility3()
 	Damage.Icon = Ability->Icon;
 	Damage.Health = 250.0f;
 	Damage.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(6));
+		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+		if (Target) { Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(6)); }
 	};
 
 	Ability->DamageModifiers.Add(Damage);
@@ -253,7 +259,10 @@ void ACharacterWizard::SetAbility6()
 	Debuff.TimeRemaining = 2.0f;
 	Debuff.OnUseAbility = [](FAbilityInfo AbilityInfo) {
 		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
-		if (!Target || !AbilityInfo.Ability || AbilityInfo.Ability->SchoolType != ABS_Magic) { return; }
+		if (!Target) { return; }
+
+		AAbilityBase* Ability = Cast<AAbilityBase>(AbilityInfo.Ability);
+		if (!Ability || Ability->SchoolType != ABS_Magic) { return; }
 
 		Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(7));
 
@@ -261,7 +270,7 @@ void ACharacterWizard::SetAbility6()
 
 		FBuffModifier Silence;
 		Silence.AbilityOwner = AbilityInfo.Ability;
-		Silence.Icon = AbilityInfo.Ability->Icon;
+		Silence.Icon = Ability->Icon;
 		Silence.Name = "Magic Trigger";
 		Silence.Description = "Silenced for 5s.";
 		Silence.School = MS_Magic;
@@ -305,13 +314,15 @@ void ACharacterWizard::SetAbility7()
 	Buff.State = CS_Invunerable;
 	Buff.TimeRemaining = 1.0f;
 	Buff.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AbilityInfo.Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(8));
-
 		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
 		if (!Target) { return; }
 
-		Target->RemoveSnareBuffModifiers(AbilityInfo.Causer);
-		Target->RemoveStuckBuffModifiers(AbilityInfo.Causer);
+		AArenaCharacter* Causer = Cast<AArenaCharacter>(AbilityInfo.Causer);
+		if (Causer) { return; }
+
+		Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(8));
+		Target->RemoveSnareBuffModifiers(Causer);
+		Target->RemoveStuckBuffModifiers(Causer);
 	};
 
 	Ability->BuffModifiers.Add(Buff);

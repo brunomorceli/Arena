@@ -1010,7 +1010,10 @@ void AArenaCharacter::ApplyDamageModifier(FDamageModifier Modifier)
 
 	if (Health.Value > 0.0f) { return; }
 
-	ACharacterBase* Causer = Cast<ACharacterBase>(Modifier.AbilityOwner->CharacterOwner);
+	AAbilityBase* Ability = Cast<AAbilityBase>(Modifier.AbilityOwner);
+	if (!Ability) { return; }
+
+	ACharacterBase* Causer = Cast<ACharacterBase>(Ability->CharacterOwner);
 	if (!Causer) { return; }
 
 	AArenaPlayerState* CauserPlayerState = Cast<AArenaPlayerState>(Causer->PlayerState);
@@ -1087,17 +1090,23 @@ void AArenaCharacter::CalculateHeal(FModifierBase Modifier, FAbilityInfo &Abilit
 {
 	if (Modifier.HealthAmount <= 0.0f) { return; }
 
+	AAbilityBase* Ability = Cast<AAbilityBase>(Modifier.AbilityOwner);
+	if (!Ability) { return; }
+
+	AArenaCharacter* CharacterOwner = Cast<AArenaCharacter>(Ability->CharacterOwner);
+	if (!CharacterOwner) { return; }
+
 	AbilityInfo.Amount = Health.GetModifierAmount(Modifier.HealthAmount, Modifier.bIsPercent);
 
 	// Calculate the power.
 	float PowerPercent = 0.0f;
 	if (Modifier.School == MS_Magic)
 	{
-		PowerPercent += Modifier.ModifierMagicPower + Modifier.AbilityOwner->CharacterOwner->MagicPower.Value;
+		PowerPercent += Modifier.ModifierMagicPower + CharacterOwner->MagicPower.Value;
 	}
 	else
 	{
-		PowerPercent += Modifier.ModifierPhysicalPower + Modifier.AbilityOwner->CharacterOwner->PhysicalPower.Value;
+		PowerPercent += Modifier.ModifierPhysicalPower + CharacterOwner->PhysicalPower.Value;
 	}
 
 	// Calculates the Power Amount.
@@ -1107,7 +1116,7 @@ void AArenaCharacter::CalculateHeal(FModifierBase Modifier, FAbilityInfo &Abilit
 	AbilityInfo.Amount += PowerAmount * FMath::RandRange(0.0, 1.0f);
 
 	// Check if is critical.
-	float CriticalRate = Modifier.ModifierCritical + Modifier.AbilityOwner->CharacterOwner->Critical.Value;
+	float CriticalRate = Modifier.ModifierCritical + CharacterOwner->Critical.Value;
 	AbilityInfo.bCritical = UUtilities::IsCritical(CriticalRate);
 
 	if (AbilityInfo.bCritical) { AbilityInfo.Amount *= FMath::FRandRange(1.5, 2.0); }
@@ -1134,6 +1143,12 @@ void AArenaCharacter::ApplyCosts(AAbilityBase* Ability)
 void AArenaCharacter::TickOvertimeModifier(FOvertimeModifier Modifier)
 {
 	if (!Modifier.AbilityOwner) { return; }
+
+	AAbilityBase* Ability = Cast<AAbilityBase>(Modifier.AbilityOwner);
+	if (!Ability) { return; }
+
+	AArenaCharacter* CharacterOwner = Cast<AArenaCharacter>(Ability->CharacterOwner);
+	if (!CharacterOwner) { return; }
 
 	FAbilityInfo AbilityInfo = GetAbilityInfo(Modifier);
 	AbilityInfo.Amount = Modifier.HealthAmount;
@@ -1170,7 +1185,7 @@ void AArenaCharacter::TickOvertimeModifier(FOvertimeModifier Modifier)
 
 	if (!Modifier.bIsHarmful ||Health.Value > 0.0f) { return; }
 
-	ACharacterBase* Causer = Cast<ACharacterBase>(Modifier.AbilityOwner->CharacterOwner);
+	ACharacterBase* Causer = Cast<ACharacterBase>(CharacterOwner);
 	if (!Causer) { return; }
 
 	AArenaPlayerState* CauserPlayerState = Cast<AArenaPlayerState>(Causer->PlayerState);
@@ -1186,17 +1201,23 @@ void AArenaCharacter::CalculateDamage(FModifierBase Modifier, FAbilityInfo &Abil
 {
 	if (Modifier.HealthAmount <= 0.0f ) { return; }
 
+	AAbilityBase* Ability = Cast<AAbilityBase>(Modifier.AbilityOwner);
+	if (!Ability) { return; }
+
+	AArenaCharacter* CharacterOwner = Cast<AArenaCharacter>(Ability->CharacterOwner);
+	if (!CharacterOwner) { return; }
+
 	AbilityInfo.Amount = Health.GetModifierAmount(Modifier.HealthAmount, Modifier.bIsPercent);
 
 	// Calculate the power.
 	float PowerPercent = 0.0f;
 	if (Modifier.School == MS_Magic)
 	{
-		PowerPercent += Modifier.ModifierMagicPower + Modifier.AbilityOwner->CharacterOwner->MagicPower.Value;
+		PowerPercent += Modifier.ModifierMagicPower + CharacterOwner->MagicPower.Value;
 	}
 	else
 	{
-		PowerPercent += Modifier.ModifierPhysicalPower + Modifier.AbilityOwner->CharacterOwner->PhysicalPower.Value;
+		PowerPercent += Modifier.ModifierPhysicalPower + CharacterOwner->PhysicalPower.Value;
 	}
 
 	// Calculates the Power Amount.
@@ -1206,7 +1227,7 @@ void AArenaCharacter::CalculateDamage(FModifierBase Modifier, FAbilityInfo &Abil
 	AbilityInfo.Amount += PowerAmount * FMath::RandRange(0.0, 1.0f);
 
 	// Check if is critical.
-	float CriticalRate = Modifier.ModifierCritical + Modifier.AbilityOwner->CharacterOwner->Critical.Value;
+	float CriticalRate = Modifier.ModifierCritical + CharacterOwner->Critical.Value;
 	AbilityInfo.bCritical = UUtilities::IsCritical(CriticalRate);
 
 	if (AbilityInfo.bCritical) { AbilityInfo.Amount *= FMath::FRandRange(1.5, 2.0); }
@@ -1335,9 +1356,15 @@ void AArenaCharacter::UpdateOnBreak(FAbilityInfo AbilityInfo)
 
 FAbilityInfo AArenaCharacter::GetDefaultAbilityInfo(FModifierBase Modifier)
 {
+	AAbilityBase* Ability = Cast<AAbilityBase>(Modifier.AbilityOwner);
+	if (!Ability) { return FAbilityInfo(); }
+
+	AArenaCharacter* CharacterOwner = Cast<AArenaCharacter>(Ability->CharacterOwner);
+	if (!CharacterOwner) { return FAbilityInfo(); }
+
 	FAbilityInfo AbilityInfo;
-	AbilityInfo.Ability = Modifier.AbilityOwner;
-	AbilityInfo.Causer = Modifier.AbilityOwner->CharacterOwner;
+	AbilityInfo.Ability = Ability;
+	AbilityInfo.Causer = CharacterOwner;
 	AbilityInfo.Target = this;
 	AbilityInfo.bIsDispellable = Modifier.bIsDispellable;
 	AbilityInfo.ModifierIcon = Modifier.Icon;
@@ -1367,7 +1394,6 @@ FAbilityInfo AArenaCharacter::GetAbilityInfo(FBuffModifier Modifier)
 	AbilityInfo.bExpires = Modifier.bUntilUse;
 	AbilityInfo.TimeRemaining = Modifier.TimeRemaining;
 	AbilityInfo.Target = this;
-	AbilityInfo.Causer = Modifier.AbilityOwner->CharacterOwner;
 
 	return AbilityInfo;
 }

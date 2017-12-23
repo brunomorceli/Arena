@@ -3,6 +3,9 @@
 #include "AbilityBase.h"
 #include "GlobalLibrary.h"
 
+#include "Enums.h"
+#include "Structs.h"
+
 // Sets default values
 AAbilityBase::AAbilityBase()
 {
