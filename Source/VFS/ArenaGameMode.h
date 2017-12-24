@@ -23,9 +23,9 @@ class VFS_API AArenaGameMode : public AGameModeBase
 
 public:
 
-	TSubclassOf<APawn> KhollBPClass;
+	TSubclassOf<APawn> WarriorBPClass;
 	TSubclassOf<APawn> MadEyeBPClass;
-	TSubclassOf<APawn> OrbusBPClass;
+	TSubclassOf<APawn> WizardBPClass;
 	TSubclassOf<APawn> OsamuBPClass;
 
 	AArenaGameMode();

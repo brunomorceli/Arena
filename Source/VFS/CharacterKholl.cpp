@@ -238,7 +238,6 @@ void ACharacterKholl::SetAbility6()
 	Ability->bAllowSelf = true;
 	Ability->bAllowEnemy = false;
 	Ability->bAllowTeam = false;
-	Ability->CommitFX = UGlobalLibrary::GetAbilityUseFX(6);
 
 	FBuffModifier Buff;
 	Buff.AbilityOwner = Ability;
@@ -253,11 +252,13 @@ void ACharacterKholl::SetAbility6()
 	Buff.bIsHarmful = false;
 	Buff.TimeRemaining = 3.0f;
 	Buff.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
-		if (!Target) { return; }
+		AArenaCharacter* Causer = Cast<AArenaCharacter>(AbilityInfo.Causer);
+		if (!Causer) { return; }
 
-		Target->RemoveSnareBuffModifiers(Target);
-		Target->RemoveStuckBuffModifiers(Target);
+		Causer->RemoveSnareBuffModifiers(Causer);
+		Causer->RemoveStuckBuffModifiers(Causer);
+
+		Causer->MulticastPlayFX(UGlobalLibrary::GetAbilityUseFX(6));
 	};
 	Ability->BuffModifiers.Add(Buff);
 }

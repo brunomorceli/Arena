@@ -12,14 +12,14 @@ AArenaGameMode::AArenaGameMode()
 	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Blueprints/Characters/DefaultCharacterBP.DefaultCharacterBP_C"));
 	if (PlayerPawnBPClass.Class != NULL) { DefaultPawnClass = PlayerPawnBPClass.Class; }
 
-	ConstructorHelpers::FClassFinder<APawn> KhollClass(TEXT("/Game/Blueprints/Characters/KhollCharacterBP.KhollCharacterBP_C"));
-	if (KhollClass.Succeeded()) { KhollBPClass = KhollClass.Class; }
+	ConstructorHelpers::FClassFinder<APawn> WarriorClass(TEXT("/Game/Blueprints/Characters/WarriorCharacterBP.WarriorCharacterBP_C"));
+	if (WarriorClass.Succeeded()) { WarriorBPClass = WarriorClass.Class; }
 
 	ConstructorHelpers::FClassFinder<APawn> MadEyeClass(TEXT("/Game/Blueprints/Characters/MadEyeCharacterBP.MadEyeCharacterBP_C"));
 	if (MadEyeClass.Succeeded()) { MadEyeBPClass = MadEyeClass.Class; }
 
-	ConstructorHelpers::FClassFinder<APawn> OrbusClass(TEXT("/Game/Blueprints/Characters/OrbusCharacterBP.OrbusCharacterBP_C"));
-	if (OrbusClass.Succeeded()) { OrbusBPClass = OrbusClass.Class; }
+	ConstructorHelpers::FClassFinder<APawn> WizardClass(TEXT("/Game/Blueprints/Characters/WizardCharacterBP.WizardCharacterBP_C"));
+	if (WizardClass.Succeeded()) { WizardBPClass = WizardClass.Class; }
 
 	ConstructorHelpers::FClassFinder<APawn> OsamuClass(TEXT("/Game/Blueprints/Characters/OsamuCharacterBP.OsamuCharacterBP_C"));
 	if (OsamuClass.Succeeded()) { OsamuBPClass = OsamuClass.Class; }
@@ -51,11 +51,11 @@ TSubclassOf<APawn> AArenaGameMode::GetPawnClassByCharacterClass(TEnumAsByte<ECha
 	case ECCL_Assassin:
 		return MadEyeBPClass;
 	case ECCL_Wizard:
-		return OrbusBPClass;
+		return WizardBPClass;
 	case ECCL_Cleric:
 		return OsamuBPClass;
 	case ECCL_Warrior:
-		return KhollBPClass;
+		return WarriorBPClass;
 	default:
 		return NULL;
 	}

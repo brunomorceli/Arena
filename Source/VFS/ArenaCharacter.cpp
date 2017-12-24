@@ -917,6 +917,9 @@ void AArenaCharacter::ApplyAuraModifier(FAuraModifier Modifier)
 
 void AArenaCharacter::ApplyBuffModifier(FBuffModifier Modifier)
 {
+	bool OnApply = false;
+	bool OnRenew = false;
+
 	if (!HasAuthority() || !Modifier.AbilityOwner) { return; }
 	
 	FAbilityInfo AbilityInfo = GetAbilityInfo(Modifier);
@@ -927,33 +930,34 @@ void AArenaCharacter::ApplyBuffModifier(FBuffModifier Modifier)
 	{
 		AbilityInfo.bDenied = true;
 		AbilityInfo.TimeRemaining = 0.0f;
-		MulticastNotifyAbilityInfo(AbilityInfo);
 
+		MulticastNotifyAbilityInfo(AbilityInfo);
 		if (Modifier.OnDenied) { Modifier.OnDenied(AbilityInfo); }
+
 		return;
 	}
 
 	if (BuffModifiers.Contains(AbilityId))
 	{
 		BuffModifiers[AbilityId].TimeRemaining = Modifier.TimeRemaining;	
+		OnRenew = true;
 
-		if (BuffModifiers[AbilityId].OnRenewHandler) { BuffModifiers[AbilityId].OnRenewHandler(AbilityInfo); }
-		if (!BuffModifiers[AbilityId].AddStack())
-		{
-			AbilityInfo.Stacks = BuffModifiers[AbilityId].Stacks;
-			return MulticastNotifyAbilityInfo(AbilityInfo);
-		}
+		if (!BuffModifiers[AbilityId].AddStack()) { AbilityInfo.Stacks = BuffModifiers[AbilityId].Stacks; }
 	}
 	else
 	{
 		BuffModifiers.Add(AbilityId, Modifier);
 		BuffModifiers[AbilityId].AddStack();
-		if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(AbilityInfo); }
+		OnApply = true;
 	}
 
 	RefreshBuffModifiersStatus();
 	AbilityInfo.Stacks = BuffModifiers[AbilityId].Stacks;
+
 	MulticastNotifyAbilityInfo(AbilityInfo);
+
+	if (OnApply && Modifier.OnApplyHandler) { Modifier.OnApplyHandler(AbilityInfo); }
+	if (OnRenew && BuffModifiers[AbilityId].OnRenewHandler) { BuffModifiers[AbilityId].OnRenewHandler(AbilityInfo); }
 }
 
 void AArenaCharacter::ApplyAbsorbingModifier(FAbsorbingModifier Modifier)
@@ -973,12 +977,16 @@ void AArenaCharacter::ApplyAbsorbingModifier(FAbsorbingModifier Modifier)
 	}
 
 	AbsorbingModifiers.Add(Modifier);
+	MulticastNotifyAbilityInfo(AbilityInfo);
+
 	if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(AbilityInfo); }
 }
 
 void AArenaCharacter::ApplyDamageModifier(FDamageModifier Modifier)
 {
 	if (!Modifier.AbilityOwner) { return; }
+
+	bool OnDoDamage = false;
 
 	Modifier.AddStack();
 	FAbilityInfo AbilityInfo = GetAbilityInfo(Modifier);
@@ -999,14 +1007,16 @@ void AArenaCharacter::ApplyDamageModifier(FDamageModifier Modifier)
 	{
 		Health.Damage(AbilityInfo.Amount);
 		UpdateOnTakeDamage(AbilityInfo);
-		if (Modifier.OnDoDamageHandler) { Modifier.OnDoDamageHandler(AbilityInfo); }
+		OnDoDamage = true;
 	}
 
 	Mana.Damage(Modifier.Mana, Modifier.bIsPercent);
 	Energy.Damage(Modifier.Energy, Modifier.bIsPercent);
 
-	if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(AbilityInfo); }
 	MulticastNotifyAbilityInfo(AbilityInfo);
+
+	if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(AbilityInfo); }
+	if (OnDoDamage && Modifier.OnDoDamageHandler) { Modifier.OnDoDamageHandler(AbilityInfo); }
 
 	if (Health.Value > 0.0f) { return; }
 
@@ -1029,6 +1039,9 @@ void AArenaCharacter::ApplyOvertimeModifier(FOvertimeModifier Modifier)
 {
 	if (!HasAuthority() || !Modifier.AbilityOwner) { return; }
 
+	bool OnApply = false;
+	bool OnRenew = false;
+
 	FAbilityInfo AbilityInfo = GetAbilityInfo(Modifier);
 	int32 AbilityId = Modifier.AbilityOwner->GetUniqueID();
 
@@ -1049,7 +1062,7 @@ void AArenaCharacter::ApplyOvertimeModifier(FOvertimeModifier Modifier)
 		OvertimeModifiers[AbilityId].AddStack();
 		AbilityInfo.Stacks = OvertimeModifiers[AbilityId].Stacks;
 
-		if (OvertimeModifiers[AbilityId].OnRenewHandler) { OvertimeModifiers[AbilityId].OnRenewHandler(AbilityInfo); }
+		OnRenew = true;
 	}
 	else
 	{
@@ -1057,15 +1070,21 @@ void AArenaCharacter::ApplyOvertimeModifier(FOvertimeModifier Modifier)
 		OvertimeModifiers[AbilityId].AddStack();
 		AbilityInfo.Stacks = OvertimeModifiers[AbilityId].Stacks;
 
-		if (OvertimeModifiers[AbilityId].OnRenewHandler) { OvertimeModifiers[AbilityId].OnApplyHandler(AbilityInfo); }
+		OnApply = true;
+
 	}
 
 	MulticastNotifyAbilityInfo(AbilityInfo);
+
+	if (OnApply && OvertimeModifiers[AbilityId].OnApplyHandler) { OvertimeModifiers[AbilityId].OnApplyHandler(AbilityInfo); }
+	if (OnRenew && OvertimeModifiers[AbilityId].OnRenewHandler) { OvertimeModifiers[AbilityId].OnRenewHandler(AbilityInfo); }
 }
 
 void AArenaCharacter::ApplyHealModifier(FHealModifier Modifier)
 {
 	if (!Modifier.AbilityOwner) { return; }
+
+	bool OnDoHeal = false;
 
 	Modifier.AddStack();
 
@@ -1076,14 +1095,15 @@ void AArenaCharacter::ApplyHealModifier(FHealModifier Modifier)
 	{
 		Health.Heal(AbilityInfo.Amount);
 		UpdateOnTakeHeal(AbilityInfo);
-		if (Modifier.OnDoHealHandler) { Modifier.OnDoHealHandler(AbilityInfo); }
+		OnDoHeal = true;
 	}
 
 	Mana.Heal(Modifier.Mana, Modifier.bIsPercent);
 	Energy.Heal(Modifier.Energy, Modifier.bIsPercent);
 
-	if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(AbilityInfo); }
 	MulticastNotifyAbilityInfo(AbilityInfo);
+	if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(AbilityInfo); }
+	if (OnDoHeal && Modifier.OnDoHealHandler) { Modifier.OnDoHealHandler(AbilityInfo); }
 }
 
 void AArenaCharacter::CalculateHeal(FModifierBase Modifier, FAbilityInfo &AbilityInfo)
@@ -1641,7 +1661,7 @@ int32 AArenaCharacter::RemoveSnareBuffModifiers(ACharacterBase* Breaker = NULL)
 
 	TArray<int32> Keys;
 	BuffModifiers.GenerateKeyArray(Keys);
-	for (auto Key : Keys)
+	for (int32 Key : Keys)
 	{
 		if (BuffModifiers[Key].bIsHarmful == 0 || BuffModifiers[Key].Speed == 0.0f) { continue; }
 
@@ -1660,6 +1680,8 @@ int32 AArenaCharacter::RemoveSnareBuffModifiers(ACharacterBase* Breaker = NULL)
 		Total++;
 	}
 
+	if (Total > 0) { RefreshBuffModifiersStatus(); }
+
 	return Total;
 }
 
@@ -1669,9 +1691,10 @@ int32 AArenaCharacter::RemoveStuckBuffModifiers(ACharacterBase* Breaker = NULL)
 
 	TArray<int32> Keys;
 	BuffModifiers.GenerateKeyArray(Keys);
-	for (auto Key : Keys)
+
+	for (int32 Key : Keys)
 	{
-		if (BuffModifiers[Key].bIsHarmful == 0 || BuffModifiers[Key].State != CS_Stuck) { continue; }
+		if (BuffModifiers[Key].bIsHarmful == false || BuffModifiers[Key].State != CS_Stuck) { continue; }
 
 		FAbilityInfo AbilityInfo = GetAbilityInfo(BuffModifiers[Key]);
 		AbilityInfo.Breaker = Breaker;
@@ -1687,6 +1710,8 @@ int32 AArenaCharacter::RemoveStuckBuffModifiers(ACharacterBase* Breaker = NULL)
 
 		Total++;
 	}
+
+	if (Total > 0) { RefreshBuffModifiersStatus(); }
 
 	return Total;
 }
