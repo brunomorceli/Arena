@@ -12,6 +12,9 @@ AArenaCharacter::AArenaCharacter()
 	GlobalCountdownTime = 1.0f;
 	GlobalCountdownTimeRemaining = 0.0f;
 
+	OutOfSightMaxTime = 0.2f;
+	OutOfSightTime = 0.0f;
+
 	AuraModifiers = TArray<FAuraModifier>();
 	AbsorbingModifiers = TArray<FAbsorbingModifier>();
 }
@@ -31,7 +34,7 @@ void AArenaCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	ValidateCast();
+	ValidateCast(DeltaTime);
 	UpdateTimers(DeltaTime);
 
 	if (CastTimeRemaining == 0.0f && (AnimationState == CAS_Cast || AnimationState == CAS_Channel))
@@ -68,9 +71,19 @@ void AArenaCharacter::UpdateState()
 	}
 }
 
-void AArenaCharacter::ValidateCast()
+void AArenaCharacter::ValidateCast(float DeltaTime)
 {
-	if (IsCasting() && ValidateStartAbility(CastAbility->Slot) != ABV_Allowed) { StopCast(true); }
+	if (IsCasting() && ValidateStartAbility(CastAbility->Slot) == ABV_Allowed)
+	{
+		OutOfSightTime = 0.0f;
+		return;
+	}
+
+	if (ABV_OutOfSight)
+	{
+		OutOfSightTime += DeltaTime;
+		if (OutOfSightTime > OutOfSightMaxTime) { StopCast(true); }
+	}
 }
 
 void AArenaCharacter::UpdateTimers(float DeltaTime)

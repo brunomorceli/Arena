@@ -29,6 +29,9 @@ class AArenaCharacter : public ACharacterBase
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	float OutOfSightMaxTime;
+	float OutOfSightTime;
+
 	float GlobalCountdownTime;
 	float GlobalCountdownTimeRemaining;
 
@@ -70,7 +73,7 @@ public:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void UpdateState() override;
-	void ValidateCast();
+	void ValidateCast(float DeltaTime);
 
 	ACharacterBase* AbilityTarget;
 

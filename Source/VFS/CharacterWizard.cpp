@@ -24,6 +24,7 @@ void ACharacterWizard::SetAbility1()
 
 	Ability->Name = "Fireball";
 	Ability->Description = "150HP and 66% chance to add fire dot.";
+	Ability->SchoolType = ABS_Magic;
 	Ability->AbilityType = ABST_Castable;
 	Ability->CastTime = 1.5f;
 	Ability->AreaType = ABA_Target;
@@ -85,6 +86,7 @@ void ACharacterWizard::SetAbility2()
 
 	Ability->Name = "Frost Bolt";
 	Ability->Description = "300HP and Slow by 50% by 7 seconds.";
+	Ability->SchoolType = ABS_Magic;
 	Ability->AbilityType = ABST_Castable;
 	Ability->AreaType = ABA_Target;
 	Ability->CommitType = ABC_Projectile;
@@ -134,6 +136,7 @@ void ACharacterWizard::SetAbility3()
 
 	Ability->Name = "Live Furnace";
 	Ability->Description = "Burn the target doing 250HP Damage and slow the target by 70% for 2 seconds.";
+	Ability->SchoolType = ABS_Magic;
 	Ability->CountdownTime = 15.0f;
 	Ability->MaxDistance = 1500.0f;
 	Ability->MaxAngle = 360.0f;
@@ -177,6 +180,7 @@ void ACharacterWizard::SetAbility4()
 
 	Ability->Name = "Force Wall";
 	Ability->Description = "Add a force wall that only the invoker would overlap for 5 seconds.";
+	Ability->SchoolType = ABS_Magic;
 	Ability->CountdownTime = 60.0f;
 	Ability->AbilityType = ABST_Instant;
 	Ability->AreaType = ABA_Target;
@@ -198,6 +202,7 @@ void ACharacterWizard::SetAbility5()
 
 	Ability->Name = "Frost Nova";
 	Ability->Description = "Snare all enemy targets whithin X yards for 4s.";
+	Ability->SchoolType = ABS_Magic;
 	Ability->MaxDistance = 600.0f;
 	Ability->AbilityType = ABST_Instant;
 	Ability->AreaType = ABA_AreaOnEffect;
@@ -235,6 +240,7 @@ void ACharacterWizard::SetAbility6()
 
 	Ability->Name = "Magic Trigger";
 	Ability->Description = "Silence the target for 5 seconds after he use any ability.";
+	Ability->SchoolType = ABS_Magic;
 	Ability->AbilityType = ABST_Instant;
 	Ability->AreaType = ABA_Target;
 	Ability->MaxDistance = 1800.0f;
@@ -292,6 +298,7 @@ void ACharacterWizard::SetAbility7()
 
 	Ability->Name = "Magic Shell";
 	Ability->Description = "Gives invulnerability for 1 second to you or an allied target..";
+	Ability->SchoolType = ABS_Magic;
 	Ability->MaxDistance = 300.0f;
 	Ability->AbilityType = ABST_Instant;
 	Ability->AreaType = ABA_Target;
@@ -318,7 +325,7 @@ void ACharacterWizard::SetAbility7()
 		if (!Target) { return; }
 
 		AArenaCharacter* Causer = Cast<AArenaCharacter>(AbilityInfo.Causer);
-		if (Causer) { return; }
+		if (!Causer) { return; }
 
 		Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(8));
 		Target->RemoveSnareBuffModifiers(Causer);
@@ -337,6 +344,7 @@ void ACharacterWizard::SetAbility8()
 
 	Ability->Name = "Laser Beam";
 	Ability->Description = "100 Damage every 1 second.";
+	Ability->SchoolType = ABS_Magic;
 	Ability->AbilityType = ABST_Channeling;
 	Ability->AreaType = ABA_Target;
 	Ability->MaxDistance = 1800.0f;

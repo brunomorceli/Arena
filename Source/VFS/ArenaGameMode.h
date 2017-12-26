@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 
 #include "Enums.h"
+#include "ArenaPlayerController.h"
 #include "ArenaGameState.h"
 #include "ArenaPlayerState.h"
 #include "ArenaGameMode.generated.h"

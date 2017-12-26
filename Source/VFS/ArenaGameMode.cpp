@@ -24,6 +24,7 @@ AArenaGameMode::AArenaGameMode()
 	ConstructorHelpers::FClassFinder<APawn> OsamuClass(TEXT("/Game/Blueprints/Characters/OsamuCharacterBP.OsamuCharacterBP_C"));
 	if (OsamuClass.Succeeded()) { OsamuBPClass = OsamuClass.Class; }
 
+	PlayerControllerClass = AArenaPlayerController::StaticClass();
 	PlayerStateClass = AArenaPlayerState::StaticClass();
 	GameStateClass = AArenaGameState::StaticClass();
 }
