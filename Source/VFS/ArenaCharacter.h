@@ -11,6 +11,7 @@
 #include "ArenaGameInstance.h"
 #include "Utilities.h"
 #include "ArenaGameMode.h"
+#include "ArenaPlayerController.h"
 #include "ArenaCharacter.generated.h"
 
 class AArenaGameMode;
@@ -19,7 +20,7 @@ class AArenaGameMode;
 // CLASS
 // ==================================================================================================================================================
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNotifyAbilityInfoDelegate, FAbilityInfo, AbilityInfo);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNotifyModifierInfoDelegate, FModifierInfo, ModifierInfo);
 
 UCLASS(config=Game)
 class AArenaCharacter : public ACharacterBase
@@ -65,7 +66,7 @@ protected:
 public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintAssignable, Category = "Notification")
-	FNotifyAbilityInfoDelegate AbilityInfoDelegate;
+	FNotifyModifierInfoDelegate ModifierInfoDelegate;
 
 	TMap<int32, AAbilityBase*> Abilities;
 
@@ -156,25 +157,25 @@ public:
 
 	void TickOvertimeModifier(FOvertimeModifier Modifier);
 
-	void CalculateDamage(FModifierBase Modifier, FAbilityInfo &AbilityInfo);
+	void CalculateDamage(FModifierBase Modifier, FModifierInfo &ModifierInfo);
 
-	void CalculateDamageByBuffModifiers(FModifierBase Modifier, FAbilityInfo &AbilityInfo);
+	void CalculateDamageByBuffModifiers(FModifierBase Modifier, FModifierInfo &ModifierInfo);
 	
-	void CalculateDamageByAbsorbingModifiers(FModifierBase Modifier, FAbilityInfo &AbilityInfo);
+	void CalculateDamageByAbsorbingModifiers(FModifierBase Modifier, FModifierInfo &ModifierInfo);
 
-	void CalculateHeal(FModifierBase Modifier, FAbilityInfo &AbilityInfo);
+	void CalculateHeal(FModifierBase Modifier, FModifierInfo &ModifierInfo);
 
-	void UpdateOnTakeDamage(FAbilityInfo AbilityInfo);
-	void UpdateOnTakeHeal(FAbilityInfo AbilityInfo);
-	void UpdateOnBreak(FAbilityInfo AbilityInfo);
+	void UpdateOnTakeDamage(FModifierInfo ModifierInfo);
+	void UpdateOnTakeHeal(FModifierInfo ModifierInfo);
+	void UpdateOnBreak(FModifierInfo ModifierInfo);
 
-	FAbilityInfo GetDefaultAbilityInfo(FModifierBase Modifier);
-	FAbilityInfo GetAbilityInfo(FAuraModifier Modifier);
-	FAbilityInfo GetAbilityInfo(FBuffModifier Modifier);
-	FAbilityInfo GetAbilityInfo(FAbsorbingModifier Modifier);
-	FAbilityInfo GetAbilityInfo(FDamageModifier Modifier);
-	FAbilityInfo GetAbilityInfo(FOvertimeModifier Modifier);
-	FAbilityInfo GetAbilityInfo(FHealModifier Modifier);
+	FModifierInfo GetDefaultModifierInfo(FModifierBase Modifier);
+	FModifierInfo GetModifierInfo(FAuraModifier Modifier);
+	FModifierInfo GetModifierInfo(FBuffModifier Modifier);
+	FModifierInfo GetModifierInfo(FAbsorbingModifier Modifier);
+	FModifierInfo GetModifierInfo(FDamageModifier Modifier);
+	FModifierInfo GetModifierInfo(FOvertimeModifier Modifier);
+	FModifierInfo GetModifierInfo(FHealModifier Modifier);
 
 	virtual void SetupAbilities();
 	virtual void SetAbility1();
@@ -241,8 +242,8 @@ public:
 	bool ServerSetPlayerProfile_Validate(FPlayerProfile PlayerProfile) { return true; }
 
 	UFUNCTION(NetMulticast, Unreliable, Category = "Network")
-	void MulticastNotifyAbilityInfo(FAbilityInfo AbilityInfo);
-	void MulticastNotifyAbilityInfo_Implementation(FAbilityInfo AbilityInfo);
+	void MulticastNotifyModifierInfo(FModifierInfo ModifierInfo);
+	void MulticastNotifyModifierInfo_Implementation(FModifierInfo ModifierInfo);
 
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 	void ClientClickAbility(int32 Slot);

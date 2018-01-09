@@ -123,11 +123,11 @@ void AArenaCharacter::UpdateBuffModifiers(float DeltaTime)
 		BuffModifiers[Key].TimeRemaining -= DeltaTime;
 		if (BuffModifiers[Key].TimeRemaining <= 0.0f)
 		{
-			FAbilityInfo AbilityInfo = GetAbilityInfo(BuffModifiers[Key]);
-			AbilityInfo.Event = EABE_Expire;
+			FModifierInfo ModifierInfo = GetModifierInfo(BuffModifiers[Key]);
+			ModifierInfo.Event = EABE_Expire;
 
-			if (BuffModifiers[Key].OnExpireHandler) { BuffModifiers[Key].OnExpireHandler(AbilityInfo); }
-			if (BuffModifiers[Key].OnRemoveHandler) { BuffModifiers[Key].OnRemoveHandler(AbilityInfo); }
+			if (BuffModifiers[Key].OnExpireHandler) { BuffModifiers[Key].OnExpireHandler(ModifierInfo); }
+			if (BuffModifiers[Key].OnRemoveHandler) { BuffModifiers[Key].OnRemoveHandler(ModifierInfo); }
 
 			BuffModifiers.Remove(Key);
 			bMustBeUpdated = true;
@@ -241,25 +241,25 @@ void AArenaCharacter::UpdateOvertimeModifiers(float DeltaTime)
 		OvertimeModifiers[Key].ElapsedTime += DeltaTime;
 		OvertimeModifiers[Key].TimeRemaining -= DeltaTime;
 
-		FAbilityInfo AbilityInfo = GetAbilityInfo(OvertimeModifiers[Key]);
-		AbilityInfo.Event = EABE_Expire;
+		FModifierInfo ModifierInfo = GetModifierInfo(OvertimeModifiers[Key]);
+		ModifierInfo.Event = EABE_Expire;
 
 		if (OvertimeModifiers[Key].ElapsedTime >= OvertimeModifiers[Key].TickTime)
 		{
 			TickOvertimeModifier(OvertimeModifiers[Key]);
 			OvertimeModifiers[Key].ElapsedTime = FMath::Fmod(OvertimeModifiers[Key].ElapsedTime, OvertimeModifiers[Key].TickTime);
 
-			if (OvertimeModifiers[Key].OnTickHandler) { OvertimeModifiers[Key].OnTickHandler(AbilityInfo); }
+			if (OvertimeModifiers[Key].OnTickHandler) { OvertimeModifiers[Key].OnTickHandler(ModifierInfo); }
 		}
 
 		if (OvertimeModifiers[Key].TimeRemaining <= 0.0f)
 		{
-			if (OvertimeModifiers[Key].OnExpireHandler) { OvertimeModifiers[Key].OnExpireHandler(AbilityInfo); }
-			if (OvertimeModifiers[Key].OnRemoveHandler) { OvertimeModifiers[Key].OnRemoveHandler(AbilityInfo); }
+			if (OvertimeModifiers[Key].OnExpireHandler) { OvertimeModifiers[Key].OnExpireHandler(ModifierInfo); }
+			if (OvertimeModifiers[Key].OnRemoveHandler) { OvertimeModifiers[Key].OnRemoveHandler(ModifierInfo); }
 
 			OvertimeModifiers.Remove(Key);
 
-			MulticastNotifyAbilityInfo(AbilityInfo);
+			MulticastNotifyModifierInfo(ModifierInfo);
 		}
 	}
 }
@@ -458,10 +458,10 @@ void AArenaCharacter::CommitAbility(int32 Slot)
 	for (auto Key : Keys)
 	{
 		if (!BuffModifiers[Key].OnUseAbility) { continue; }
-		FAbilityInfo AbilityInfo = GetAbilityInfo(BuffModifiers[Key]);
+		FModifierInfo ModifierInfo = GetModifierInfo(BuffModifiers[Key]);
 		int32 AbilityId = BuffModifiers[Key].AbilityOwner->GetUniqueID();
 
-		BuffModifiers[Key].OnUseAbility(AbilityInfo);
+		BuffModifiers[Key].OnUseAbility(ModifierInfo);
 	}
 
 	CommitAbilityModifiers(Ability, false);
@@ -925,7 +925,7 @@ void AArenaCharacter::ApplyDelayedModifiers(AAbilityBase* Ability)
 
 void AArenaCharacter::ApplyAuraModifier(FAuraModifier Modifier)
 {
-	//if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(GetAbilityInfo(Modifier)); }
+	//if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(GetModifierInfo(Modifier)); }
 }
 
 void AArenaCharacter::ApplyBuffModifier(FBuffModifier Modifier)
@@ -935,17 +935,17 @@ void AArenaCharacter::ApplyBuffModifier(FBuffModifier Modifier)
 
 	if (!HasAuthority() || !Modifier.AbilityOwner) { return; }
 	
-	FAbilityInfo AbilityInfo = GetAbilityInfo(Modifier);
+	FModifierInfo ModifierInfo = GetModifierInfo(Modifier);
 	int32 AbilityId = Modifier.AbilityOwner->GetUniqueID();
 
 	// Target is Invunerable
 	if (State == CS_Invunerable && Modifier.bIsHarmful == 1)
 	{
-		AbilityInfo.bDenied = true;
-		AbilityInfo.TimeRemaining = 0.0f;
+		ModifierInfo.bDenied = true;
+		ModifierInfo.TimeRemaining = 0.0f;
 
-		MulticastNotifyAbilityInfo(AbilityInfo);
-		if (Modifier.OnDenied) { Modifier.OnDenied(AbilityInfo); }
+		MulticastNotifyModifierInfo(ModifierInfo);
+		if (Modifier.OnDenied) { Modifier.OnDenied(ModifierInfo); }
 
 		return;
 	}
@@ -955,7 +955,7 @@ void AArenaCharacter::ApplyBuffModifier(FBuffModifier Modifier)
 		BuffModifiers[AbilityId].TimeRemaining = Modifier.TimeRemaining;	
 		OnRenew = true;
 
-		if (!BuffModifiers[AbilityId].AddStack()) { AbilityInfo.Stacks = BuffModifiers[AbilityId].Stacks; }
+		if (!BuffModifiers[AbilityId].AddStack()) { ModifierInfo.Stacks = BuffModifiers[AbilityId].Stacks; }
 	}
 	else
 	{
@@ -965,34 +965,34 @@ void AArenaCharacter::ApplyBuffModifier(FBuffModifier Modifier)
 	}
 
 	RefreshBuffModifiersStatus();
-	AbilityInfo.Stacks = BuffModifiers[AbilityId].Stacks;
+	ModifierInfo.Stacks = BuffModifiers[AbilityId].Stacks;
 
-	MulticastNotifyAbilityInfo(AbilityInfo);
+	MulticastNotifyModifierInfo(ModifierInfo);
 
-	if (OnApply && Modifier.OnApplyHandler) { Modifier.OnApplyHandler(AbilityInfo); }
-	if (OnRenew && BuffModifiers[AbilityId].OnRenewHandler) { BuffModifiers[AbilityId].OnRenewHandler(AbilityInfo); }
+	if (OnApply && Modifier.OnApplyHandler) { Modifier.OnApplyHandler(ModifierInfo); }
+	if (OnRenew && BuffModifiers[AbilityId].OnRenewHandler) { BuffModifiers[AbilityId].OnRenewHandler(ModifierInfo); }
 }
 
 void AArenaCharacter::ApplyAbsorbingModifier(FAbsorbingModifier Modifier)
 {
 	Modifier.AddStack();
-	FAbilityInfo AbilityInfo = GetAbilityInfo(Modifier);
+	FModifierInfo ModifierInfo = GetModifierInfo(Modifier);
 
 	// Target is Invunerable
 	if (State == CS_Invunerable && Modifier.bIsHarmful == 1)
 	{
-		AbilityInfo.bDenied = true;
-		AbilityInfo.TimeRemaining = 0.0f;
-		MulticastNotifyAbilityInfo(AbilityInfo);
+		ModifierInfo.bDenied = true;
+		ModifierInfo.TimeRemaining = 0.0f;
+		MulticastNotifyModifierInfo(ModifierInfo);
 
-		if (Modifier.OnDenied) { Modifier.OnDenied(AbilityInfo); }
+		if (Modifier.OnDenied) { Modifier.OnDenied(ModifierInfo); }
 		return;
 	}
 
 	AbsorbingModifiers.Add(Modifier);
-	MulticastNotifyAbilityInfo(AbilityInfo);
+	MulticastNotifyModifierInfo(ModifierInfo);
 
-	if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(AbilityInfo); }
+	if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(ModifierInfo); }
 }
 
 void AArenaCharacter::ApplyDamageModifier(FDamageModifier Modifier)
@@ -1002,34 +1002,34 @@ void AArenaCharacter::ApplyDamageModifier(FDamageModifier Modifier)
 	bool OnDoDamage = false;
 
 	Modifier.AddStack();
-	FAbilityInfo AbilityInfo = GetAbilityInfo(Modifier);
+	FModifierInfo ModifierInfo = GetModifierInfo(Modifier);
 
 	// Target is Invunerable
 	if (State == CS_Invunerable && Modifier.bIsHarmful == 1)
 	{
-		AbilityInfo.bDenied = true;
-		AbilityInfo.TimeRemaining = 0.0f;
-		MulticastNotifyAbilityInfo(AbilityInfo);
+		ModifierInfo.bDenied = true;
+		ModifierInfo.TimeRemaining = 0.0f;
+		MulticastNotifyModifierInfo(ModifierInfo);
 
-		if (Modifier.OnDenied) { Modifier.OnDenied(AbilityInfo); }
+		if (Modifier.OnDenied) { Modifier.OnDenied(ModifierInfo); }
 		return;
 	}
 
-	CalculateDamage(Modifier, AbilityInfo);
-	if (AbilityInfo.Amount >= 0.0f)
+	CalculateDamage(Modifier, ModifierInfo);
+	if (ModifierInfo.Amount >= 0.0f)
 	{
-		Health.Damage(AbilityInfo.Amount);
-		UpdateOnTakeDamage(AbilityInfo);
+		Health.Damage(ModifierInfo.Amount);
+		UpdateOnTakeDamage(ModifierInfo);
 		OnDoDamage = true;
 	}
 
 	Mana.Damage(Modifier.Mana, Modifier.bIsPercent);
 	Energy.Damage(Modifier.Energy, Modifier.bIsPercent);
 
-	MulticastNotifyAbilityInfo(AbilityInfo);
+	MulticastNotifyModifierInfo(ModifierInfo);
 
-	if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(AbilityInfo); }
-	if (OnDoDamage && Modifier.OnDoDamageHandler) { Modifier.OnDoDamageHandler(AbilityInfo); }
+	if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(ModifierInfo); }
+	if (OnDoDamage && Modifier.OnDoDamageHandler) { Modifier.OnDoDamageHandler(ModifierInfo); }
 
 	if (Health.Value > 0.0f) { return; }
 
@@ -1055,17 +1055,17 @@ void AArenaCharacter::ApplyOvertimeModifier(FOvertimeModifier Modifier)
 	bool OnApply = false;
 	bool OnRenew = false;
 
-	FAbilityInfo AbilityInfo = GetAbilityInfo(Modifier);
+	FModifierInfo ModifierInfo = GetModifierInfo(Modifier);
 	int32 AbilityId = Modifier.AbilityOwner->GetUniqueID();
 
 	// Target is Invunerable
 	if (State == CS_Invunerable && Modifier.bIsHarmful == 1)
 	{
-		AbilityInfo.bDenied = true;
-		AbilityInfo.TimeRemaining = 0.0f;
-		MulticastNotifyAbilityInfo(AbilityInfo);
+		ModifierInfo.bDenied = true;
+		ModifierInfo.TimeRemaining = 0.0f;
+		MulticastNotifyModifierInfo(ModifierInfo);
 
-		if (Modifier.OnDenied) { Modifier.OnDenied(AbilityInfo); }
+		if (Modifier.OnDenied) { Modifier.OnDenied(ModifierInfo); }
 		return;
 	}
 
@@ -1073,7 +1073,7 @@ void AArenaCharacter::ApplyOvertimeModifier(FOvertimeModifier Modifier)
 	{
 		OvertimeModifiers[AbilityId].TimeRemaining = Modifier.TimeRemaining;
 		OvertimeModifiers[AbilityId].AddStack();
-		AbilityInfo.Stacks = OvertimeModifiers[AbilityId].Stacks;
+		ModifierInfo.Stacks = OvertimeModifiers[AbilityId].Stacks;
 
 		OnRenew = true;
 	}
@@ -1081,16 +1081,16 @@ void AArenaCharacter::ApplyOvertimeModifier(FOvertimeModifier Modifier)
 	{
 		OvertimeModifiers.Add(AbilityId, Modifier);
 		OvertimeModifiers[AbilityId].AddStack();
-		AbilityInfo.Stacks = OvertimeModifiers[AbilityId].Stacks;
+		ModifierInfo.Stacks = OvertimeModifiers[AbilityId].Stacks;
 
 		OnApply = true;
 
 	}
 
-	MulticastNotifyAbilityInfo(AbilityInfo);
+	MulticastNotifyModifierInfo(ModifierInfo);
 
-	if (OnApply && OvertimeModifiers[AbilityId].OnApplyHandler) { OvertimeModifiers[AbilityId].OnApplyHandler(AbilityInfo); }
-	if (OnRenew && OvertimeModifiers[AbilityId].OnRenewHandler) { OvertimeModifiers[AbilityId].OnRenewHandler(AbilityInfo); }
+	if (OnApply && OvertimeModifiers[AbilityId].OnApplyHandler) { OvertimeModifiers[AbilityId].OnApplyHandler(ModifierInfo); }
+	if (OnRenew && OvertimeModifiers[AbilityId].OnRenewHandler) { OvertimeModifiers[AbilityId].OnRenewHandler(ModifierInfo); }
 }
 
 void AArenaCharacter::ApplyHealModifier(FHealModifier Modifier)
@@ -1101,25 +1101,25 @@ void AArenaCharacter::ApplyHealModifier(FHealModifier Modifier)
 
 	Modifier.AddStack();
 
-	FAbilityInfo AbilityInfo = GetAbilityInfo(Modifier);
+	FModifierInfo ModifierInfo = GetModifierInfo(Modifier);
 
-	CalculateHeal(Modifier, AbilityInfo);
-	if (AbilityInfo.Amount >= 0.0f)
+	CalculateHeal(Modifier, ModifierInfo);
+	if (ModifierInfo.Amount >= 0.0f)
 	{
-		Health.Heal(AbilityInfo.Amount);
-		UpdateOnTakeHeal(AbilityInfo);
+		Health.Heal(ModifierInfo.Amount);
+		UpdateOnTakeHeal(ModifierInfo);
 		OnDoHeal = true;
 	}
 
 	Mana.Heal(Modifier.Mana, Modifier.bIsPercent);
 	Energy.Heal(Modifier.Energy, Modifier.bIsPercent);
 
-	MulticastNotifyAbilityInfo(AbilityInfo);
-	if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(AbilityInfo); }
-	if (OnDoHeal && Modifier.OnDoHealHandler) { Modifier.OnDoHealHandler(AbilityInfo); }
+	MulticastNotifyModifierInfo(ModifierInfo);
+	if (Modifier.OnApplyHandler) { Modifier.OnApplyHandler(ModifierInfo); }
+	if (OnDoHeal && Modifier.OnDoHealHandler) { Modifier.OnDoHealHandler(ModifierInfo); }
 }
 
-void AArenaCharacter::CalculateHeal(FModifierBase Modifier, FAbilityInfo &AbilityInfo)
+void AArenaCharacter::CalculateHeal(FModifierBase Modifier, FModifierInfo &ModifierInfo)
 {
 	if (Modifier.HealthAmount <= 0.0f) { return; }
 
@@ -1129,7 +1129,7 @@ void AArenaCharacter::CalculateHeal(FModifierBase Modifier, FAbilityInfo &Abilit
 	AArenaCharacter* CharacterOwner = Cast<AArenaCharacter>(Ability->CharacterOwner);
 	if (!CharacterOwner) { return; }
 
-	AbilityInfo.Amount = Health.GetModifierAmount(Modifier.HealthAmount, Modifier.bIsPercent);
+	ModifierInfo.Amount = Health.GetModifierAmount(Modifier.HealthAmount, Modifier.bIsPercent);
 
 	// Calculate the power.
 	float PowerPercent = 0.0f;
@@ -1143,16 +1143,16 @@ void AArenaCharacter::CalculateHeal(FModifierBase Modifier, FAbilityInfo &Abilit
 	}
 
 	// Calculates the Power Amount.
-	float PowerAmount = UUtilities::GetAmountPercentage(AbilityInfo.Amount, PowerPercent);
+	float PowerAmount = UUtilities::GetAmountPercentage(ModifierInfo.Amount, PowerPercent);
 
 	// Add a randomized Amount from Power Amount.
-	AbilityInfo.Amount += PowerAmount * FMath::RandRange(0.0, 1.0f);
+	ModifierInfo.Amount += PowerAmount * FMath::RandRange(0.0, 1.0f);
 
 	// Check if is critical.
 	float CriticalRate = Modifier.ModifierCritical + CharacterOwner->Critical.Value;
-	AbilityInfo.bCritical = UUtilities::IsCritical(CriticalRate);
+	ModifierInfo.bCritical = UUtilities::IsCritical(CriticalRate);
 
-	if (AbilityInfo.bCritical) { AbilityInfo.Amount *= FMath::FRandRange(1.5, 2.0); }
+	if (ModifierInfo.bCritical) { ModifierInfo.Amount *= FMath::FRandRange(1.5, 2.0); }
 }
 
 void AArenaCharacter::ApplyCosts(AAbilityBase* Ability)
@@ -1183,17 +1183,17 @@ void AArenaCharacter::TickOvertimeModifier(FOvertimeModifier Modifier)
 	AArenaCharacter* CharacterOwner = Cast<AArenaCharacter>(Ability->CharacterOwner);
 	if (!CharacterOwner) { return; }
 
-	FAbilityInfo AbilityInfo = GetAbilityInfo(Modifier);
-	AbilityInfo.Amount = Modifier.HealthAmount;
+	FModifierInfo ModifierInfo = GetModifierInfo(Modifier);
+	ModifierInfo.Amount = Modifier.HealthAmount;
 
 	if (Modifier.bIsHarmful)
 	{
-		CalculateDamage(Modifier, AbilityInfo);
-		if (AbilityInfo.Amount >= 0.0f)
+		CalculateDamage(Modifier, ModifierInfo);
+		if (ModifierInfo.Amount >= 0.0f)
 		{
-			Health.Damage(AbilityInfo.Amount);
-			UpdateOnTakeDamage(AbilityInfo);
-			if (Modifier.OnDoDamageHandler) { Modifier.OnDoDamageHandler(AbilityInfo); }
+			Health.Damage(ModifierInfo.Amount);
+			UpdateOnTakeDamage(ModifierInfo);
+			if (Modifier.OnDoDamageHandler) { Modifier.OnDoDamageHandler(ModifierInfo); }
 		}
 
 		Mana.Damage(Modifier.ManaAmount, Modifier.bIsPercent);
@@ -1201,20 +1201,20 @@ void AArenaCharacter::TickOvertimeModifier(FOvertimeModifier Modifier)
 	}
 	else
 	{
-		CalculateHeal(Modifier, AbilityInfo);
-		if (AbilityInfo.Amount >= 0.0f)
+		CalculateHeal(Modifier, ModifierInfo);
+		if (ModifierInfo.Amount >= 0.0f)
 		{
-			Health.Heal(AbilityInfo.Amount);
-			UpdateOnTakeHeal(AbilityInfo);
-			if (Modifier.OnDoHealHandler) { Modifier.OnDoHealHandler(AbilityInfo); }
+			Health.Heal(ModifierInfo.Amount);
+			UpdateOnTakeHeal(ModifierInfo);
+			if (Modifier.OnDoHealHandler) { Modifier.OnDoHealHandler(ModifierInfo); }
 		}
 
 		Mana.Heal(Modifier.ManaAmount, Modifier.bIsPercent);
 		Energy.Heal(Modifier.ManaAmount, Modifier.bIsPercent);
 	}
 
-	if (Modifier.OnTickHandler) { Modifier.OnTickHandler(AbilityInfo); }
-	MulticastNotifyAbilityInfo(AbilityInfo);
+	if (Modifier.OnTickHandler) { Modifier.OnTickHandler(ModifierInfo); }
+	MulticastNotifyModifierInfo(ModifierInfo);
 
 	if (!Modifier.bIsHarmful ||Health.Value > 0.0f) { return; }
 
@@ -1230,7 +1230,7 @@ void AArenaCharacter::TickOvertimeModifier(FOvertimeModifier Modifier)
 	MyPlayerState->ServerAddDeath();
 }
 
-void AArenaCharacter::CalculateDamage(FModifierBase Modifier, FAbilityInfo &AbilityInfo)
+void AArenaCharacter::CalculateDamage(FModifierBase Modifier, FModifierInfo &ModifierInfo)
 {
 	if (Modifier.HealthAmount <= 0.0f ) { return; }
 
@@ -1240,7 +1240,7 @@ void AArenaCharacter::CalculateDamage(FModifierBase Modifier, FAbilityInfo &Abil
 	AArenaCharacter* CharacterOwner = Cast<AArenaCharacter>(Ability->CharacterOwner);
 	if (!CharacterOwner) { return; }
 
-	AbilityInfo.Amount = Health.GetModifierAmount(Modifier.HealthAmount, Modifier.bIsPercent);
+	ModifierInfo.Amount = Health.GetModifierAmount(Modifier.HealthAmount, Modifier.bIsPercent);
 
 	// Calculate the power.
 	float PowerPercent = 0.0f;
@@ -1254,40 +1254,40 @@ void AArenaCharacter::CalculateDamage(FModifierBase Modifier, FAbilityInfo &Abil
 	}
 
 	// Calculates the Power Amount.
-	float PowerAmount = UUtilities::GetAmountPercentage(AbilityInfo.Amount, PowerPercent);
+	float PowerAmount = UUtilities::GetAmountPercentage(ModifierInfo.Amount, PowerPercent);
 	
 	// Add a randomized Amount from Power Amount.
-	AbilityInfo.Amount += PowerAmount * FMath::RandRange(0.0, 1.0f);
+	ModifierInfo.Amount += PowerAmount * FMath::RandRange(0.0, 1.0f);
 
 	// Check if is critical.
 	float CriticalRate = Modifier.ModifierCritical + CharacterOwner->Critical.Value;
-	AbilityInfo.bCritical = UUtilities::IsCritical(CriticalRate);
+	ModifierInfo.bCritical = UUtilities::IsCritical(CriticalRate);
 
-	if (AbilityInfo.bCritical) { AbilityInfo.Amount *= FMath::FRandRange(1.5, 2.0); }
+	if (ModifierInfo.bCritical) { ModifierInfo.Amount *= FMath::FRandRange(1.5, 2.0); }
 
-	CalculateDamageByBuffModifiers(Modifier, AbilityInfo);
-	CalculateDamageByAbsorbingModifiers(Modifier, AbilityInfo);
+	CalculateDamageByBuffModifiers(Modifier, ModifierInfo);
+	CalculateDamageByAbsorbingModifiers(Modifier, ModifierInfo);
 }
 
-void AArenaCharacter::CalculateDamageByBuffModifiers(FModifierBase Modifier, FAbilityInfo &AbilityInfo)
+void AArenaCharacter::CalculateDamageByBuffModifiers(FModifierBase Modifier, FModifierInfo &ModifierInfo)
 {
-	if (State == CS_Invunerable || AbilityInfo.Amount <= 0.0f) { return; }
+	if (State == CS_Invunerable || ModifierInfo.Amount <= 0.0f) { return; }
 
 	if (Modifier.School == MS_Magic)
 	{
-		AbilityInfo.Amount -= UUtilities::GetAmountPercentage(AbilityInfo.Amount, MagicDefense.Value);
+		ModifierInfo.Amount -= UUtilities::GetAmountPercentage(ModifierInfo.Amount, MagicDefense.Value);
 	}
 	else
 	{
-		AbilityInfo.Amount -= UUtilities::GetAmountPercentage(AbilityInfo.Amount, PhysicalDefense.Value);
+		ModifierInfo.Amount -= UUtilities::GetAmountPercentage(ModifierInfo.Amount, PhysicalDefense.Value);
 	}
 
-	AbilityInfo.Amount = FMath::Max(AbilityInfo.Amount, 0.0f);
+	ModifierInfo.Amount = FMath::Max(ModifierInfo.Amount, 0.0f);
 }
 
-void AArenaCharacter::CalculateDamageByAbsorbingModifiers(FModifierBase Modifier, FAbilityInfo &AbilityInfo)
+void AArenaCharacter::CalculateDamageByAbsorbingModifiers(FModifierBase Modifier, FModifierInfo &ModifierInfo)
 {
-	if (State == CS_Invunerable || AbilityInfo.Amount <= 0.0f) { return; }
+	if (State == CS_Invunerable || ModifierInfo.Amount <= 0.0f) { return; }
 
 	for (int32 Index = 0; Index < AbsorbingModifiers.Num();)
 	{
@@ -1297,179 +1297,179 @@ void AArenaCharacter::CalculateDamageByAbsorbingModifiers(FModifierBase Modifier
 			continue;
 		}
 
-		if (AbsorbingModifiers[Index].Health > AbilityInfo.Amount)
+		if (AbsorbingModifiers[Index].Health > ModifierInfo.Amount)
 		{
-			AbilityInfo.Absorbed += AbilityInfo.Amount;
-			AbsorbingModifiers[Index].Health -= AbilityInfo.Amount;
-			AbilityInfo.Amount = 0.0f;
+			ModifierInfo.Absorbed += ModifierInfo.Amount;
+			AbsorbingModifiers[Index].Health -= ModifierInfo.Amount;
+			ModifierInfo.Amount = 0.0f;
 			return;
 		}
 
-		AbilityInfo.Amount -= AbsorbingModifiers[Index].Health;
-		AbilityInfo.Absorbed -= AbsorbingModifiers[Index].Health;
+		ModifierInfo.Amount -= AbsorbingModifiers[Index].Health;
+		ModifierInfo.Absorbed -= AbsorbingModifiers[Index].Health;
 
 		if (AbsorbingModifiers[Index].OnRemoveHandler)
 		{
-			AbsorbingModifiers[Index].OnRemoveHandler(AbilityInfo);
+			AbsorbingModifiers[Index].OnRemoveHandler(ModifierInfo);
 		}
 
 		AbsorbingModifiers.RemoveAt(Index);
 		
-		if (AbilityInfo.Amount <= 0) { return; }
+		if (ModifierInfo.Amount <= 0) { return; }
 
 		Index++;
 	}
 }
 
-void AArenaCharacter::UpdateOnTakeDamage(FAbilityInfo AbilityInfo)
+void AArenaCharacter::UpdateOnTakeDamage(FModifierInfo ModifierInfo)
 {
 	for (auto Aura : AuraModifiers)
 	{
-		if (Aura.OnTakeDamageHandler) { Aura.OnTakeDamageHandler(AbilityInfo); }
+		if (Aura.OnTakeDamageHandler) { Aura.OnTakeDamageHandler(ModifierInfo); }
 	}
 
 	TArray<int32> BuffKeys;
 	BuffModifiers.GenerateKeyArray(BuffKeys);
 	for (auto Key : BuffKeys)
 	{
-		if (BuffModifiers[Key].OnTakeDamageHandler) { BuffModifiers[Key].OnTakeDamageHandler(AbilityInfo); }
+		if (BuffModifiers[Key].OnTakeDamageHandler) { BuffModifiers[Key].OnTakeDamageHandler(ModifierInfo); }
 	}
 
 	TArray<int32> OvertimeKeys;
 	OvertimeModifiers.GenerateKeyArray(OvertimeKeys);
 	for (auto Key : OvertimeKeys)
 	{
-		if (OvertimeModifiers[Key].OnTakeDamageHandler) { OvertimeModifiers[Key].OnTakeDamageHandler(AbilityInfo); }
+		if (OvertimeModifiers[Key].OnTakeDamageHandler) { OvertimeModifiers[Key].OnTakeDamageHandler(ModifierInfo); }
 	}
 }
 
-void AArenaCharacter::UpdateOnTakeHeal(FAbilityInfo AbilityInfo)
+void AArenaCharacter::UpdateOnTakeHeal(FModifierInfo ModifierInfo)
 {
 	for (auto Aura : AuraModifiers)
 	{
-		if (Aura.OnTakeHealHandler) { Aura.OnTakeHealHandler(AbilityInfo); }
+		if (Aura.OnTakeHealHandler) { Aura.OnTakeHealHandler(ModifierInfo); }
 	}
 
 	TArray<int32> BuffKeys;
 	BuffModifiers.GenerateKeyArray(BuffKeys);
 	for (auto Key : BuffKeys)
 	{
-		if (BuffModifiers[Key].OnTakeHealHandler) { BuffModifiers[Key].OnTakeHealHandler(AbilityInfo); }
+		if (BuffModifiers[Key].OnTakeHealHandler) { BuffModifiers[Key].OnTakeHealHandler(ModifierInfo); }
 	}
 
 	TArray<int32> OvertimeKeys;
 	OvertimeModifiers.GenerateKeyArray(OvertimeKeys);
 	for (auto Key : OvertimeKeys)
 	{
-		if (OvertimeModifiers[Key].OnTakeHealHandler) { OvertimeModifiers[Key].OnTakeHealHandler(AbilityInfo); }
+		if (OvertimeModifiers[Key].OnTakeHealHandler) { OvertimeModifiers[Key].OnTakeHealHandler(ModifierInfo); }
 	}
 }
 
-void AArenaCharacter::UpdateOnBreak(FAbilityInfo AbilityInfo)
+void AArenaCharacter::UpdateOnBreak(FModifierInfo ModifierInfo)
 {
 	for (auto Aura : AuraModifiers)
 	{
-		if (Aura.OnBreakHandler) { Aura.OnBreakHandler(AbilityInfo); }
+		if (Aura.OnBreakHandler) { Aura.OnBreakHandler(ModifierInfo); }
 	}
 
 	TArray<int32> BuffKeys;
 	BuffModifiers.GenerateKeyArray(BuffKeys);
 	for (auto Key : BuffKeys)
 	{
-		if (BuffModifiers[Key].OnBreakHandler) { BuffModifiers[Key].OnBreakHandler(AbilityInfo); }
+		if (BuffModifiers[Key].OnBreakHandler) { BuffModifiers[Key].OnBreakHandler(ModifierInfo); }
 	}
 
 	TArray<int32> OvertimeKeys;
 	OvertimeModifiers.GenerateKeyArray(OvertimeKeys);
 	for (auto Key : OvertimeKeys)
 	{
-		if (OvertimeModifiers[Key].OnBreakHandler) { OvertimeModifiers[Key].OnBreakHandler(AbilityInfo); }
+		if (OvertimeModifiers[Key].OnBreakHandler) { OvertimeModifiers[Key].OnBreakHandler(ModifierInfo); }
 	}
 }
 
-FAbilityInfo AArenaCharacter::GetDefaultAbilityInfo(FModifierBase Modifier)
+FModifierInfo AArenaCharacter::GetDefaultModifierInfo(FModifierBase Modifier)
 {
 	AAbilityBase* Ability = Cast<AAbilityBase>(Modifier.AbilityOwner);
-	if (!Ability) { return FAbilityInfo(); }
+	if (!Ability) { return FModifierInfo(); }
 
 	AArenaCharacter* CharacterOwner = Cast<AArenaCharacter>(Ability->CharacterOwner);
-	if (!CharacterOwner) { return FAbilityInfo(); }
+	if (!CharacterOwner) { return FModifierInfo(); }
 
-	FAbilityInfo AbilityInfo;
-	AbilityInfo.Ability = Ability;
-	AbilityInfo.Causer = CharacterOwner;
-	AbilityInfo.Target = this;
-	AbilityInfo.bIsDispellable = Modifier.bIsDispellable;
-	AbilityInfo.ModifierIcon = Modifier.Icon;
-	AbilityInfo.ModifierName = Modifier.Name;
-	AbilityInfo.ModifierDescription = Modifier.Description;
-	AbilityInfo.Stacks = Modifier.Stacks;
+	FModifierInfo ModifierInfo;
+	ModifierInfo.Ability = Ability;
+	ModifierInfo.Causer = CharacterOwner;
+	ModifierInfo.Target = this;
+	ModifierInfo.bIsDispellable = Modifier.bIsDispellable;
+	ModifierInfo.ModifierIcon = Modifier.Icon;
+	ModifierInfo.ModifierName = Modifier.Name;
+	ModifierInfo.ModifierDescription = Modifier.Description;
+	ModifierInfo.Stacks = Modifier.Stacks;
 
-	return AbilityInfo;
+	return ModifierInfo;
 }
 
-FAbilityInfo AArenaCharacter::GetAbilityInfo(FAuraModifier Modifier)
+FModifierInfo AArenaCharacter::GetModifierInfo(FAuraModifier Modifier)
 {
-	FAbilityInfo AbilityInfo = GetDefaultAbilityInfo(Modifier);
-	AbilityInfo.Type = EAIT_Damage;
-	AbilityInfo.bIsDispellable = false;
+	FModifierInfo ModifierInfo = GetDefaultModifierInfo(Modifier);
+	ModifierInfo.Type = EAIT_Damage;
+	ModifierInfo.bIsDispellable = false;
 
-	return AbilityInfo;
+	return ModifierInfo;
 }
 
-FAbilityInfo AArenaCharacter::GetAbilityInfo(FBuffModifier Modifier)
+FModifierInfo AArenaCharacter::GetModifierInfo(FBuffModifier Modifier)
 {
-	FAbilityInfo AbilityInfo = GetDefaultAbilityInfo(Modifier);
-	AbilityInfo.Type = EAIT_Buff;
-	AbilityInfo.Event = EABE_Apply;
-	AbilityInfo.bIsDispellable = Modifier.bIsDispellable;
-	AbilityInfo.bIsHarmful = Modifier.bIsHarmful;
-	AbilityInfo.bExpires = Modifier.bUntilUse;
-	AbilityInfo.TimeRemaining = Modifier.TimeRemaining;
-	AbilityInfo.Target = this;
+	FModifierInfo ModifierInfo = GetDefaultModifierInfo(Modifier);
+	ModifierInfo.Type = EAIT_Buff;
+	ModifierInfo.Event = EABE_Apply;
+	ModifierInfo.bIsDispellable = Modifier.bIsDispellable;
+	ModifierInfo.bIsHarmful = Modifier.bIsHarmful;
+	ModifierInfo.bExpires = Modifier.bUntilUse;
+	ModifierInfo.TimeRemaining = Modifier.TimeRemaining;
+	ModifierInfo.Target = this;
 
-	return AbilityInfo;
+	return ModifierInfo;
 }
 
-FAbilityInfo AArenaCharacter::GetAbilityInfo(FAbsorbingModifier Modifier)
+FModifierInfo AArenaCharacter::GetModifierInfo(FAbsorbingModifier Modifier)
 {
-	FAbilityInfo AbilityInfo = GetDefaultAbilityInfo(Modifier);
-	AbilityInfo.Type = EAIT_Buff;
-	AbilityInfo.bIsDispellable = Modifier.bIsDispellable;
-	AbilityInfo.bIsHarmful = Modifier.bIsHarmful;
-	AbilityInfo.bExpires = Modifier.bUntilUse;
-	AbilityInfo.TimeRemaining = Modifier.bUntilUse ? Modifier.TimeRemaining : 0.0f;
+	FModifierInfo ModifierInfo = GetDefaultModifierInfo(Modifier);
+	ModifierInfo.Type = EAIT_Buff;
+	ModifierInfo.bIsDispellable = Modifier.bIsDispellable;
+	ModifierInfo.bIsHarmful = Modifier.bIsHarmful;
+	ModifierInfo.bExpires = Modifier.bUntilUse;
+	ModifierInfo.TimeRemaining = Modifier.bUntilUse ? Modifier.TimeRemaining : 0.0f;
 
-	return AbilityInfo;
+	return ModifierInfo;
 }
 
-FAbilityInfo AArenaCharacter::GetAbilityInfo(FDamageModifier Modifier)
+FModifierInfo AArenaCharacter::GetModifierInfo(FDamageModifier Modifier)
 {
-	FAbilityInfo AbilityInfo = GetDefaultAbilityInfo(Modifier);
-	AbilityInfo.Type = EAIT_Damage;
-	AbilityInfo.bIsHarmful = true;
+	FModifierInfo ModifierInfo = GetDefaultModifierInfo(Modifier);
+	ModifierInfo.Type = EAIT_Damage;
+	ModifierInfo.bIsHarmful = true;
 
-	return AbilityInfo;
+	return ModifierInfo;
 }
 
-FAbilityInfo AArenaCharacter::GetAbilityInfo(FOvertimeModifier Modifier)
+FModifierInfo AArenaCharacter::GetModifierInfo(FOvertimeModifier Modifier)
 {
-	FAbilityInfo AbilityInfo = GetDefaultAbilityInfo(Modifier);
-	AbilityInfo.bIsHarmful = Modifier.bIsHarmful;
-	AbilityInfo.Type = AbilityInfo.bIsHarmful ? EAIT_Damage : EAIT_Heal;
-	AbilityInfo.bIsDispellable = Modifier.bIsDispellable;
-	AbilityInfo.TimeRemaining = Modifier.TimeRemaining;
+	FModifierInfo ModifierInfo = GetDefaultModifierInfo(Modifier);
+	ModifierInfo.bIsHarmful = Modifier.bIsHarmful;
+	ModifierInfo.Type = ModifierInfo.bIsHarmful ? EAIT_Damage : EAIT_Heal;
+	ModifierInfo.bIsDispellable = Modifier.bIsDispellable;
+	ModifierInfo.TimeRemaining = Modifier.TimeRemaining;
 
-	return AbilityInfo;
+	return ModifierInfo;
 }
 
-FAbilityInfo AArenaCharacter::GetAbilityInfo(FHealModifier Modifier)
+FModifierInfo AArenaCharacter::GetModifierInfo(FHealModifier Modifier)
 {
-	FAbilityInfo AbilityInfo = GetDefaultAbilityInfo(Modifier);
-	AbilityInfo.Type = EAIT_Heal;
-	AbilityInfo.bIsHarmful = false;
+	FModifierInfo ModifierInfo = GetDefaultModifierInfo(Modifier);
+	ModifierInfo.Type = EAIT_Heal;
+	ModifierInfo.bIsHarmful = false;
 
-	return AbilityInfo;
+	return ModifierInfo;
 }
 
 void AArenaCharacter::SetupAbilities()
@@ -1497,15 +1497,15 @@ bool AArenaCharacter::RemoveBuffModifier(int32 Key, ACharacterBase* Breaker = NU
 {
 	if (!BuffModifiers.Contains(Key)) { return false; }
 
-	FAbilityInfo AbilityInfo = GetAbilityInfo(BuffModifiers[Key]);
-	AbilityInfo.Breaker = Breaker;
-	AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+	FModifierInfo ModifierInfo = GetModifierInfo(BuffModifiers[Key]);
+	ModifierInfo.Breaker = Breaker;
+	ModifierInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
 
-	if (BuffModifiers[Key].OnBreakHandler) { BuffModifiers[Key].OnBreakHandler(AbilityInfo); }
-	if (BuffModifiers[Key].OnRemoveHandler) { BuffModifiers[Key].OnRemoveHandler(AbilityInfo); }
+	if (BuffModifiers[Key].OnBreakHandler) { BuffModifiers[Key].OnBreakHandler(ModifierInfo); }
+	if (BuffModifiers[Key].OnRemoveHandler) { BuffModifiers[Key].OnRemoveHandler(ModifierInfo); }
 
 	BuffModifiers.Remove(Key);
-	MulticastNotifyAbilityInfo(AbilityInfo);
+	MulticastNotifyModifierInfo(ModifierInfo);
 
 	return true;
 }
@@ -1523,15 +1523,15 @@ bool AArenaCharacter::RemoveRandomBuffModifier(bool bIsHarmful, ACharacterBase* 
 	if (BuffKeys.Num() < 1) return false;
 	int32 Key = BuffKeys[FMath::RandRange(0, BuffKeys.Num() - 1)];
 
-	FAbilityInfo AbilityInfo = GetAbilityInfo(BuffModifiers[Key]);
-	AbilityInfo.Breaker = Breaker;
-	AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+	FModifierInfo ModifierInfo = GetModifierInfo(BuffModifiers[Key]);
+	ModifierInfo.Breaker = Breaker;
+	ModifierInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
 
-	if (BuffModifiers[Key].OnBreakHandler) { BuffModifiers[Key].OnBreakHandler(AbilityInfo); }
-	if (BuffModifiers[Key].OnRemoveHandler) { BuffModifiers[Key].OnRemoveHandler(AbilityInfo); }
+	if (BuffModifiers[Key].OnBreakHandler) { BuffModifiers[Key].OnBreakHandler(ModifierInfo); }
+	if (BuffModifiers[Key].OnRemoveHandler) { BuffModifiers[Key].OnRemoveHandler(ModifierInfo); }
 
 	BuffModifiers.Remove(Key);
-	MulticastNotifyAbilityInfo(AbilityInfo);
+	MulticastNotifyModifierInfo(ModifierInfo);
 
 	return true;
 }
@@ -1546,17 +1546,17 @@ int32 AArenaCharacter::RemoveBuffModifiers(bool bIsHarmful, ACharacterBase* Brea
 	{
 		if (BuffModifiers[Key].bIsHarmful != (bIsHarmful ? 1 : 0)) { continue; }
 
-		FAbilityInfo AbilityInfo = GetAbilityInfo(BuffModifiers[Key]);
-		AbilityInfo.Breaker = Breaker;
-		AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+		FModifierInfo ModifierInfo = GetModifierInfo(BuffModifiers[Key]);
+		ModifierInfo.Breaker = Breaker;
+		ModifierInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
 
-		if (BuffModifiers[Key].OnBreakHandler) { BuffModifiers[Key].OnBreakHandler(AbilityInfo); }
-		if (BuffModifiers[Key].OnRemoveHandler) { BuffModifiers[Key].OnRemoveHandler(AbilityInfo); }
+		if (BuffModifiers[Key].OnBreakHandler) { BuffModifiers[Key].OnBreakHandler(ModifierInfo); }
+		if (BuffModifiers[Key].OnRemoveHandler) { BuffModifiers[Key].OnRemoveHandler(ModifierInfo); }
 
-		MulticastNotifyAbilityInfo(AbilityInfo);
+		MulticastNotifyModifierInfo(ModifierInfo);
 
 		BuffModifiers.Remove(Key);
-		MulticastNotifyAbilityInfo(AbilityInfo);
+		MulticastNotifyModifierInfo(ModifierInfo);
 
 		Total++;
 	}
@@ -1572,14 +1572,14 @@ int32 AArenaCharacter::RemoveAllBuffModifiers(ACharacterBase* Breaker = NULL)
 	BuffModifiers.GenerateKeyArray(Keys);
 	for (auto Key : Keys)
 	{
-		FAbilityInfo AbilityInfo = GetAbilityInfo(BuffModifiers[Key]);
-		AbilityInfo.Breaker = Breaker;
-		AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+		FModifierInfo ModifierInfo = GetModifierInfo(BuffModifiers[Key]);
+		ModifierInfo.Breaker = Breaker;
+		ModifierInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
 
-		if (BuffModifiers[Key].OnBreakHandler) { BuffModifiers[Key].OnBreakHandler(AbilityInfo); }
-		if (BuffModifiers[Key].OnRemoveHandler) { BuffModifiers[Key].OnRemoveHandler(AbilityInfo); }
+		if (BuffModifiers[Key].OnBreakHandler) { BuffModifiers[Key].OnBreakHandler(ModifierInfo); }
+		if (BuffModifiers[Key].OnRemoveHandler) { BuffModifiers[Key].OnRemoveHandler(ModifierInfo); }
 
-		MulticastNotifyAbilityInfo(AbilityInfo);
+		MulticastNotifyModifierInfo(ModifierInfo);
 	}
 
 	BuffModifiers.Empty();
@@ -1591,15 +1591,15 @@ bool AArenaCharacter::RemoveAbsorbingModifier(int32 Key, ACharacterBase* Breaker
 {
 	if (AbsorbingModifiers.IsValidIndex(Key)) { return false; }
 
-	FAbilityInfo AbilityInfo = GetAbilityInfo(AbsorbingModifiers[Key]);
-	AbilityInfo.Breaker = Breaker;
-	AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+	FModifierInfo ModifierInfo = GetModifierInfo(AbsorbingModifiers[Key]);
+	ModifierInfo.Breaker = Breaker;
+	ModifierInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
 
-	if (AbsorbingModifiers[Key].OnBreakHandler) { AbsorbingModifiers[Key].OnBreakHandler(AbilityInfo); }
-	if (AbsorbingModifiers[Key].OnRemoveHandler) { AbsorbingModifiers[Key].OnRemoveHandler(AbilityInfo); }
+	if (AbsorbingModifiers[Key].OnBreakHandler) { AbsorbingModifiers[Key].OnBreakHandler(ModifierInfo); }
+	if (AbsorbingModifiers[Key].OnRemoveHandler) { AbsorbingModifiers[Key].OnRemoveHandler(ModifierInfo); }
 
 	AbsorbingModifiers.RemoveAt(Key);
-	MulticastNotifyAbilityInfo(AbilityInfo);
+	MulticastNotifyModifierInfo(ModifierInfo);
 
 	return true;
 }
@@ -1609,15 +1609,15 @@ bool AArenaCharacter::RemoveRandomAbsorbingModifier(bool bIsHarmful, ACharacterB
 	if (AbsorbingModifiers.Num() < 1) return false;
 	int32 Key = FMath::RandRange(0, AbsorbingModifiers.Num() - 1);
 
-	FAbilityInfo AbilityInfo = GetAbilityInfo(AbsorbingModifiers[Key]);
-	AbilityInfo.Breaker = Breaker;
-	AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+	FModifierInfo ModifierInfo = GetModifierInfo(AbsorbingModifiers[Key]);
+	ModifierInfo.Breaker = Breaker;
+	ModifierInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
 
-	if (AbsorbingModifiers[Key].OnBreakHandler) { AbsorbingModifiers[Key].OnBreakHandler(AbilityInfo); }
-	if (AbsorbingModifiers[Key].OnRemoveHandler) { AbsorbingModifiers[Key].OnRemoveHandler(AbilityInfo); }
+	if (AbsorbingModifiers[Key].OnBreakHandler) { AbsorbingModifiers[Key].OnBreakHandler(ModifierInfo); }
+	if (AbsorbingModifiers[Key].OnRemoveHandler) { AbsorbingModifiers[Key].OnRemoveHandler(ModifierInfo); }
 
 	AbsorbingModifiers.RemoveAt(Key);
-	MulticastNotifyAbilityInfo(AbilityInfo);
+	MulticastNotifyModifierInfo(ModifierInfo);
 
 	return true;
 }
@@ -1634,15 +1634,15 @@ int32 AArenaCharacter::RemoveAbsorbingModifiers(bool bIsHarmful, ACharacterBase*
 			continue;
 		}
 
-		FAbilityInfo AbilityInfo = GetAbilityInfo(AbsorbingModifiers[Key]);
-		AbilityInfo.Breaker = Breaker;
-		AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+		FModifierInfo ModifierInfo = GetModifierInfo(AbsorbingModifiers[Key]);
+		ModifierInfo.Breaker = Breaker;
+		ModifierInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
 
-		if (AbsorbingModifiers[Key].OnBreakHandler) { AbsorbingModifiers[Key].OnBreakHandler(AbilityInfo); }
-		if (AbsorbingModifiers[Key].OnRemoveHandler) { AbsorbingModifiers[Key].OnRemoveHandler(AbilityInfo); }
+		if (AbsorbingModifiers[Key].OnBreakHandler) { AbsorbingModifiers[Key].OnBreakHandler(ModifierInfo); }
+		if (AbsorbingModifiers[Key].OnRemoveHandler) { AbsorbingModifiers[Key].OnRemoveHandler(ModifierInfo); }
 
 		AbsorbingModifiers.RemoveAt(Key);
-		MulticastNotifyAbilityInfo(AbilityInfo);
+		MulticastNotifyModifierInfo(ModifierInfo);
 	}
 
 	return Total;
@@ -1654,13 +1654,13 @@ int32 AArenaCharacter::RemoveAllAbsorbingModifiers(ACharacterBase* Breaker = NUL
 
 	for (int32 Key = 0; Key < AbsorbingModifiers.Num(); Key++)
 	{
-		FAbilityInfo AbilityInfo = GetAbilityInfo(AbsorbingModifiers[Key]);
-		AbilityInfo.Breaker = Breaker;
-		AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+		FModifierInfo ModifierInfo = GetModifierInfo(AbsorbingModifiers[Key]);
+		ModifierInfo.Breaker = Breaker;
+		ModifierInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
 
-		if (AbsorbingModifiers[Key].OnBreakHandler) { AbsorbingModifiers[Key].OnBreakHandler(AbilityInfo); }
-		if (AbsorbingModifiers[Key].OnRemoveHandler) { AbsorbingModifiers[Key].OnRemoveHandler(AbilityInfo); }
-		MulticastNotifyAbilityInfo(AbilityInfo);
+		if (AbsorbingModifiers[Key].OnBreakHandler) { AbsorbingModifiers[Key].OnBreakHandler(ModifierInfo); }
+		if (AbsorbingModifiers[Key].OnRemoveHandler) { AbsorbingModifiers[Key].OnRemoveHandler(ModifierInfo); }
+		MulticastNotifyModifierInfo(ModifierInfo);
 	}
 
 	AbsorbingModifiers.Empty();
@@ -1678,17 +1678,17 @@ int32 AArenaCharacter::RemoveSnareBuffModifiers(ACharacterBase* Breaker = NULL)
 	{
 		if (BuffModifiers[Key].bIsHarmful == 0 || BuffModifiers[Key].Speed == 0.0f) { continue; }
 
-		FAbilityInfo AbilityInfo = GetAbilityInfo(BuffModifiers[Key]);
-		AbilityInfo.Breaker = Breaker;
-		AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+		FModifierInfo ModifierInfo = GetModifierInfo(BuffModifiers[Key]);
+		ModifierInfo.Breaker = Breaker;
+		ModifierInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
 
-		if (BuffModifiers[Key].OnBreakHandler) { BuffModifiers[Key].OnBreakHandler(AbilityInfo); }
-		if (BuffModifiers[Key].OnRemoveHandler) { BuffModifiers[Key].OnRemoveHandler(AbilityInfo); }
+		if (BuffModifiers[Key].OnBreakHandler) { BuffModifiers[Key].OnBreakHandler(ModifierInfo); }
+		if (BuffModifiers[Key].OnRemoveHandler) { BuffModifiers[Key].OnRemoveHandler(ModifierInfo); }
 
-		MulticastNotifyAbilityInfo(AbilityInfo);
+		MulticastNotifyModifierInfo(ModifierInfo);
 
 		BuffModifiers.Remove(Key);
-		MulticastNotifyAbilityInfo(AbilityInfo);
+		MulticastNotifyModifierInfo(ModifierInfo);
 
 		Total++;
 	}
@@ -1709,17 +1709,17 @@ int32 AArenaCharacter::RemoveStuckBuffModifiers(ACharacterBase* Breaker = NULL)
 	{
 		if (BuffModifiers[Key].bIsHarmful == false || BuffModifiers[Key].State != CS_Stuck) { continue; }
 
-		FAbilityInfo AbilityInfo = GetAbilityInfo(BuffModifiers[Key]);
-		AbilityInfo.Breaker = Breaker;
-		AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+		FModifierInfo ModifierInfo = GetModifierInfo(BuffModifiers[Key]);
+		ModifierInfo.Breaker = Breaker;
+		ModifierInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
 
-		if (BuffModifiers[Key].OnBreakHandler) { BuffModifiers[Key].OnBreakHandler(AbilityInfo); }
-		if (BuffModifiers[Key].OnRemoveHandler) { BuffModifiers[Key].OnRemoveHandler(AbilityInfo); }
+		if (BuffModifiers[Key].OnBreakHandler) { BuffModifiers[Key].OnBreakHandler(ModifierInfo); }
+		if (BuffModifiers[Key].OnRemoveHandler) { BuffModifiers[Key].OnRemoveHandler(ModifierInfo); }
 
-		MulticastNotifyAbilityInfo(AbilityInfo);
+		MulticastNotifyModifierInfo(ModifierInfo);
 
 		BuffModifiers.Remove(Key);
-		MulticastNotifyAbilityInfo(AbilityInfo);
+		MulticastNotifyModifierInfo(ModifierInfo);
 
 		Total++;
 	}
@@ -1733,12 +1733,12 @@ bool AArenaCharacter::RemoveOvertimeModifier(int32 Key, ACharacterBase* Breaker 
 {
 	if (!OvertimeModifiers.Contains(Key)) { return false; }
 
-	FAbilityInfo AbilityInfo = GetAbilityInfo(OvertimeModifiers[Key]);
-	AbilityInfo.Breaker = Breaker;
-	AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+	FModifierInfo ModifierInfo = GetModifierInfo(OvertimeModifiers[Key]);
+	ModifierInfo.Breaker = Breaker;
+	ModifierInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
 
-	if (OvertimeModifiers[Key].OnBreakHandler) { OvertimeModifiers[Key].OnBreakHandler(AbilityInfo); }
-	if (OvertimeModifiers[Key].OnRemoveHandler) { OvertimeModifiers[Key].OnRemoveHandler(AbilityInfo); }
+	if (OvertimeModifiers[Key].OnBreakHandler) { OvertimeModifiers[Key].OnBreakHandler(ModifierInfo); }
+	if (OvertimeModifiers[Key].OnRemoveHandler) { OvertimeModifiers[Key].OnRemoveHandler(ModifierInfo); }
 
 	OvertimeModifiers.Remove(Key);
 	return true;
@@ -1757,12 +1757,12 @@ bool AArenaCharacter::RemoveRandomOvertimeModifier(bool bIsHarmful, ACharacterBa
 	if (BuffKeys.Num() < 1) return false;
 	int32 Key = BuffKeys[FMath::RandRange(0, BuffKeys.Num() - 1)];
 
-	FAbilityInfo AbilityInfo = GetAbilityInfo(OvertimeModifiers[Key]);
-	AbilityInfo.Breaker = Breaker;
-	AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+	FModifierInfo ModifierInfo = GetModifierInfo(OvertimeModifiers[Key]);
+	ModifierInfo.Breaker = Breaker;
+	ModifierInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
 
-	if (OvertimeModifiers[Key].OnBreakHandler) { OvertimeModifiers[Key].OnBreakHandler(AbilityInfo); }
-	if (OvertimeModifiers[Key].OnRemoveHandler) { OvertimeModifiers[Key].OnRemoveHandler(AbilityInfo); }
+	if (OvertimeModifiers[Key].OnBreakHandler) { OvertimeModifiers[Key].OnBreakHandler(ModifierInfo); }
+	if (OvertimeModifiers[Key].OnRemoveHandler) { OvertimeModifiers[Key].OnRemoveHandler(ModifierInfo); }
 
 	OvertimeModifiers.Remove(Key);
 
@@ -1779,12 +1779,12 @@ int32 AArenaCharacter::RemoveOvertimeModifiers(bool bIsHarmful, ACharacterBase* 
 	{
 		if (OvertimeModifiers[Key].bIsHarmful != (bIsHarmful ? 1 : 0)) { continue; }
 
-		FAbilityInfo AbilityInfo = GetAbilityInfo(OvertimeModifiers[Key]);
-		AbilityInfo.Breaker = Breaker;
-		AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+		FModifierInfo ModifierInfo = GetModifierInfo(OvertimeModifiers[Key]);
+		ModifierInfo.Breaker = Breaker;
+		ModifierInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
 
-		if (OvertimeModifiers[Key].OnBreakHandler) { OvertimeModifiers[Key].OnBreakHandler(AbilityInfo); }
-		if (OvertimeModifiers[Key].OnRemoveHandler) { OvertimeModifiers[Key].OnRemoveHandler(AbilityInfo); }
+		if (OvertimeModifiers[Key].OnBreakHandler) { OvertimeModifiers[Key].OnBreakHandler(ModifierInfo); }
+		if (OvertimeModifiers[Key].OnRemoveHandler) { OvertimeModifiers[Key].OnRemoveHandler(ModifierInfo); }
 
 		OvertimeModifiers.Remove(Key);
 		Total++;
@@ -1801,12 +1801,12 @@ int32 AArenaCharacter::RemoveAllOvertimeModifiers(ACharacterBase* Breaker = NULL
 	OvertimeModifiers.GenerateKeyArray(Keys);
 	for (auto Key : Keys)
 	{
-		FAbilityInfo AbilityInfo = GetAbilityInfo(OvertimeModifiers[Key]);
-		AbilityInfo.Breaker = Breaker;
-		AbilityInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
+		FModifierInfo ModifierInfo = GetModifierInfo(OvertimeModifiers[Key]);
+		ModifierInfo.Breaker = Breaker;
+		ModifierInfo.Event = Breaker ? EABE_Dispell : EABE_Break;
 
-		if (OvertimeModifiers[Key].OnBreakHandler) { OvertimeModifiers[Key].OnBreakHandler(AbilityInfo); }
-		if (OvertimeModifiers[Key].OnRemoveHandler) { OvertimeModifiers[Key].OnRemoveHandler(AbilityInfo); }
+		if (OvertimeModifiers[Key].OnBreakHandler) { OvertimeModifiers[Key].OnBreakHandler(ModifierInfo); }
+		if (OvertimeModifiers[Key].OnRemoveHandler) { OvertimeModifiers[Key].OnRemoveHandler(ModifierInfo); }
 	}
 
 	OvertimeModifiers.Empty();
@@ -1913,10 +1913,10 @@ void AArenaCharacter::OnRep_PlayerClass()
 	Super::OnRep_PlayerClass();
 }
 
-void AArenaCharacter::MulticastNotifyAbilityInfo_Implementation(FAbilityInfo AbilityInfo)
+void AArenaCharacter::MulticastNotifyModifierInfo_Implementation(FModifierInfo ModifierInfo)
 {
-	AddAbilityInfo(AbilityInfo);
-	AbilityInfoDelegate.Broadcast(AbilityInfo);
+	AddModifierInfo(ModifierInfo);
+	ModifierInfoDelegate.Broadcast(ModifierInfo);
 }
 
 

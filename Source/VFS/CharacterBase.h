@@ -78,10 +78,10 @@ public:
 	bool bTargetLoS;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
-	TMap<FName, FAbilityInfo> AbilityInfoList;
+	TMap<FName, FModifierInfo> ModifierInfoList;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
-	TArray<FAbilityInfo> SummaryInfo;
+	TArray<FModifierInfo> SummaryInfo;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
 	int32 SummaryInfoLimit;
@@ -301,15 +301,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Utils")
 	void PlayFX(TSubclassOf<AAbilityFXBase> Effect);
 
-	void AddAbilityInfo(FAbilityInfo AbilityInfo);
+	void AddModifierInfo(FModifierInfo ModifierInfo);
 
-	void RemoveAbilityInfo(FName ModifierName);
+	void RemoveModifierInfo(FName ModifierName);
 
-	void AddSummary(FAbilityInfo AbilityInfo);
+	void AddSummary(FModifierInfo ModifierInfo);
 
-	bool IsBuff(FAbilityInfo AbilityInfo);
+	bool IsBuff(FModifierInfo ModifierInfo);
 	
-	bool IsDebuff(FAbilityInfo AbilityInfo);
+	bool IsDebuff(FModifierInfo ModifierInfo);
 
 	void UpdateBuffInfoTimers(float DeltaTime);
 

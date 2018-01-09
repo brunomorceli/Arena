@@ -43,17 +43,17 @@ void ACharacterWizard::SetAbility1()
 	Damage.AbilityOwner = Abilities[1];
 	Damage.Icon = Abilities[1]->Icon;
 	Damage.Health = 150.0f;
-	Damage.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+	Damage.OnApplyHandler = [](FModifierInfo ModifierInfo) {
+		AArenaCharacter* Target = Cast<AArenaCharacter>(ModifierInfo.Target);
 		if (!Target) { return; }
 
-		AAbilityBase* Ability = Cast<AAbilityBase>(AbilityInfo.Ability);
+		AAbilityBase* Ability = Cast<AAbilityBase>(ModifierInfo.Ability);
 		if (!Ability) { return; }
 
 		if (!UUtilities::IsCritical(66.66f)) { return; }
 
 		FOvertimeModifier Dot;
-		Dot.AbilityOwner = AbilityInfo.Ability;
+		Dot.AbilityOwner = ModifierInfo.Ability;
 		Dot.Name = "Fireball";
 		Dot.Description = "Does 30HP damage every 2 seconds.";
 		Dot.Icon = Ability->Icon;
@@ -66,8 +66,8 @@ void ACharacterWizard::SetAbility1()
 		Dot.bAllowEnemy = true;
 		Dot.bAllowSelf = false;
 		Dot.bAllowTeam = false;
-		Dot.OnTickHandler = [](FAbilityInfo AbilityInfo) {
-			AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+		Dot.OnTickHandler = [](FModifierInfo ModifierInfo) {
+			AArenaCharacter* Target = Cast<AArenaCharacter>(ModifierInfo.Target);
 			if (!Target) { return; }
 			Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(5));
 		};
@@ -105,8 +105,8 @@ void ACharacterWizard::SetAbility2()
 	Damage.AbilityOwner = Ability;
 	Damage.Icon = Ability->Icon;
 	Damage.Health = 250.0f;
-	Damage.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+	Damage.OnApplyHandler = [](FModifierInfo ModifierInfo) {
+		AArenaCharacter* Target = Cast<AArenaCharacter>(ModifierInfo.Target);
 		if (Target) { Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(7)); }
 	};
 	Ability->DamageModifiers.Add(Damage);
@@ -152,8 +152,8 @@ void ACharacterWizard::SetAbility3()
 	Damage.AbilityOwner = Ability;
 	Damage.Icon = Ability->Icon;
 	Damage.Health = 250.0f;
-	Damage.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+	Damage.OnApplyHandler = [](FModifierInfo ModifierInfo) {
+		AArenaCharacter* Target = Cast<AArenaCharacter>(ModifierInfo.Target);
 		if (Target) { Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(6)); }
 	};
 
@@ -263,19 +263,19 @@ void ACharacterWizard::SetAbility6()
 	Debuff.bAllowEnemy = true;
 	Debuff.bIsHarmful = true;
 	Debuff.TimeRemaining = 2.0f;
-	Debuff.OnUseAbility = [](FAbilityInfo AbilityInfo) {
-		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+	Debuff.OnUseAbility = [](FModifierInfo ModifierInfo) {
+		AArenaCharacter* Target = Cast<AArenaCharacter>(ModifierInfo.Target);
 		if (!Target) { return; }
 
-		AAbilityBase* Ability = Cast<AAbilityBase>(AbilityInfo.Ability);
+		AAbilityBase* Ability = Cast<AAbilityBase>(ModifierInfo.Ability);
 		if (!Ability || Ability->SchoolType != ABS_Magic) { return; }
 
 		Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(7));
 
-		Target->RemoveBuffModifier(AbilityInfo.Ability->GetUniqueID(), NULL);
+		Target->RemoveBuffModifier(ModifierInfo.Ability->GetUniqueID(), NULL);
 
 		FBuffModifier Silence;
-		Silence.AbilityOwner = AbilityInfo.Ability;
+		Silence.AbilityOwner = ModifierInfo.Ability;
 		Silence.Icon = Ability->Icon;
 		Silence.Name = "Magic Trigger";
 		Silence.Description = "Silenced for 5s.";
@@ -320,11 +320,11 @@ void ACharacterWizard::SetAbility7()
 	Buff.bAllowSelf = true;
 	Buff.State = CS_Invunerable;
 	Buff.TimeRemaining = 1.0f;
-	Buff.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+	Buff.OnApplyHandler = [](FModifierInfo ModifierInfo) {
+		AArenaCharacter* Target = Cast<AArenaCharacter>(ModifierInfo.Target);
 		if (!Target) { return; }
 
-		AArenaCharacter* Causer = Cast<AArenaCharacter>(AbilityInfo.Causer);
+		AArenaCharacter* Causer = Cast<AArenaCharacter>(ModifierInfo.Causer);
 		if (!Causer) { return; }
 
 		Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(8));

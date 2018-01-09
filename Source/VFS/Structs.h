@@ -23,7 +23,7 @@
 // ==================================================================================================================================================
 
 USTRUCT(BlueprintType)
-struct FAbilityInfo
+struct FModifierInfo
 {
 	GENERATED_USTRUCT_BODY(BlueprintType)
 
@@ -33,7 +33,7 @@ public:
 	TEnumAsByte<EAbilityEvent> Event = EABE_Apply;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
-	TEnumAsByte<EAbilityInfoType> Type = EAIT_Damage;
+	TEnumAsByte<EModifierInfoType> Type = EAIT_Damage;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
 	int32 bIsHarmful = false;
@@ -220,7 +220,7 @@ struct FModifierBase
 
 public:
 
-	typedef void(*HandlerPtr)(FAbilityInfo);
+	typedef void(*HandlerPtr)(FModifierInfo);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
 	FGuid ModifierId = FGuid();

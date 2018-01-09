@@ -142,7 +142,7 @@ enum EModifierConstrain
 };
 
 UENUM(BlueprintType)
-enum EAbilityInfoType
+enum EModifierInfoType
 {
 	EAIT_Damage UMETA(DisplayName = "Damage"),
 	EAIT_Heal UMETA(DisplayName = "Heal"),

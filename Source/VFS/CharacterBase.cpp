@@ -118,7 +118,7 @@ ACharacterBase::ACharacterBase()
 	bNetLoadOnClient = true;
 	bReplicateMovement = true;
 
-	SummaryInfo = TArray<FAbilityInfo>();
+	SummaryInfo = TArray<FModifierInfo>();
 	SummaryInfoLimit = 150;
 
 	State = CS_Idle;
@@ -428,7 +428,7 @@ void ACharacterBase::SetDeadState()
 	Mana.Value = 0.0f;
 	Energy.Value = 0.0f;
 	State = CS_Death;
-	AbilityInfoList.Empty();
+	ModifierInfoList.Empty();
 
 	FTimerHandle TimerHandler;
 	World->GetTimerManager().SetTimer(TimerHandler, this, &ACharacterBase::ServerRespawn, DeathDelay, false);
@@ -636,44 +636,44 @@ void ACharacterBase::PlayFX(TSubclassOf<AAbilityFXBase> Effect)
 	NewFX->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
 }
 
-void ACharacterBase::AddAbilityInfo(FAbilityInfo AbilityInfo)
+void ACharacterBase::AddModifierInfo(FModifierInfo ModifierInfo)
 {
-	if (AbilityInfo.Target->GetUniqueID() != GetUniqueID() && AbilityInfo.Causer->GetUniqueID() != GetUniqueID()) { return; }
+	if (ModifierInfo.Target->GetUniqueID() != GetUniqueID() && ModifierInfo.Causer->GetUniqueID() != GetUniqueID()) { return; }
 
-	AddSummary(AbilityInfo);
+	AddSummary(ModifierInfo);
 
-	if (!AbilityInfoList.Contains(AbilityInfo.ModifierName))
+	if (!ModifierInfoList.Contains(ModifierInfo.ModifierName))
 	{
-		AbilityInfoList.Add(AbilityInfo.ModifierName, AbilityInfo);
+		ModifierInfoList.Add(ModifierInfo.ModifierName, ModifierInfo);
 		return;
 	}
 
-	AbilityInfoList[AbilityInfo.ModifierName] = AbilityInfo;
+	ModifierInfoList[ModifierInfo.ModifierName] = ModifierInfo;
 }
 
-void ACharacterBase::RemoveAbilityInfo(FName ModifierName)
+void ACharacterBase::RemoveModifierInfo(FName ModifierName)
 {
-	if (AbilityInfoList.Contains(ModifierName)) { AbilityInfoList.Remove(ModifierName); }
+	if (ModifierInfoList.Contains(ModifierName)) { ModifierInfoList.Remove(ModifierName); }
 }
 
-void ACharacterBase::AddSummary(FAbilityInfo AbilityInfo)
+void ACharacterBase::AddSummary(FModifierInfo ModifierInfo)
 {
-	SummaryInfo.Push(AbilityInfo);
+	SummaryInfo.Push(ModifierInfo);
 	if (SummaryInfo.Num() > SummaryInfoLimit) { SummaryInfo.RemoveAt(0); }
 }
 
-bool ACharacterBase::IsBuff(FAbilityInfo AbilityInfo)
+bool ACharacterBase::IsBuff(FModifierInfo ModifierInfo)
 {
-	if (AbilityInfo.Type != EAIT_Buff && AbilityInfo.Type != EAIT_Heal) { return false; }
-	if (AbilityInfo.Target->GetUniqueID() != GetUniqueID() || !AbilityInfo.bIsHarmful) { return false; }
+	if (ModifierInfo.Type != EAIT_Buff && ModifierInfo.Type != EAIT_Heal) { return false; }
+	if (ModifierInfo.Target->GetUniqueID() != GetUniqueID() || !ModifierInfo.bIsHarmful) { return false; }
 
 	return true;
 }
 
-bool ACharacterBase::IsDebuff(FAbilityInfo AbilityInfo)
+bool ACharacterBase::IsDebuff(FModifierInfo ModifierInfo)
 {
-	if (AbilityInfo.Type != EAIT_Buff && AbilityInfo.Type != EAIT_Heal) { return false; }
-	if (AbilityInfo.Target->GetUniqueID() != GetUniqueID() || AbilityInfo.bIsHarmful) { return false; }
+	if (ModifierInfo.Type != EAIT_Buff && ModifierInfo.Type != EAIT_Heal) { return false; }
+	if (ModifierInfo.Target->GetUniqueID() != GetUniqueID() || ModifierInfo.bIsHarmful) { return false; }
 
 	return true;
 }
@@ -681,12 +681,12 @@ bool ACharacterBase::IsDebuff(FAbilityInfo AbilityInfo)
 void ACharacterBase::UpdateBuffInfoTimers(float DeltaTime)
 {
 	TArray<FName> Keys;
-	AbilityInfoList.GenerateKeyArray(Keys);
+	ModifierInfoList.GenerateKeyArray(Keys);
 	for (int32 i = 0; i < Keys.Num(); i++)
 	{
 		FName Key = Keys[i];
-		AbilityInfoList[Key].TimeRemaining -= DeltaTime;
-		if (AbilityInfoList[Key].TimeRemaining <= 0.0f) { RemoveAbilityInfo(Key); }
+		ModifierInfoList[Key].TimeRemaining -= DeltaTime;
+		if (ModifierInfoList[Key].TimeRemaining <= 0.0f) { RemoveModifierInfo(Key); }
 	}
 }
 

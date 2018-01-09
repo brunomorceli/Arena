@@ -38,8 +38,8 @@ void ACharacterKholl::SetAbility1()
 	Damage.Icon = Abilities[1]->Icon;
 	Damage.Health = 130.0f;
 	Damage.ModifierCritical = 30.0f;
-	Damage.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+	Damage.OnApplyHandler = [](FModifierInfo ModifierInfo) {
+		AArenaCharacter* Target = Cast<AArenaCharacter>(ModifierInfo.Target);
 		if (Target) { Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(1)); }
 	};
 	Ability->DamageModifiers.Add(Damage);
@@ -69,17 +69,17 @@ void ACharacterKholl::SetAbility2()
 	Damage.AbilityOwner = Ability;
 	Damage.Icon = Ability->Icon;
 	Damage.Health = 250.0f;
-	Damage.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+	Damage.OnApplyHandler = [](FModifierInfo ModifierInfo) {
+		AArenaCharacter* Target = Cast<AArenaCharacter>(ModifierInfo.Target);
 		if (!Target) { return; }
 
 		Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(2));
 
-		AAbilityBase* Ability = Cast<AAbilityBase>(AbilityInfo.Ability);
+		AAbilityBase* Ability = Cast<AAbilityBase>(ModifierInfo.Ability);
 		if (!Ability || !UUtilities::IsCritical(50.0f)) { return; }
 
 		FOvertimeModifier Overtime;
-		Overtime.AbilityOwner = AbilityInfo.Ability;
+		Overtime.AbilityOwner = ModifierInfo.Ability;
 		Overtime.Icon = Ability->Icon;
 		Overtime.Name = "Slash Attack Bleeding";
 		Overtime.Description = "30 physical damage every 1 second.";
@@ -87,8 +87,8 @@ void ACharacterKholl::SetAbility2()
 		Overtime.TickTime = 1.0f;
 		Overtime.TimeRemaining = 10.0f;
 		Overtime.bIsHarmful = true;
-		Overtime.OnTickHandler = [](FAbilityInfo AbilityInfo) {
-			AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+		Overtime.OnTickHandler = [](FModifierInfo ModifierInfo) {
+			AArenaCharacter* Target = Cast<AArenaCharacter>(ModifierInfo.Target);
 			if (Target) { Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(3)); }
 		};
 
@@ -120,9 +120,9 @@ void ACharacterKholl::SetAbility3()
 	Damage.AbilityOwner = Ability;
 	Damage.Icon = Ability->Icon;
 	Damage.Health = 100.0f;
-	Damage.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
-		if (Target) { Target->ServerKnockBack(AbilityInfo.Causer->GetActorLocation(), 400.0f); }
+	Damage.OnApplyHandler = [](FModifierInfo ModifierInfo) {
+		AArenaCharacter* Target = Cast<AArenaCharacter>(ModifierInfo.Target);
+		if (Target) { Target->ServerKnockBack(ModifierInfo.Causer->GetActorLocation(), 400.0f); }
 	};
 
 	Ability->DamageModifiers.Add(Damage);
@@ -169,8 +169,8 @@ void ACharacterKholl::SetAbility4()
 	Buff.bAllowEnemy = true;
 	Buff.bIsHarmful = false;
 	Buff.TimeRemaining = 5.0f;
-	Buff.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+	Buff.OnApplyHandler = [](FModifierInfo ModifierInfo) {
+		AArenaCharacter* Target = Cast<AArenaCharacter>(ModifierInfo.Target);
 		if (Target) { Target->MulticastPlayFX(UGlobalLibrary::GetAbilityUseFX(4)); }
 	};
 
@@ -251,8 +251,8 @@ void ACharacterKholl::SetAbility6()
 	Buff.bAllowEnemy = false;
 	Buff.bIsHarmful = false;
 	Buff.TimeRemaining = 3.0f;
-	Buff.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AArenaCharacter* Causer = Cast<AArenaCharacter>(AbilityInfo.Causer);
+	Buff.OnApplyHandler = [](FModifierInfo ModifierInfo) {
+		AArenaCharacter* Causer = Cast<AArenaCharacter>(ModifierInfo.Causer);
 		if (!Causer) { return; }
 
 		Causer->RemoveSnareBuffModifiers(Causer);
@@ -295,8 +295,8 @@ void ACharacterKholl::SetAbility7()
 	Root.Description = "Incapable to move.";
 	Root.State = CS_Stuck;
 	Root.TimeRemaining = 4.0f;
-	Root.OnApplyHandler = [](FAbilityInfo AbilityInfo) {
-		AArenaCharacter* Target = Cast<AArenaCharacter>(AbilityInfo.Target);
+	Root.OnApplyHandler = [](FModifierInfo ModifierInfo) {
+		AArenaCharacter* Target = Cast<AArenaCharacter>(ModifierInfo.Target);
 		if (Target) { Target->MulticastPlayFX(UGlobalLibrary::GetAbilityHitFX(7)); }
 	};
 
