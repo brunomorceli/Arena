@@ -21,8 +21,8 @@ AArenaGameMode::AArenaGameMode()
 	ConstructorHelpers::FClassFinder<APawn> WizardClass(TEXT("/Game/Blueprints/Characters/WizardCharacterBP.WizardCharacterBP_C"));
 	if (WizardClass.Succeeded()) { WizardBPClass = WizardClass.Class; }
 
-	ConstructorHelpers::FClassFinder<APawn> OsamuClass(TEXT("/Game/Blueprints/Characters/OsamuCharacterBP.OsamuCharacterBP_C"));
-	if (OsamuClass.Succeeded()) { OsamuBPClass = OsamuClass.Class; }
+	ConstructorHelpers::FClassFinder<APawn> ClericClass(TEXT("/Game/Blueprints/Characters/ClericCharacterBP.ClericCharacterBP_C"));
+	if (ClericClass.Succeeded()) { ClericBPClass = ClericClass.Class; }
 
 	PlayerControllerClass = AArenaPlayerController::StaticClass();
 	PlayerStateClass = AArenaPlayerState::StaticClass();
@@ -54,7 +54,7 @@ TSubclassOf<APawn> AArenaGameMode::GetPawnClassByCharacterClass(TEnumAsByte<ECha
 	case ECCL_Wizard:
 		return WizardBPClass;
 	case ECCL_Cleric:
-		return OsamuBPClass;
+		return ClericBPClass;
 	case ECCL_Warrior:
 		return WarriorBPClass;
 	default:

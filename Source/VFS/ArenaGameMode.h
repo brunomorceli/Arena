@@ -27,7 +27,7 @@ public:
 	TSubclassOf<APawn> WarriorBPClass;
 	TSubclassOf<APawn> MadEyeBPClass;
 	TSubclassOf<APawn> WizardBPClass;
-	TSubclassOf<APawn> OsamuBPClass;
+	TSubclassOf<APawn> ClericBPClass;
 
 	AArenaGameMode();
 
